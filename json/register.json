@@ -1,0 +1,15 @@
+// requst
+{
+    "username": string,
+    "vk_id": integer
+}
+
+//respose
+{
+    "status": bool,
+    "token": string(64) // optional
+    "errors": [ // optional
+        integer, // error code,
+        string // error description
+    ]
+}
