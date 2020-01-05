@@ -65,12 +65,15 @@ def register_user(request):
     username = data.get("username", None)
     response = {"status": False}
 
-    user_exist = Person.objects.filter(username__iexact=username)
+    username_exist = Person.objects.filter(username__iexact=username)
+    vkuser_exist = Person.objects.filter(vk_id=vk_id)
 
     if (not vk_id) or (not username):
-        response["errors"] = [0, "require more data"]
-    elif user_exist:
+        response["errors"] = [0, "more data required"]
+    elif username_exist:
         response["errors"] = [3, "username already exist"]
+    elif vkuser_exist:
+        response["errors"] = [4, "user already registered"]
     else:
         token = generate_token(vk_id=vk_id)
         Person.objects.create(vk_id=vk_id, username=username, token=token)
@@ -82,6 +85,7 @@ def register_user(request):
 
 def get_map(request):
     data = get_data(request)
+    response = {"status": True, "game_objects": None}
     try:
         x = data['coords'][0]
         y = data['coords'][1]
@@ -92,8 +96,6 @@ def get_map(request):
         y_coords = (y - (height // 2), y + (height // 2))
 
         all_objects = MapObject.objects.filter(Q(Q(Q(x__gte=x_coords[0]) & Q(x__lte=x_coords[1])) & Q(Q(y__gte=y_coords[0]) & Q(y__lte=y_coords[1]))))
-        status = True
-        errors = None
 
         if all_objects:
             game_objects = []
@@ -108,11 +110,10 @@ def get_map(request):
                     }
                 }
                 game_objects.append(game_object)
-        else:
-            game_objects = None
+            
+            response["game_objects"] = game_objects
     except KeyError:
-        game_objects = None
-        status = False
-        errors = [2, "not correct json"]
+        response["status"] = False
+        response["errors"] = [2, "not correct json"]
     
-    return JsonResponse({"status": status, "errors": errors, "game_objects": game_objects})
+    return JsonResponse(response)
