@@ -20,6 +20,10 @@ def generate_token(vk_id):
     return hash_string
 
 
+def get_status(request):
+    return HttpResponse("ok, api is working!")
+
+
 def get_data(request):
     try:
         data = json.loads(request.body.decode("utf-8"))
