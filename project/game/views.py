@@ -54,15 +54,6 @@ def check_token(func):
     return wrapper
 
 
-# def check_user(request):
-#     user = Person.objects.filter(vk_id=get_data(request).get("vk_id", None))
-#     if user:
-#         response = True
-#     else:
-#         response = False
-#     return JsonResponse({"status": response})
-
-
 def register_user(request):
     data = get_data(request)
     vk_id = data.get("vk_id", None)
@@ -80,9 +71,12 @@ def register_user(request):
         response["errors"] = [4, "user already registered"]
     else:
         token = generate_token(vk_id=vk_id)
-        Person.objects.create(vk_id=vk_id, username=username, token=token)
-        response["token"] = token
-        response["status"] = True
+        try:
+            Person.objects.create(vk_id=vk_id, username=username, token=token)
+            response["token"] = token
+            response["status"] = True
+        except ValueError:
+            response["errors"] = [2, "not correct json"]
 
     return JsonResponse(response)
 
@@ -116,7 +110,7 @@ def get_map(request):
                 game_objects.append(game_object)
             
             response["game_objects"] = game_objects
-    except KeyError:
+    except (KeyError, ValueError):
         response["status"] = False
         response["errors"] = [2, "not correct json"]
     
