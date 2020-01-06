@@ -60,22 +60,22 @@ def register_user(request):
     username = data.get("username", None)
     response = {"status": False}
 
-    username_exist = Person.objects.filter(username__iexact=username)
-    vkuser_exist = Person.objects.filter(vk_id=vk_id)
+    try:
+        username_exist = Person.objects.filter(username__iexact=username)
+        vkuser_exist = Person.objects.filter(vk_id=vk_id)
 
-    if (not vk_id) or (not username):
-        response["errors"] = [0, "more data required"]
-    elif username_exist:
-        response["errors"] = [3, "username already exist"]
-    elif vkuser_exist:
-        response["errors"] = [4, "user already registered"]
-    else:
-        token = generate_token(vk_id=vk_id)
-        try:
+        if (not vk_id) or (not username):
+            response["errors"] = [0, "more data required"]
+        elif username_exist:
+            response["errors"] = [3, "username already exist"]
+        elif vkuser_exist:
+            response["errors"] = [4, "user already registered"]
+        else:
+            token = generate_token(vk_id=vk_id)
             Person.objects.create(vk_id=vk_id, username=username, token=token)
             response["token"] = token
             response["status"] = True
-        except ValueError:
+    except (KeyError, ValueError):
             response["errors"] = [2, "not correct json"]
 
     return JsonResponse(response)
