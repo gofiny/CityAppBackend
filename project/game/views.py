@@ -1,7 +1,7 @@
 from django.shortcuts import HttpResponse
 from django.http import JsonResponse
 from django.db.models import Q
-from .models import Person, MapObject
+#from .models import Person, MapObject
 import json
 import hashlib
 import string
@@ -76,7 +76,7 @@ def register_user(request):
             response["token"] = token
             response["status"] = True
     except (KeyError, ValueError):
-            response["errors"] = [2, "not correct json"]
+        response["errors"] = [2, "not correct json"]
 
     return JsonResponse(response)
 
