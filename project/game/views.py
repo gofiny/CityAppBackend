@@ -110,6 +110,7 @@ def get_map(request):
                 game_objects.append(game_object)
             
             response["game_objects"] = game_objects
+            #response["count"] = len(all_objects)
     except (KeyError, ValueError):
         response["status"] = False
         response["errors"] = [2, "not correct json"]
