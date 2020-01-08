@@ -15,7 +15,6 @@ class Person(models.Model):
 class GameObject(models.Model):
     '''Игровой объект'''
     name = models.CharField(max_length=20)
-    owner = models.ForeignKey(Person, on_delete=models.CASCADE, related_name="game_objects", null=True, default=None, blank=True)
     health = models.IntegerField(default=0)
     object_type = models.CharField(default=None, null=True, max_length=7)
 
@@ -46,6 +45,7 @@ class MapObject(models.Model):
     '''Игровой объект на карте'''
     x = models.IntegerField(default=0)
     y = models.IntegerField(default=0)
+    owner = models.ForeignKey(Person, on_delete=models.CASCADE, related_name="game_objects", null=True, default=None, blank=True)
     game_object = models.ForeignKey(GameObject, on_delete=models.CASCADE, related_name="on_map")
 
     def __str__(self):
@@ -56,5 +56,5 @@ class MapObject(models.Model):
         '''Возваращает рандомный объект на карте или None'''
         count = self.objects.all().count()
         if count > 0:
-            return self.objects.all()[randint(0, count)]
+            return self.objects.all()[randint(0, count - 1)]
         return None
