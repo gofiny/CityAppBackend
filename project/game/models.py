@@ -1,4 +1,5 @@
 from django.db import models
+from random import randint
 
 
 class Person(models.Model):
@@ -14,6 +15,7 @@ class Person(models.Model):
 class GameObject(models.Model):
     '''Игровой объект'''
     name = models.CharField(max_length=20)
+    owner = models.ForeignKey(Person, on_delete=models.CASCADE, related_name="game_objects", null=True, default=None, blank=True)
     health = models.IntegerField(default=0)
     object_type = models.CharField(default=None, null=True, max_length=7)
 
@@ -48,3 +50,11 @@ class MapObject(models.Model):
 
     def __str__(self):
         return f"X: {self.x} Y: {self.y}"
+
+    @classmethod
+    def get_random_object(self):
+        '''Возваращает рандомный объект на карте или None'''
+        count = self.objects.all().count()
+        if count > 0:
+            return self.objects.all()[randint(0, count)]
+        return None
