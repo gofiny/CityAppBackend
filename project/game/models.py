@@ -1,8 +1,8 @@
 from django.db import models
-from random import randint, shuffle
+import random
 
 
-class Person(models.Model):
+class Player(models.Model):
     '''Игрок'''
     username = models.CharField(max_length=25, unique=True)
     vk_id = models.IntegerField(unique=True)
@@ -32,8 +32,8 @@ class StaticObject(GameObject):
     @classmethod
     def get_random_gen_object(self):
         all_obj = list(self.objects.filter(name__contains="gen_"))
-        shuffle(all_obj)
-        return all_obj[randint(0, len(all_obj) - 1)]
+        random.shuffle(all_obj)
+        return all_obj[random.randint(0, len(all_obj) - 1)]
 
 
 class DynamicObject(GameObject):
@@ -51,7 +51,7 @@ class MapObject(models.Model):
     '''Игровой объект на карте'''
     x = models.IntegerField(default=0)
     y = models.IntegerField(default=0)
-    owner = models.ForeignKey(Person, on_delete=models.CASCADE, related_name="game_objects", null=True, default=None, blank=True)
+    owner = models.ForeignKey(Player, on_delete=models.CASCADE, related_name="game_objects", null=True, default=None, blank=True)
     game_object = models.ForeignKey(GameObject, on_delete=models.CASCADE, related_name="on_map")
 
     def __str__(self):
@@ -62,5 +62,5 @@ class MapObject(models.Model):
         '''Возвращает рандомный объект на карте или None'''
         count = self.objects.all().count()
         if count > 0:
-            return self.objects.all()[randint(0, count - 1)]
+            return self.objects.all()[random.randint(0, count - 1)]
         return None

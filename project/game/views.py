@@ -1,15 +1,15 @@
 from django.shortcuts import HttpResponse
 from django.http import JsonResponse
 from django.db.models import Q
-from .models import Person, MapObject, StaticObject, DynamicObject, GameObject
+from .models import Player, MapObject, StaticObject, DynamicObject, GameObject
 import json
 import hashlib
 import string
-from random import choice, randint
+import random
 
 
 def generate_string(size=18, chars=string.ascii_uppercase + string.digits):
-    return ''.join(choice(chars) for _ in range(size))
+    return ''.join(random.choice(chars) for _ in range(size))
 
 
 def generate_token(vk_id):
@@ -29,13 +29,13 @@ def get_data(request):
         data = json.loads(request.body.decode("utf-8"))
     except json.decoder.JSONDecodeError:
         status = False
-        errors = [2, "not correct json"]
+        errors = [2, "json is not correct"]
         return JsonResponse({"status": status, "errors": errors})
     return data
 
 
 def get_token(vk_id):
-    user = Person.objects.filter(vk_id=vk_id)
+    user = Player.objects.filter(vk_id=vk_id)
     if user:
         return user.first().token
     return None
@@ -44,12 +44,15 @@ def get_token(vk_id):
 def check_token(func):
     def wrapper(request):
         data = get_data(request)
-        user_token = get_token(data.get("vk_id", None))
-        taken_token = data.get("token", None)
-        if user_token == taken_token:
-            return func(request)
+        try:
+            user_token = get_token(data["vk_id"])
+            taken_token = data["token"]
+            if user_token == taken_token:
+                return func(request)
+            errors = [1, "token is not correct"]
+        except (ValueError, KeyError):
+            errors = [2, "json is not correct"]
         status = False
-        errors = [1, "token is not correct"]
         return JsonResponse({"status": status, "errors": errors})
     return wrapper
 
@@ -66,8 +69,8 @@ def check_relay(pos):
 
 
 def gen_random_pos(pos, min_c=20, max_c=70):
-    x = choice([randint(pos[0] - max_c, pos[0] - min_c), randint(pos[0] + min_c, pos[0] + max_c)])
-    y = choice([randint(pos[1] - max_c, pos[1] - min_c), randint(pos[1] + min_c, pos[1] + max_c)])
+    x = random.choice([random.randint(pos[0] - max_c, pos[0] - min_c), random.randint(pos[0] + min_c, pos[0] + max_c)])
+    y = random.choice([random.randint(pos[1] - max_c, pos[1] - min_c), random.randint(pos[1] + min_c, pos[1] + max_c)])
     return (x, y)
 
 
@@ -99,8 +102,8 @@ def register_user(request):
         vk_id = data["vk_id"]
         username = data["username"]
 
-        username_exist = Person.objects.filter(username__iexact=username)
-        vkuser_exist = Person.objects.filter(vk_id=vk_id)
+        username_exist = Player.objects.filter(username__iexact=username)
+        vkuser_exist = Player.objects.filter(vk_id=vk_id)
 
         if username_exist:
             response["errors"] = [3, "username already exist"]
@@ -108,7 +111,7 @@ def register_user(request):
             response["errors"] = [4, "user already registered"]
         else:
             token = generate_token(vk_id=vk_id)
-            player = Person.objects.create(vk_id=vk_id, username=username, token=token)
+            player = Player.objects.create(vk_id=vk_id, username=username, token=token)
             create_spawn(owner=player)
             response["token"] = token
             response["status"] = True
@@ -129,7 +132,7 @@ def get_spawn(request):
         response["coords"] = {"x": spawn.x, "y": spawn.y}
     except (KeyError, ValueError):
         response["errors"] = [2, "json is not correct"]
-    except (Person.DoesNotExist, MapObject.DoesNotExist) as ex:
+    except (Player.DoesNotExist, MapObject.DoesNotExist) as ex:
         response["errors"] = [5, str(ex)]
 
     return JsonResponse(response)
@@ -137,7 +140,7 @@ def get_spawn(request):
 
 
 def get_map(request):
-    '''Возваращет объекты расположенные на карте'''
+    '''Возвращает объекты расположенные на карте'''
     data = get_data(request)
     response = {"status": True, "game_objects": None}
     try:
