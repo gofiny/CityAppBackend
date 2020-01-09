@@ -65,9 +65,9 @@ def check_relay(pos):
     return True
 
 
-def gen_random_pos(pos):
-    x = choice([randint(pos[0] - 70, pos[0] - 20), randint(pos[0] + 20, pos[0] + 70)])
-    y = choice([randint(pos[1] - 70, pos[1] - 20), randint(pos[1] + 20, pos[1] + 70)])
+def gen_random_pos(pos, min_c=20, max_c=70):
+    x = choice([randint(pos[0] - max_c, pos[0] - min_c), randint(pos[0] + min_c, pos[0] + max_c)])
+    y = choice([randint(pos[1] - max_c, pos[1] - min_c), randint(pos[1] + min_c, pos[1] + max_c)])
     return (x, y)
 
 
@@ -127,7 +127,7 @@ def get_spawn(request):
         spawn = MapObject.objects.get(owner__vk_id=vk_id, game_object__name="spawn")
         response["status"] = True
         response["coords"] = {"x": spawn.x, "y": spawn.y}
-    except KeyError:
+    except (KeyError, ValueError):
         response["errors"] = [2, "json is not correct"]
     except (Person.DoesNotExist, MapObject.DoesNotExist) as ex:
         response["errors"] = [5, str(ex)]
@@ -137,6 +137,7 @@ def get_spawn(request):
 
 
 def get_map(request):
+    '''Возваращет объекты расположенные на карте'''
     data = get_data(request)
     response = {"status": True, "game_objects": None}
     try:
@@ -155,7 +156,7 @@ def get_map(request):
             for map_object in all_objects:
                 game_object = {
                     "name": map_object.game_object.name,
-                    "owner": map_object.owner.username,
+                    "owner": None if not hasattr(map_object.owner, "username") else map_object.owner.username,
                     "health": map_object.game_object.health,
                     "type": map_object.game_object.object_type,
                     "coords": {
@@ -172,3 +173,19 @@ def get_map(request):
         response["errors"] = [2, "not correct json"]
     
     return JsonResponse(response)
+
+
+def gen_objects(request):
+    '''Генерирует случайные объекты-ресурсы на карте'''
+    counter = 0
+    while counter <= 15:
+        random_obj = MapObject.get_random_object()
+        pos = gen_random_pos(pos=(random_obj.x, random_obj.y), min_c=1)
+        is_exist = MapObject.objects.filter(x=pos[0], y=pos[1])
+        if is_exist:
+            continue
+        obj = StaticObject.get_random_gen_object()
+        MapObject.objects.create(x=pos[0], y=pos[1], game_object=obj)
+        counter += 1
+
+    return HttpResponse(status=200)

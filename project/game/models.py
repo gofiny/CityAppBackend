@@ -1,5 +1,5 @@
 from django.db import models
-from random import randint
+from random import randint, shuffle
 
 
 class Person(models.Model):
@@ -29,6 +29,12 @@ class StaticObject(GameObject):
         self.object_type = "static"
         super().save(*args, **kwargs)
 
+    @classmethod
+    def get_random_gen_object(self):
+        all_obj = list(self.objects.filter(name__contains="gen_"))
+        shuffle(all_obj)
+        return all_obj[randint(0, len(all_obj) - 1)]
+
 
 class DynamicObject(GameObject):
     '''Динамический игровой объект'''
@@ -53,7 +59,7 @@ class MapObject(models.Model):
 
     @classmethod
     def get_random_object(self):
-        '''Возваращает рандомный объект на карте или None'''
+        '''Возвращает рандомный объект на карте или None'''
         count = self.objects.all().count()
         if count > 0:
             return self.objects.all()[randint(0, count - 1)]
