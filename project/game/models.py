@@ -15,7 +15,7 @@ class Player(models.Model):
 class GameObject(models.Model):
     '''Игровой объект'''
     name = models.CharField(max_length=20)
-    health = models.IntegerField(default=0)
+    health = models.IntegerField(default=10)
     object_type = models.CharField(default=None, null=True, max_length=7)
 
 
@@ -38,6 +38,8 @@ class StaticObject(GameObject):
 
 class DynamicObject(GameObject):
     '''Динамический игровой объект'''
+    speed = models.IntegerField(default=10)
+    power = models.IntegerField(default=10)
 
     def __str__(self):
         return f"{self.name}"

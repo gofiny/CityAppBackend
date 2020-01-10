@@ -93,6 +93,12 @@ def create_spawn(owner):
     pos = get_free_pos()
     spawn = StaticObject.objects.get_or_create(name="spawn", health=1000)[0]
     MapObject.objects.create(x=pos[0], y=pos[1], owner=owner, game_object=spawn)
+    return pos
+
+
+def create_slave(player, pos):
+    slave = DynamicObject.objects.get_or_create(name="slave")[0]
+    MapObject.objects.create(x=pos[0], y=pos[1], owner=player, game_object=slave)
 
 
 def register_user(request):
@@ -112,7 +118,8 @@ def register_user(request):
         else:
             token = generate_token(vk_id=vk_id)
             player = Player.objects.create(vk_id=vk_id, username=username, token=token)
-            create_spawn(owner=player)
+            pos = create_spawn(owner=player)
+            create_slave(player=player, pos=pos)
             response["token"] = token
             response["status"] = True
     except (KeyError, ValueError):
