@@ -24,6 +24,12 @@ async def get_token(pool, vk_id):
         return token
 
 
+async def gen_random_pos(pos, min_c=20, max_c=70):
+    x = random.choice([random.randint(pos[0] - max_c, pos[0] - min_c), random.randint(pos[0] + min_c, pos[0] + max_c)])
+    y = random.choice([random.randint(pos[1] - max_c, pos[1] - min_c), random.randint(pos[1] + min_c, pos[1] + max_c)])
+    return (x, y)
+
+
 def check_token(func):
     async def wrapper(request):
         try:
