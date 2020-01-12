@@ -1,4 +1,4 @@
-from aiohttp.web import json_response
+from aiohttp.web import json_response, Request
 from json.decoder import JSONDecodeError
 from exceptions import UserAlreadyExist
 import staff
@@ -11,11 +11,12 @@ async def test_api(request):
     return json_response({"status": True})
 
 
-async def register_user(request):
+async def register_user(request: Request) -> json_response:
+    '''Метод регистрации игрока'''
     response = {"status": False}
     try:
-        data = await request.json()
-        token = await staff.create_user(pool=request.app["pool"], vk_id=data["vk_id"], username=data["username"])
+        data: dict = await request.json()
+        token = await staff.make_user(pool=request.app["pool"], vk_id=data["vk_id"], username=data["username"])
         response["status"] = True
         response["token"] = token
     except (ValueError, KeyError, JSONDecodeError):
