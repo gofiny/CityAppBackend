@@ -39,6 +39,21 @@ def check_token(func):
     return wrapper
 
 
+
+async def check_relay(conn, pos):
+    min_coords = (pos[0] - 20, pos[1] - 20)
+    max_coords = (pos[0] + 20, pos[1] + 20)
+    objects = await conn.fetchval(
+        "SELECT name FROM game_objects WHERE "
+        f"x > {min_coords[0]} AND x < {max_coords[0]} "
+        f"AND y > {min_coords[1]} AND y < {max_coords[1]} "
+        f"AND name <> LIKE '%gen_%';"
+    )
+    if objects:
+        return False
+    return True
+
+
 async def check_player(conn, vk_id, username):
     user = await conn.fetchval(f"SELECT username FROM players WHERE vk_id = {vk_id} OR username = '{username}';")
     return user
