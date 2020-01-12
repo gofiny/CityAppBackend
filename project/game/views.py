@@ -166,7 +166,7 @@ def get_map(request):
             for map_object in all_objects:
                 game_object = {
                     "name": map_object.game_object.name,
-                    "owner": None if not hasattr(map_object.owner, "username") else map_object.owner.username,
+                    "owner": None if not hasattr(map_object.owner, "vk_id") else map_object.owner.vk_id,
                     "health": map_object.game_object.health,
                     "type": map_object.game_object.object_type,
                     "coords": {
