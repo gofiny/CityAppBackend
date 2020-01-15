@@ -1,3 +1,6 @@
+'''Информация для подключения к базе данных'''
+
+
 USER = "telegram"
 PASSWORD = "telpass123"
 DATABASE = "global_chat"
