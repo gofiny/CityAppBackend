@@ -4,10 +4,9 @@ from exceptions import UserAlreadyExist
 import staff
 
 
-@staff.check_token
 async def test_api(request):
     data = await request.json()
-
+    await staff.test(request.app['pool'])
     return json_response({"status": True})
 
 

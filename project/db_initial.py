@@ -30,12 +30,12 @@ game_objects = '''CREATE TABLE IF NOT EXISTS "game_objects"
 
 static_objects = '''CREATE TABLE IF NOT EXISTS "static_objects"
 (
-    "game_object_ptr_id" integer NOT NULL PRIMARY KEY REFERENCES "game_objects" ("id") DEFERRABLE INITIALLY DEFERRED
+    "game_object_ptr_id" integer NOT NULL PRIMARY KEY REFERENCES "game_objects" ("id") ON DELETE cascade
 );'''
 
-dynamic_objects = '''CREATE TABLE IF NOT EXISTS "dynamic_objectc"
+dynamic_objects = '''CREATE TABLE IF NOT EXISTS "dynamic_objects"
 (
-    "game_object_ptr_id" integer NOT NULL PRIMARY KEY REFERENCES "game_objects" ("id") DEFERRABLE INITIALLY DEFERRED,
+    "game_object_ptr_id" integer NOT NULL PRIMARY KEY REFERENCES "game_objects" ("id") ON DELETE cascade,
     "power" integer NOT NULL,
     "speed" integer NOT NULL
 );'''
@@ -45,8 +45,8 @@ map_objects = '''CREATE TABLE IF NOT EXISTS "map_objects"
     "id" SERIAL NOT NULL PRIMARY KEY,
     "x" integer NOT NULL,
     "y" integer NOT NULL,
-    "game_object_id" integer NOT NULL REFERENCES "game_objects" ("id") DEFERRABLE INITIALLY DEFERRED,
-    "owner_id" integer NULL REFERENCES "players" ("id") DEFERRABLE INITIALLY DEFERRED
+    "game_object_id" integer NOT NULL REFERENCES "game_objects" ("id") ON DELETE cascade,
+    "owner_id" integer NULL REFERENCES "players" ("id") ON DELETE cascade
 );'''
 
 map_objects_game_object_index = '''CREATE INDEX "map_object_game_object_id_dbce3a33" ON "map_objects" ("game_object_id");'''
