@@ -1,6 +1,6 @@
 '''Подкапотка запросов к БД'''
 from json.decoder import JSONDecodeError
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 from exceptions import UserAlreadyExist, UserOrSpawnNotExist
 import random
 import string
@@ -39,10 +39,11 @@ async def gen_random_pos(pos: Tuple[int, int], min_c: int = 20, max_c: int = 70)
     return (x_coord, y_coord)
 
 
-async def get_random_mapobject(conn: Connection) -> Optional[Record]:
+async def get_random_mapobject(conn: Connection, limit: int = 1) -> List[Optional[Record]]:
     '''Получает рандомный объект на карте'''
-    map_object: Optional[Record] = await conn.fetchrow(
-        "SELECT * FROM map_objects OFFSET RANDOM() * (SELECT COUNT(*) FROM map_objects) LIMIT 1;"
+    map_object: List[Optional[Record]] = await conn.fetch(
+        "SELECT * FROM map_objects OFFSET RANDOM() * "
+        f"(SELECT COUNT(*) FROM map_objects) LIMIT {limit};"
     )
     return map_object
 
@@ -84,7 +85,7 @@ async def get_free_pos(conn: Connection) -> Tuple[int, int]:
     while True:
         random_obj = await get_random_mapobject(conn)
         if random_obj:
-            new_pos = await gen_random_pos(pos=(random_obj['x'], random_obj['y']))
+            new_pos = await gen_random_pos(pos=(random_obj[0]['x'], random_obj[0]['y']))
             is_exist: Optional[int] = await conn.fetchval(
                 f"SELECT x FROM map_objects WHERE x = {new_pos[0]} AND y = {new_pos[1]}"
             )
@@ -152,7 +153,7 @@ async def create_user(conn: Connection, vk_id: int, username: str) -> Tuple[int,
     return (player_id, token)
 
 
-async def make_user(pool: Connection, vk_id: int, username: str) -> str:
+async def make_user(pool: Pool, vk_id: int, username: str) -> str:
     '''Создает игрока, генерирует ему точку спауна и выдет пешку'''
     async with pool.acquire() as conn:
         player_id, token = await create_user(conn, vk_id, username)
@@ -162,10 +163,10 @@ async def make_user(pool: Connection, vk_id: int, username: str) -> str:
         return token
 
 
-async def get_spawn_coords(pool: Connection, vk_id: int) -> Record:
+async def get_spawn_coords(pool: Pool, vk_id: int) -> Record:
     '''Возвращает точку спауна игрока'''
     async with pool.acquire() as conn:
-        spawn = await conn.fetchrow(
+        spawn: Optional[Record] = await conn.fetchrow(
             "SELECT mo.x, mo.y FROM map_objects mo "
             "INNER JOIN game_objects go ON mo.game_object_id=go.id "
             "INNER JOIN players ON mo.owner_id=players.id "
@@ -174,3 +175,45 @@ async def get_spawn_coords(pool: Connection, vk_id: int) -> Record:
         if not spawn:
             raise UserOrSpawnNotExist
         return spawn
+
+
+async def get_map(pool: Pool, x_coord: int, y_coord: int, width: int, height: int) -> List[Optional[Record]]:
+    '''Возвращает объекты на карте из области'''
+    x_coords = (x_coord - (width // 2), x_coord + (width // 2))
+    y_coords = (y_coord - (height // 2), y_coord + (height // 2))
+    async with pool.acquire() as conn:
+        all_objects: List[Optional[Record]] = await conn.fetch(
+            "SELECT go.name, players.vk_id, go.health, go.object_type, mo.x, mo.y "
+            "FROM map_objects mo "
+            "LEFT JOIN players ON mo.owner_id=players.id "
+            "LEFT JOIN game_objects go ON mo.game_object_id=go.id "
+            f"WHERE mo.x >= {x_coords[0]} AND mo.x <= {x_coords[1]} "
+            f"AND mo.y >= {y_coords[0]} AND mo.y <= {y_coords[1]}"
+        )
+
+        return all_objects
+
+
+async def gen_objects(pool: Pool) -> None:
+    '''Генерирует объекты для фарма на карте'''
+    async with pool.acquire() as conn:
+        all_objects: List[Record] = await conn.fetch(
+            "SELECT id FROM game_objects "
+            f"WHERE name LIKE '%gen_%'"
+        )
+        all_objects *= 7
+        random_objects = await get_random_mapobject(conn, len(all_objects))
+        values: List[Tuple[int, int, int]] = []
+        for random_obj in random_objects:
+            pos = await gen_random_pos(pos=(random_obj["x"], random_obj["y"]), min_c=1)
+            is_exist = await conn.fetchval(
+                f"SELECT x FROM map_objects WHERE x={pos[0]} AND y={pos[1]}"
+            )
+            if is_exist:
+                continue
+            values.append((pos[0], pos[1], all_objects.pop()["id"]))
+        await conn.executemany(
+            "INSERT INTO map_objects (x, y, game_object_id) "
+            "VALUES ($1, $2, $3);", values
+        )
+            

@@ -1,7 +1,7 @@
 '''Обработчик запросов приходящих на сервер'''
 from exceptions import UserAlreadyExist, UserOrSpawnNotExist
 from json.decoder import JSONDecodeError
-from aiohttp.web import json_response, Request
+from aiohttp.web import json_response, Request, Response
 import staff
 
 
@@ -26,7 +26,7 @@ async def register_user(request: Request) -> json_response:
 
 
 async def get_spawn(request: Request) -> json_response:
-    '''Возваращает координаты спауна игрока'''
+    '''Возвращает координаты спауна игрока'''
     response = {"status": False}
     try:
         data: dict = await request.json()
@@ -42,3 +42,12 @@ async def get_spawn(request: Request) -> json_response:
         response["errors"] = [2, "json is not correct"]
 
     return json_response(response)
+
+
+async def gen_mapobjects(request: Request) -> json_response:
+    '''Метод генерации рандомных объектов на карте'''
+    #try:
+    await staff.gen_objects(pool=request.app["pool"])
+    return Response()
+    # except:
+    #     return Response(status=300)
