@@ -51,3 +51,38 @@ async def gen_mapobjects(request: Request) -> json_response:
     return Response()
     # except:
     #     return Response(status=300)
+
+
+async def get_map(request: Request) -> json_response:
+    '''Возвращает объекты расположенные на карте'''
+    response = {"status": True, "game_objects": None}
+    try:
+        data: dict = await request.json()
+        map_objects = await staff.get_map(
+            pool=request.app["pool"],
+            x_coord=data["coords"][0],
+            y_coord=data["coords"][1],
+            width=data["scope"][0],
+            height=data["scope"][1]
+        )
+
+        if map_objects:
+            game_objects = []
+            for map_object in map_objects:
+                game_object = {
+                    "name": map_object["name"],
+                    "owner": map_object["vk_id"],
+                    "health": map_object["health"],
+                    "type": map_object["object_type"],
+                    "coords": {
+                        "x": map_object["x"],
+                        "y": map_object["y"]
+                    }
+                }
+                game_objects.append(game_object)
+            response["game_objects"] = game_objects
+    except (ValueError, KeyError, JSONDecodeError):
+        response["status"] = False
+        response["errors"] = [2, "json is not correct"]
+
+    return json_response(response)
