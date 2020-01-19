@@ -1,5 +1,6 @@
 '''Входная точка приложения'''
 import asyncio
+import logging
 import asyncpg
 from aiohttp import web
 import config
@@ -8,7 +9,12 @@ from urls import URLS
 
 async def init_app():
     '''Ицициализация приложения'''
-    __app = web.Application()
+    stio_handler = logging.StreamHandler()
+    stio_handler.setLevel(logging.INFO)
+    _logger = logging.getLogger('aiohttp.access')
+    _logger.addHandler(stio_handler)
+    _logger.setLevel(logging.DEBUG)
+    __app = web.Application(logger=_logger)
     __app["pool"] = await asyncpg.create_pool(dsn=config.DESTINATION)
     __app.router.add_routes(URLS)
     return __app
@@ -17,4 +23,4 @@ async def init_app():
 if __name__ == "__main__":
     LOOP = asyncio.get_event_loop()
     APP = LOOP.run_until_complete(init_app())
-    web.run_app(APP)
+    web.run_app(APP, access_log_format='%t %a "%r" -> [%s] %b bytes in %Tf seconds.')
