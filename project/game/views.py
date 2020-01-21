@@ -151,10 +151,10 @@ def get_map(request):
     data = get_data(request)
     response = {"status": True, "game_objects": None}
     try:
-        x = data['coords'][0]
-        y = data['coords'][1]
-        width = data['scope'][0]
-        height = data['scope'][1]
+        x = data['coors']['x']
+        y = data['coors']['y']
+        width = data['scope']['width']
+        height = data['scope']['height']
 
         x_coords = (x - (width // 2), x + (width // 2))
         y_coords = (y - (height // 2), y + (height // 2))
