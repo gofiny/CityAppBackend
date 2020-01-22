@@ -1,5 +1,6 @@
 from django.db import models
 import random
+import uuid
 
 
 class Player(models.Model):
@@ -15,9 +16,14 @@ class Player(models.Model):
 
 class GameObject(models.Model):
     '''Игровой объект'''
+    uuid = models.UUIDField(unique=False, default=None, null=True)
     name = models.CharField(max_length=20)
     health = models.IntegerField(default=10)
     object_type = models.CharField(default=None, null=True, max_length=7)
+
+    def save(self, *args, **kwargs):
+        self.uuid = uuid.uuid4()
+        super().save(*args, **kwargs)
 
 
 class StaticObject(GameObject):
