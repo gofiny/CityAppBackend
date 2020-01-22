@@ -5,11 +5,12 @@ import random
 class Player(models.Model):
     '''Игрок'''
     username = models.CharField(max_length=25, unique=True)
-    vk_id = models.IntegerField(unique=True)
+    user_id = models.CharField(unique=True, max_length=32)
     token = models.CharField(max_length=64)
+    metadata = models.CharField(max_length=32, null=True)
 
     def __str__(self):
-        return f"[{self.vk_id}] {self.username}"
+        return f"[{self.user_id}] {self.username}"
 
 
 class GameObject(models.Model):

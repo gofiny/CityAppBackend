@@ -12,10 +12,10 @@ def generate_string(size=18, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
 
 
-def generate_token(vk_id):
+def generate_token(user_id):
     salt = "sFTtzfpkqdSuDxrwTQGLCFZlLofLYG"
     random_string = generate_string()
-    finally_string = str(vk_id) + salt + random_string
+    finally_string = str(user_id) + salt + random_string
     hash_string = hashlib.sha256(finally_string.encode('utf-8')).hexdigest()
     return hash_string
 
@@ -34,8 +34,8 @@ def get_data(request):
     return data
 
 
-def get_token(vk_id):
-    user = Player.objects.filter(vk_id=vk_id)
+def get_token(user_id):
+    user = Player.objects.filter(user_id=user_id)
     if user:
         return user.first().token
     return None
@@ -45,7 +45,7 @@ def check_token(func):
     def wrapper(request):
         data = get_data(request)
         try:
-            user_token = get_token(data["vk_id"])
+            user_token = get_token(data["user_id"])
             taken_token = data["token"]
             if user_token == taken_token:
                 return func(request)
@@ -105,19 +105,20 @@ def register_user(request):
     data = get_data(request)
     response = {"status": False}
     try:
-        vk_id = data["vk_id"]
+        user_id = data["user_id"]
         username = data["username"]
+        metadata = data.get("meta_data")
 
         username_exist = Player.objects.filter(username__iexact=username)
-        vkuser_exist = Player.objects.filter(vk_id=vk_id)
+        vkuser_exist = Player.objects.filter(user_id=user_id)
 
         if username_exist:
             response["errors"] = [3, "username already exist"]
         elif vkuser_exist:
             response["errors"] = [4, "user already registered"]
         else:
-            token = generate_token(vk_id=vk_id)
-            player = Player.objects.create(vk_id=vk_id, username=username, token=token)
+            token = generate_token(user_id=user_id)
+            player = Player.objects.create(user_id=user_id, username=username, token=token, metadata=str(metadata))
             pos = create_spawn(owner=player)
             create_pawn(player=player, pawn_name="woodcutter", pos=pos)
             response["token"] = token
@@ -126,24 +127,6 @@ def register_user(request):
         response["errors"] = [2, "json is not correct"]
 
     return JsonResponse(response)
-
-
-def get_spawn(request):
-    data = get_data(request)
-    response = {"status": False}
-
-    try:
-        vk_id = data["vk_id"]
-        spawn = MapObject.objects.get(owner__vk_id=vk_id, game_object__name="spawn")
-        response["status"] = True
-        response["coords"] = {"x": spawn.x, "y": spawn.y}
-    except (KeyError, ValueError):
-        response["errors"] = [2, "json is not correct"]
-    except (Player.DoesNotExist, MapObject.DoesNotExist) as ex:
-        response["errors"] = [5, str(ex)]
-
-    return JsonResponse(response)
-
 
 
 def get_map(request):
@@ -166,7 +149,7 @@ def get_map(request):
             for map_object in all_objects:
                 game_object = {
                     "name": map_object.game_object.name,
-                    "owner": None if not hasattr(map_object.owner, "vk_id") else map_object.owner.vk_id,
+                    "owner": None if not hasattr(map_object.owner, "user_id") else map_object.owner.user_id,
                     "health": map_object.game_object.health,
                     "type": map_object.game_object.object_type,
                     "coords": {
