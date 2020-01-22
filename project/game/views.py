@@ -182,3 +182,25 @@ def gen_objects(request):
         counter += 1
 
     return HttpResponse(status=200)
+
+
+@check_token
+def get_profile(request):
+    response = {"status": True}
+    try:
+        data = get_data(request)
+
+        user_id = data["user_id"]
+        player = Player.objects.get(user_id=user_id)
+        spawn_obj = player.game_objects.filter(game_object__name="spawn").get()
+        response["username"] = player.username
+        response["meta_data"] = player.metadata
+        response["spawn"] = {"x": spawn_obj.x, "y": spawn_obj.y}
+        response["resources"] = ["Пока пусто"]
+    except (KeyError, ValueError, Player.DoesNotExist):
+        response["errors"] = ["2", "json is not correct"]
+        response["status"] = False
+
+    return JsonResponse(response)
+
+    
