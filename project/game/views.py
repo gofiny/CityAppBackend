@@ -98,7 +98,7 @@ def create_spawn(owner):
 
 def create_pawn(player, pawn_name, pos):
     pawn = DynamicObject.objects.get_or_create(name=pawn_name)[0]
-    MapObject.objects.create(x=pos[0], y=pos[1], owner=player, game_object=pawn)
+    MapObject.objects.create(x=pos[0] + 1, y=pos[1], owner=player, game_object=pawn)
 
 
 def register_user(request):
