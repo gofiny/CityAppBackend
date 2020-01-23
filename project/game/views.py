@@ -197,7 +197,7 @@ def get_profile(request):
         response["username"] = player.username
         response["meta_data"] = player.metadata
         response["spawn"] = {"x": spawn_obj.x, "y": spawn_obj.y}
-        response["resources"] = ["Пока пусто"]
+        response["resources"] = ["nothing"]
     except (KeyError, ValueError, Player.DoesNotExist):
         response["errors"] = ["2", "json is not correct"]
         response["status"] = False
