@@ -14,7 +14,7 @@ async def init_app():
     stio_handler.setLevel(logging.INFO)
     file_logs = logging.FileHandler("server.log")
     file_logs.setLevel(logging.INFO)
-    _logger = logging.getLogger('aiohttp.access')
+    _logger = logging.getLogger('aiohttp.server')
     _logger.addHandler(file_logs)
     _logger.addHandler(stio_handler)
     _logger.setLevel(logging.DEBUG)
