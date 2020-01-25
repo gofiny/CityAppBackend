@@ -145,7 +145,7 @@ async def create_user(conn: Connection, user_id: int, username: str) -> Tuple[uu
     token = await generate_token(user_id)
     player_uuid: int = await conn.fetchval(
         "INSERT INTO players (uuid, user_id, username, token) "
-        f"VALUES ({uuid.uuid4()}, {user_id}, '{username}', '{token}') RETURNING uuid;"
+        f"VALUES ({uuid.uuid4()}, '{user_id}', '{username}', '{token}') RETURNING uuid;"
     )
     return (player_uuid, token)
 
