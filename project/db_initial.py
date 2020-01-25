@@ -43,18 +43,18 @@ STATIC_OBJECTS = '''CREATE TABLE IF NOT EXISTS "static_objects"
     "game_object_ptr" uuid NOT NULL PRIMARY KEY REFERENCES "game_objects" ("uuid") ON DELETE cascade
 );'''
 
-GENERATED_OBJECTS = '''CREATE TABLE IF NOT EXIST "generated_objects"
+GENERATED_OBJECTS = '''CREATE TABLE IF NOT EXISTS "generated_objects"
 (
     "game_object_ptr" uuid NOT NULL PRIMARY KEY REFERENCES "game_objects" ("uuid") ON DELETE cascade
 );'''
 
-PawnObjects = '''CREATE TABLE IF NOT EXIST "pawn_objects"
+PawnObjects = '''CREATE TABLE IF NOT EXISTS "pawn_objects"
 (
     "game_object_ptr" uuid NOT NULL PRIMARY KEY REFERENCES "game_objects" ("uuid") ON DELETE cascade,
     "max_tasks" integer NOT NULL
 )'''
 
-MAP_OBJECTS = '''CREATE TABLE IF NOT EXIST "map_objects"
+MAP_OBJECTS = '''CREATE TABLE IF NOT EXISTS "map_objects"
 (
     "uuid" uuid NOT NULL PRIMARY KEY,
     "x" integer NOT NULL,
@@ -63,7 +63,7 @@ MAP_OBJECTS = '''CREATE TABLE IF NOT EXIST "map_objects"
     "owner" uuid NULL REFERENCES "players" ("uuid") ON DELETE cascade
 );'''
 
-PlayerResources = '''CREATE TABLE IF NOT EXIST "players_resources
+PlayerResources = '''CREATE TABLE IF NOT EXISTS "players_resources
 (
     "uuid" uuid NOT NULL PRIMARY KEY,
     "player" uuid NOT NULL REFERENCES "players" ("uuid") ON DELETE cascade,
