@@ -7,5 +7,5 @@ URLS = [
     web.post("/async/register_user", register_user),
     web.post("/async/gen_objects", gen_mapobjects),
     web.post("/async/get_map", get_map),
-    web.pos("async/test", test)
+    web.post("async/test", test)
 ]
