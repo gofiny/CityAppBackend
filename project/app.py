@@ -1,5 +1,6 @@
 '''Входная точка приложения'''
 import asyncio
+import argparse
 import logging
 import asyncpg
 from aiohttp import web
@@ -21,6 +22,9 @@ async def init_app():
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--path')
     LOOP = asyncio.get_event_loop()
     APP = LOOP.run_until_complete(init_app())
-    web.run_app(APP, access_log_format='%t %a "%r" -> [%s] %b bytes in %Tf seconds.')
+    args = parser.parse_args()
+    web.run_app(APP, access_log_format='%t %a "%r" -> [%s] %b bytes in %Tf seconds.', path=args.path)
