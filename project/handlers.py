@@ -5,6 +5,10 @@ from aiohttp.web import json_response, Request, Response
 import staff
 
 
+async def test(request: Request) -> json_response:
+    return json_response("status": True)
+
+
 async def register_user(request: Request) -> json_response:
     '''Метод регистрации игрока'''
     response = {"status": False}
