@@ -52,7 +52,7 @@ async def get_map(request: Request) -> json_response:
             for map_object in map_objects:
                 game_object = {
                     "name": map_object["name"],
-                    "owner": map_object["vk_id"],
+                    "owner": map_object["username"],
                     "health": map_object["health"],
                     "type": map_object["object_type"],
                     "coors": {
@@ -67,3 +67,7 @@ async def get_map(request: Request) -> json_response:
         response["errors"] = [2, "json is not correct"]
 
     return json_response(response)
+
+
+async def get_profile(request: Request) -> json_response:
+    """Возвращает инфу о игроке"""

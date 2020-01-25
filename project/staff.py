@@ -5,6 +5,7 @@ from exceptions import UserAlreadyExist, UserOrSpawnNotExist
 import random
 import string
 import hashlib
+import uuid
 from asyncpg import Record
 from asyncpg.pool import Pool
 from asyncpg.connection import Connection
@@ -54,10 +55,10 @@ async def check_relay(conn: Connection, pos: Tuple[int, int]) -> bool:
     max_coords = (pos[0] + 20, pos[1] + 20)
     objects: Optional[str] = await conn.fetchval(
         "SELECT go.name FROM map_objects mo "
-        "INNER JOIN game_objects go ON mo.game_object_id=go.id WHERE "
+        "INNER JOIN game_objects go ON mo.game_object=go.uuid WHERE "
         f"mo.x >= {min_coords[0]} AND mo.x <= {max_coords[0]} "
         f"AND mo.y >= {min_coords[1]} AND mo.y <= {max_coords[1]} "
-        f"AND go.name NOT LIKE '%gen_%';"
+        f"AND go.object_type NOT LIKE 'generated';"
     )
     if objects:
         return False
@@ -98,67 +99,63 @@ async def get_free_pos(conn: Connection) -> Tuple[int, int]:
         return (0, 0)
 
 
-async def create_object_on_map(conn: Connection, x: int, y: int, game_object_id: int, owner_id: int) -> None:
+async def create_object_on_map(conn: Connection, x: int, y: int, game_object_uuid: int, owner_uuid: int) -> None:
     '''Создаем объект на карте'''
     await conn.execute(
-        "INSERT INTO map_objects (x, y, game_object_id, owner_id) "
-        f"VALUES ({x}, {y}, {game_object_id}, {owner_id});"
+        "INSERT INTO map_objects (uuid, x, y, game_object, owner) "
+        f"VALUES ({uuid.uuid4()}, {x}, {y}, {game_object_uuid}, {owner_uuid});"
     )
 
 
-async def create_spawn(conn: Connection, player_id: int) -> Tuple[int, int]:
+async def create_spawn(conn: Connection, player_uuid: uuid.uuid4) -> Tuple[int, int]:
     '''Создает точку спауна игрока'''
     pos = await get_free_pos(conn)
-    spawn_id: Optional[int] = await conn.fetchval(
-        "SELECT id FROM game_objects WHERE name = 'spawn';"
+    spawn_uuid: Optional[uuid.uuid4] = await conn.fetchval(
+        "SELECT uuid FROM game_objects WHERE name = 'spawn';"
     )
-    if not spawn_id:
-        spawn_id: int = await conn.fetchval(
-            "WITH go AS (INSERT INTO game_objects (name, health, object_type) "
-            "VALUES ('spawn', 1000, 'static') RETURNING id) "
-            "INSERT INTO static_objects (game_object_ptr_id) "
-            "VALUES ((SELECT id FROM go)) RETURNING (SELECT id FROM go);"
+    if not spawn_uuid:
+        spawn_uuid: uuid.uuid4 = await conn.fetchval(
+            "WITH go AS (INSERT INTO game_objects (uuid, name, health, object_type) "
+            f"VALUES ({uuid.uuid4}, 'spawn', 1000, 'static') RETURNING uuid) "
+            "INSERT INTO static_objects (game_object_ptr) "
+            "VALUES ((SELECT uuid FROM go)) RETURNING (SELECT uuid FROM go);"
         )
-    await create_object_on_map(conn, x=pos[0], y=pos[1], game_object_id=spawn_id, owner_id=player_id)
+    await create_object_on_map(conn, x=pos[0], y=pos[1], game_object_uuid=spawn_uuid, owner_uuid=player_uuid)
     return pos
 
 
-async def create_pawn(conn: Connection, player_id: int, pawn_name: str, pos: Tuple[int, int]) -> None:
+async def create_pawn(conn: Connection, player_uuid: int, pawn_name: str, pos: Tuple[int, int]) -> None:
     '''Создает пешку'''
-    pawn_id: Optional[int] = await conn.fetchval(
-        f"SELECT id FROM game_objects WHERE name = '{pawn_name}'"
+    pawn_uuid: int = await conn.fetchval(
+        "WITH go AS (INSERT INTO game_objects (uuid, name, health, object_type) "
+        f"VALUES ({uuid.uuid4()}, '{pawn_name}', 10, 'generated') RETURNING uuid) "
+        "INSERT INTO generated_objects (game_object_ptr) "
+        "VALUES ((SELECT uuid FROM go)) RETURNING (SELECT uuid FROM go);"
     )
-    if not pawn_id:
-        pawn_id: int = await conn.fetchval(
-            "WITH go AS (INSERT INTO game_objects (name, health, object_type) "
-            f"VALUES ('{pawn_name}', 10, 'dynamic') RETURNING id) "
-            "INSERT INTO dynamic_objects (game_object_ptr_id, power, speed) "
-            "VALUES ((SELECT id FROM go), 10, 10) RETURNING (SELECT id FROM go);"
-        )
-    await create_object_on_map(conn, x=pos[0], y=pos[1], game_object_id=pawn_id, owner_id=player_id)
+    await create_object_on_map(conn, x=pos[0], y=pos[1], game_object_uuid=pawn_uuid, owner_uuid=player_uuid)
 
 
-async def create_user(conn: Connection, user_id: int, username: str) -> Tuple[int, str]:
+async def create_user(conn: Connection, user_id: int, username: str) -> Tuple[uuid.uuid4, str]:
     '''Создает игрока'''
     user: Optional[str] = await conn.fetchval(
-        f"SELECT username FROM players WHERE user_id = {user_id} OR username = '{username}';"
+        f"SELECT username FROM players WHERE user_id = '{user_id}' OR username = '{username}';"
     )
     if user:
         raise UserAlreadyExist
     token = await generate_token(user_id)
-    player_id: int = await conn.fetchval(
-        f"INSERT INTO players (user_id, username, token) "
-        "VALUES ({user_id}, '{username}', '{token}') RETURNING id;"
+    player_uuid: int = await conn.fetchval(
+        "INSERT INTO players (uuid, user_id, username, token) "
+        f"VALUES ({uuid.uuid4()}, {user_id}, '{username}', '{token}') RETURNING uuid;"
     )
-    return (player_id, token)
+    return (player_uuid, token)
 
 
 async def make_user(pool: Pool, user_id: int, username: str) -> str:
-    '''Создает игрока, генерирует ему точку спауна и выдет пешку'''
+    '''Создает игрока, генерирует ему точку спауна и выдает пешку'''
     async with pool.acquire() as conn:
-        player_id, token = await create_user(conn, user_id, username)
-        spawn_pos = await create_spawn(conn, player_id)
-        await create_pawn(conn, player_id, "wood_cutter", spawn_pos)
+        player_uuid, token = await create_user(conn, user_id, username)
+        spawn_pos = await create_spawn(conn, player_uuid)
+        await create_pawn(conn, player_uuid, "wood_cutter", spawn_pos)
 
         return token
 
