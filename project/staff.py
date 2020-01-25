@@ -155,7 +155,7 @@ async def make_user(pool: Pool, user_id: int, username: str) -> str:
     async with pool.acquire() as conn:
         player_uuid, token = await create_user(conn, user_id, username)
         spawn_pos = await create_spawn(conn, player_uuid)
-        await create_pawn(conn, player_uuid, "wood_cutter", spawn_pos)
+        await create_pawn(conn, player_uuid, "wood_cutter", spawn_pos[0] + 1)
 
         return token
 
