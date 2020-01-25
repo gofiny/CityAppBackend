@@ -103,7 +103,7 @@ async def create_object_on_map(conn: Connection, x: int, y: int, game_object_uui
     '''Создаем объект на карте'''
     await conn.execute(
         "INSERT INTO map_objects (uuid, x, y, game_object, owner) "
-        f"VALUES ({uuid.uuid4()}, {x}, {y}, {game_object_uuid}, {owner_uuid});"
+        f"VALUES ('{uuid.uuid4()}', {x}, {y}, '{game_object_uuid}', '{owner_uuid}');"
     )
 
 
@@ -116,7 +116,7 @@ async def create_spawn(conn: Connection, player_uuid: uuid.uuid4) -> Tuple[int, 
     if not spawn_uuid:
         spawn_uuid: uuid.uuid4 = await conn.fetchval(
             "WITH go AS (INSERT INTO game_objects (uuid, name, health, object_type) "
-            f"VALUES ({uuid.uuid4}, 'spawn', 1000, 'static') RETURNING uuid) "
+            f"VALUES ('{uuid.uuid4}', 'spawn', 1000, 'static') RETURNING uuid) "
             "INSERT INTO static_objects (game_object_ptr) "
             "VALUES ((SELECT uuid FROM go)) RETURNING (SELECT uuid FROM go);"
         )
@@ -128,7 +128,7 @@ async def create_pawn(conn: Connection, player_uuid: int, pawn_name: str, pos: T
     '''Создает пешку'''
     pawn_uuid: int = await conn.fetchval(
         "WITH go AS (INSERT INTO game_objects (uuid, name, health, object_type) "
-        f"VALUES ({uuid.uuid4()}, '{pawn_name}', 10, 'generated') RETURNING uuid) "
+        f"VALUES ('{uuid.uuid4()}', '{pawn_name}', 10, 'generated') RETURNING uuid) "
         "INSERT INTO generated_objects (game_object_ptr) "
         "VALUES ((SELECT uuid FROM go)) RETURNING (SELECT uuid FROM go);"
     )
@@ -145,7 +145,7 @@ async def create_user(conn: Connection, user_id: int, username: str) -> Tuple[uu
     token = await generate_token(user_id)
     player_uuid: int = await conn.fetchval(
         "INSERT INTO players (uuid, user_id, username, token) "
-        f"VALUES ({uuid.uuid4()}, '{user_id}', '{username}', '{token}') RETURNING uuid;"
+        f"VALUES ('{uuid.uuid4()}', '{user_id}', '{username}', '{token}') RETURNING uuid;"
     )
     return (player_uuid, token)
 
@@ -167,7 +167,7 @@ async def get_spawn_coords(pool: Pool, user_id: int) -> Record:
             "SELECT mo.x, mo.y FROM map_objects mo "
             "INNER JOIN game_objects go ON mo.game_object_id=go.id "
             "INNER JOIN players ON mo.owner_id=players.id "
-            f"WHERE players.user_id={user_id} AND go.name='spawn';"
+            f"WHERE players.user_id='{user_id}' AND go.name='spawn';"
         )
         if not spawn:
             raise UserOrSpawnNotExist
