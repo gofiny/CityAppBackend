@@ -27,7 +27,7 @@ PLAYERS = '''CREATE TABLE IF NOT EXISTS "players"
     "username" varchar(25) NOT NULL UNIQUE,
     "user_id" varchar(35) NOT NULL UNIQUE,
     "token" varchar(64) NOT NULL,
-    "metadata" varcahr(30)
+    "metadata" varchar(30)
 );'''
 
 GAME_OBJECTS = '''CREATE TABLE IF NOT EXISTS "game_objects"
