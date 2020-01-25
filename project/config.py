@@ -1,10 +1,10 @@
 '''Информация для подключения к базе данных'''
 
 
-USER = "telegram"
-PASSWORD = "telpass123"
-DATABASE = "global_chat"
-HOST = "s162935.hostiman.com"
+USER = "dmitry"
+PASSWORD = "6PEMGE2x"
+DATABASE = "game"
+HOST = "localhost"
 PORT = 5432
 
 DESTINATION = f"postgres://{USER}:{PASSWORD}@{HOST}:{PORT}/{DATABASE}"

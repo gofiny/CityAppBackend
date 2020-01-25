@@ -12,7 +12,7 @@ async def register_user(request: Request) -> json_response:
         data: dict = await request.json()
         token = await staff.make_user(
             pool=request.app["pool"],
-            vk_id=data["vk_id"],
+            user_id=data["user_id"],
             username=data["username"]
         )
         response["status"] = True
@@ -21,25 +21,6 @@ async def register_user(request: Request) -> json_response:
         response["errors"] = [2, "json is not correct"]
     except UserAlreadyExist:
         response["errors"] = [3, "user already exist"]
-
-    return json_response(response)
-
-
-async def get_spawn(request: Request) -> json_response:
-    '''Возвращает координаты спауна игрока'''
-    response = {"status": False}
-    try:
-        data: dict = await request.json()
-        spawn = await staff.get_spawn_coords(
-            pool=request.app["pool"],
-            vk_id=data["vk_id"]
-        )
-        response["status"] = True
-        response["coords"] = {"x": spawn["x"], "y": spawn["y"]}
-    except UserOrSpawnNotExist:
-        response["errors"] = [5, "User or Spawn are not exist"]
-    except (ValueError, KeyError, JSONDecodeError):
-        response["errors"] = [2, "json is not correct"]
 
     return json_response(response)
 
@@ -60,10 +41,10 @@ async def get_map(request: Request) -> json_response:
         data: dict = await request.json()
         map_objects = await staff.get_map(
             pool=request.app["pool"],
-            x_coord=data["coords"][0],
-            y_coord=data["coords"][1],
-            width=data["scope"][0],
-            height=data["scope"][1]
+            x_coord=data["coors"]["x"],
+            y_coord=data["coors"]['y'],
+            width=data["scope"]["width"],
+            height=data["scope"]["height"]
         )
 
         if map_objects:
@@ -74,7 +55,7 @@ async def get_map(request: Request) -> json_response:
                     "owner": map_object["vk_id"],
                     "health": map_object["health"],
                     "type": map_object["object_type"],
-                    "coords": {
+                    "coors": {
                         "x": map_object["x"],
                         "y": map_object["y"]
                     }

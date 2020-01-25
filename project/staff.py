@@ -16,19 +16,19 @@ async def gen_string(size: int = 18, chars: str = string.ascii_uppercase + strin
     return ''.join(random.choice(chars) for _ in range(size))
 
 
-async def generate_token(vk_id: int) -> str:
+async def generate_token(user_id: int) -> str:
     '''Генерирует Токен в виде строки sha256'''
     salt: str = "sFTtzfpkqdSuDxrwTQGLCFZlLofLYG"
     random_string = await gen_string()
-    finally_string = str(vk_id) + salt + random_string
+    finally_string = str(user_id) + salt + random_string
     hash_string = hashlib.sha256(finally_string.encode('utf-8')).hexdigest()
     return hash_string
 
 
-async def get_token(pool: Pool, vk_id: int) -> Optional[str]:
+async def get_token(pool: Pool, user_id: int) -> Optional[str]:
     '''Получает токен игрока из БД'''
     async with pool.acquire() as conn:
-        token: Optional[str] = await conn.fetchval(f'SELECT token FROM players WHERE vk_id={vk_id}')
+        token: Optional[str] = await conn.fetchval(f'SELECT token FROM players WHERE user_id={user_id}')
         return token
 
 
@@ -69,7 +69,7 @@ def check_token(func):
     async def wrapper(request):
         try:
             data: dict = await request.json()
-            token = await get_token(pool=request.app["pool"], vk_id=data["vk_id"])
+            token = await get_token(pool=request.app["pool"], user_id=data["user_id"])
             if token == data["token"]:
                 return await func(request)
             errors = [1, "token is not correct"]
@@ -138,39 +138,39 @@ async def create_pawn(conn: Connection, player_id: int, pawn_name: str, pos: Tup
     await create_object_on_map(conn, x=pos[0], y=pos[1], game_object_id=pawn_id, owner_id=player_id)
 
 
-async def create_user(conn: Connection, vk_id: int, username: str) -> Tuple[int, str]:
+async def create_user(conn: Connection, user_id: int, username: str) -> Tuple[int, str]:
     '''Создает игрока'''
     user: Optional[str] = await conn.fetchval(
-        f"SELECT username FROM players WHERE vk_id = {vk_id} OR username = '{username}';"
+        f"SELECT username FROM players WHERE user_id = {user_id} OR username = '{username}';"
     )
     if user:
         raise UserAlreadyExist
-    token = await generate_token(vk_id)
+    token = await generate_token(user_id)
     player_id: int = await conn.fetchval(
-        f"INSERT INTO players (vk_id, username, token) "
-        "VALUES ({vk_id}, '{username}', '{token}') RETURNING id;"
+        f"INSERT INTO players (user_id, username, token) "
+        "VALUES ({user_id}, '{username}', '{token}') RETURNING id;"
     )
     return (player_id, token)
 
 
-async def make_user(pool: Pool, vk_id: int, username: str) -> str:
+async def make_user(pool: Pool, user_id: int, username: str) -> str:
     '''Создает игрока, генерирует ему точку спауна и выдет пешку'''
     async with pool.acquire() as conn:
-        player_id, token = await create_user(conn, vk_id, username)
+        player_id, token = await create_user(conn, user_id, username)
         spawn_pos = await create_spawn(conn, player_id)
         await create_pawn(conn, player_id, "wood_cutter", spawn_pos)
 
         return token
 
 
-async def get_spawn_coords(pool: Pool, vk_id: int) -> Record:
+async def get_spawn_coords(pool: Pool, user_id: int) -> Record:
     '''Возвращает точку спауна игрока'''
     async with pool.acquire() as conn:
         spawn: Optional[Record] = await conn.fetchrow(
             "SELECT mo.x, mo.y FROM map_objects mo "
             "INNER JOIN game_objects go ON mo.game_object_id=go.id "
             "INNER JOIN players ON mo.owner_id=players.id "
-            f"WHERE players.vk_id={vk_id} AND go.name='spawn';"
+            f"WHERE players.user_id={user_id} AND go.name='spawn';"
         )
         if not spawn:
             raise UserOrSpawnNotExist
@@ -183,7 +183,7 @@ async def get_map(pool: Pool, x_coord: int, y_coord: int, width: int, height: in
     y_coords = (y_coord - (height // 2), y_coord + (height // 2))
     async with pool.acquire() as conn:
         all_objects: List[Optional[Record]] = await conn.fetch(
-            "SELECT go.name, players.vk_id, go.health, go.object_type, mo.x, mo.y "
+            "SELECT go.name, players.user_id, go.health, go.object_type, mo.x, mo.y "
             "FROM map_objects mo "
             "LEFT JOIN players ON mo.owner_id=players.id "
             "LEFT JOIN game_objects go ON mo.game_object_id=go.id "
