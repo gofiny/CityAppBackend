@@ -63,7 +63,7 @@ MAP_OBJECTS = '''CREATE TABLE IF NOT EXISTS "map_objects"
     "owner" uuid NULL REFERENCES "players" ("uuid") ON DELETE cascade
 );'''
 
-PlayerResources = '''CREATE TABLE IF NOT EXISTS "players_resources
+PlayerResources = '''CREATE TABLE IF NOT EXISTS "players_resources"
 (
     "uuid" uuid NOT NULL PRIMARY KEY,
     "player" uuid NOT NULL REFERENCES "players" ("uuid") ON DELETE cascade,
