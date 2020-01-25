@@ -54,7 +54,7 @@ PawnObjects = '''CREATE TABLE IF NOT EXIST "pawn_objects"
     "max_tasks" integer NOT NULL
 )'''
 
-MAP_OBJECTS = '''CREATE TABLE IF NOT EXISTS "map_objects"
+MAP_OBJECTS = '''CREATE TABLE IF NOT EXIST "map_objects"
 (
     "uuid" uuid NOT NULL PRIMARY KEY,
     "x" integer NOT NULL,
