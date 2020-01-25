@@ -3,3 +3,4 @@ venv
 __pycache__/
 supervisord.log
 supervisor.pid
+server.log

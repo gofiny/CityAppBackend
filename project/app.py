@@ -12,7 +12,10 @@ async def init_app():
     '''Ицициализация приложения'''
     stio_handler = logging.StreamHandler()
     stio_handler.setLevel(logging.INFO)
+    file_logs = logging.FileHandler("server.log")
+    file_logs.setLevel(logging.INFO)
     _logger = logging.getLogger('aiohttp.access')
+    _logger.addHandler(file_logs)
     _logger.addHandler(stio_handler)
     _logger.setLevel(logging.DEBUG)
     __app = web.Application(logger=_logger)
