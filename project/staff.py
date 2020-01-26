@@ -182,7 +182,7 @@ async def get_map(pool: Pool, x_coord: int, y_coord: int, width: int, height: in
     y_coords = (y_coord - (height // 2), y_coord + (height // 2))
     async with pool.acquire() as conn:
         all_objects: List[Optional[Record]] = await conn.fetch(
-            "SELECT go.name, players.username, go.health, go.object_type, mo.x, mo.y, mo.uuid"
+            "SELECT go.name, players.username, go.health, go.object_type, mo.x, mo.y, mo.uuid "
             "FROM map_objects mo "
             "INNER JOIN players ON mo.owner=players.uuid "
             "LEFT JOIN game_objects go ON mo.game_object=go.uuid "
