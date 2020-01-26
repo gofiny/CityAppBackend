@@ -144,8 +144,10 @@ async def create_user(conn: Connection, user_id: int, username: str) -> Tuple[uu
         raise UserAlreadyExist
     token = await generate_token(user_id)
     player_uuid: int = await conn.fetchval(
-        "INSERT INTO players (uuid, user_id, username, token) "
-        f"VALUES ('{uuid.uuid4()}', '{user_id}', '{username}', '{token}') RETURNING uuid;"
+        "WITH pl AS (INSERT INTO players (uuid, user_id, username, token) "
+        f"VALUES ('{uuid.uuid4()}', '{user_id}', '{username}', '{token}') RETURNING uuid) "
+        "INSERT INTO players_resources (uuid, player, money, wood, stones) "
+        f"VALUES ('{uuid.uuid4()}', (SELECT uuid FROM pl), 1000, 10, 10) RETURNING (SELECT uuid FROM pl)"
     )
     return (player_uuid, token)
 
@@ -213,4 +215,16 @@ async def gen_objects(pool: Pool) -> None:
             "INSERT INTO map_objects (x, y, game_object_id) "
             "VALUES ($1, $2, $3);", values
         )
-            
+
+
+async def get_profile_info(pool: Pool, user_id: str) -> dict:
+    """Получаем информацию о профиле игрока"""
+    async with pool.acquire() as conn:
+        data = await conn.fetch(
+            "SELECT players.username, players.metadata, mo.x, mo.y, "
+            "pr.money, pr.wood, pr.stones FROM players "
+            "INNER JOIN map_objects mo ON players.uuid=mo.owner "
+            "INNER JOIN game_objects go ON mo.game_object=go.uuid "
+            "INNER JOIN players_resources pr ON pr.player=players.uuid "
+            f"WHERE players.user_id='{user_id}' AND go.name='spawn'"
+        )
