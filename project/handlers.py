@@ -149,13 +149,13 @@ async def get_player_pawns(request: Request) -> json_response:
 
 async def gen_new_object(request: Request) -> Response:
     '''Отвечает за проверку и генерацию объектов с ресурсами на карте'''
-    try:
-        data = await request.json()
-        await staff.generate_object(
-            pool=request.app['pool'],
-            obj_name=data['obj_name'],
-            limit=data['limit']
-        )
-        return Response(status=200)
-    except (ValueError, KeyError, JSONDecodeError):
-        return Response(status=500)
+    #try:
+    data = await request.json()
+    await staff.generate_object(
+        pool=request.app['pool'],
+        obj_name=data['obj_name'],
+        limit=data['limit']
+    )
+    return Response(status=200)
+    #except (ValueError, KeyError, JSONDecodeError):
+        #return Response(status=500)
