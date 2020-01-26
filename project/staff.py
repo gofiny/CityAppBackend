@@ -129,8 +129,8 @@ async def create_pawn(conn: Connection, player_uuid: int, pawn_name: str, pos: T
     pawn_uuid: int = await conn.fetchval(
         "WITH go AS (INSERT INTO game_objects (uuid, name, health, object_type) "
         f"VALUES ('{uuid.uuid4()}', '{pawn_name}', 10, 'pawn') RETURNING uuid) "
-        "INSERT INTO pawn_objects (game_object_ptr) "
-        "VALUES ((SELECT uuid FROM go)) RETURNING (SELECT uuid FROM go);"
+        "INSERT INTO pawn_objects (game_object_ptr, max_tasks) "
+        "VALUES ((SELECT uuid FROM go), 2) RETURNING (SELECT uuid FROM go);"
     )
     await create_object_on_map(conn, x=pos[0], y=pos[1], game_object_uuid=pawn_uuid, owner_uuid=player_uuid)
 
