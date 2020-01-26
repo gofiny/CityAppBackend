@@ -237,6 +237,6 @@ async def get_object(pool: Pool, object_uuid: str):
             "SELECT go.name, go.object_type, players.username, go.health, mo.x, mo.y "
             "FROM map_objects mo "
             "INNER JOIN game_objects go ON mo.game_object=go.uuid "
-            "LEFT JOIN players ON map_objects.owner=players.uuid "
+            "LEFT JOIN players ON mo.owner=players.uuid "
             f"WHERE mo.uuid='{object_uuid}'"
         )
