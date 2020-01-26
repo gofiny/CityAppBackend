@@ -132,7 +132,7 @@ async def get_player_pawns(request: Request) -> json_response:
     '''Возвращает список всех пешек игрока'''
     response = {"status": True}
     try:
-        data = request.json()
+        data = await request.json()
         pawns = staff.get_pawns(
             pool=request.app['pool'],
             token=data['token']
