@@ -29,7 +29,7 @@ async def generate_token(user_id: int) -> str:
 async def get_token(pool: Pool, user_id: int) -> Optional[str]:
     '''Получает токен игрока из БД'''
     async with pool.acquire() as conn:
-        token: Optional[str] = await conn.fetchval(f'SELECT token FROM players WHERE user_id={user_id}')
+        token: Optional[str] = await conn.fetchval(f"SELECT token FROM players WHERE user_id='{user_id}'")
         return token
 
 
