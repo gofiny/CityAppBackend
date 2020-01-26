@@ -230,7 +230,7 @@ async def get_profile_info(pool: Pool, user_id: str) -> Optional[Record]:
         )
 
 
-async def get_object(pool: Pool, object_uuid: str):
+async def get_object(pool: Pool, object_uuid: str) -> Optional[Record]:
     '''Получает объект по uuid map_object'''
     async with pool.acquire() as conn:
         return await conn.fetchrow(
@@ -238,5 +238,18 @@ async def get_object(pool: Pool, object_uuid: str):
             "FROM map_objects mo "
             "INNER JOIN game_objects go ON mo.game_object=go.uuid "
             "LEFT JOIN players ON mo.owner=players.uuid "
-            f"WHERE mo.uuid='{object_uuid}'"
+            f"WHERE mo.uuid='{object_uuid}';"
+        )
+
+
+async def get_pawns(pool: Pool, token: str) -> List[Optional[Record]]:
+    '''Получает список пешек игрока'''
+    async with pool.acquire() as conn:
+        return await conn.fetch(
+            "SELECT go.uuid, go.name, go.health, pw.max_tasks "
+            "FROM map_objects mo "
+            "INNER JOIN game_objects go ON mo.game_object=go.uuid "
+            "INNER JOIN pawn_objects po ON po.game_object_ptr=go.uuid "
+            "LEFT JOIN players ON mo.owner=players.uuid "
+            f"WHERE players.token='{token}';"
         )

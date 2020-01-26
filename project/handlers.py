@@ -126,3 +126,31 @@ async def get_object_info(request: Request) -> json_response:
         response["errors"] = [2, "json is not correct"]
 
     return json_response(response)
+
+
+async def get_player_pawns(request: Request) -> json_response:
+    '''Возвращает список всех пешек игрока'''
+    response = {"status": True}
+    try:
+        data = request.json()
+        pawns = staff.get_pawns(
+            pool=request.app['pool'],
+            token=data['token']
+        )
+        response_pawns = None
+        if pawns:
+            response_pawns = []
+            for pawn in pawns:
+                response_pawns.append(
+                    {
+                        "uuid": pawn["uuid"],
+                        "name": pawn["name"],
+                        "health": pawn["health"],
+                        "max_tasks": pawn["max_tasks"]
+                    }
+                )
+        response["pawns"] = response_pawns
+    except (KeyError, ValueError, JSONDecodeError):
+        response["errors"] = [2, "json is not correct"]
+
+    return json_response(response)

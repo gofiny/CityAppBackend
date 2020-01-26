@@ -5,7 +5,8 @@ from handlers import (
     gen_mapobjects,
     get_map, test,
     get_profile,
-    get_object_info
+    get_object_info,
+    get_player_pawns
 )
 
 
@@ -15,5 +16,6 @@ URLS = [
     web.post("/async/get_map", get_map),
     web.post("/async/test", test),
     web.post("/async/get_profile", get_profile),
-    web.post("/async/get_object_info", get_object_info)
+    web.post("/async/get_object_info", get_object_info),
+    web.post("/async/get_player_pawns", get_player_pawns)
 ]
