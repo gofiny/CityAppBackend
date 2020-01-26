@@ -147,7 +147,7 @@ async def create_user(conn: Connection, user_id: int, username: str) -> Tuple[uu
         "WITH pl AS (INSERT INTO players (uuid, user_id, username, token) "
         f"VALUES ('{uuid.uuid4()}', '{user_id}', '{username}', '{token}') RETURNING uuid) "
         "INSERT INTO players_resources (uuid, player, money, wood, stones) "
-        f"VALUES ('{uuid.uuid4()}', (SELECT uuid FROM pl), 1000, 10, 10) RETURNING (SELECT uuid FROM pl)"
+        f"VALUES ('{uuid.uuid4()}', (SELECT uuid FROM pl), 0, 20, 0) RETURNING (SELECT uuid FROM pl)"
     )
     return (player_uuid, token)
 
