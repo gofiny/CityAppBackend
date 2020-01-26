@@ -1,6 +1,6 @@
 '''Подкапотка запросов к БД'''
 from json.decoder import JSONDecodeError
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple, List, Union
 from exceptions import UserAlreadyExist, UserOrSpawnNotExist
 import random
 import string
