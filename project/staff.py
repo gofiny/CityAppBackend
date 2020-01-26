@@ -289,7 +289,7 @@ async def generate_object(pool: Pool, obj_name: str, limit: int):
             return
         while True:
             random_obj = await get_random_mapobject(conn)
-            random_pos = await gen_random_pos((random_obj[0], random_obj[1]), min_c=1)
+            random_pos = await gen_random_pos((random_obj['x'], random_obj['y']), min_c=1)
             is_exist = await check_object_on_pos(conn, random_pos[0], random_pos[1])
             if is_exist:
                 continue
