@@ -184,8 +184,8 @@ async def get_map(pool: Pool, x_coord: int, y_coord: int, width: int, height: in
         all_objects: List[Optional[Record]] = await conn.fetch(
             "SELECT go.name, players.user_id, go.health, go.object_type, mo.x, mo.y "
             "FROM map_objects mo "
-            "LEFT JOIN players ON mo.owner_id=players.id "
-            "LEFT JOIN game_objects go ON mo.game_object_id=go.id "
+            "INNER JOIN players ON mo.owner_id=players.uuid "
+            "INNER JOIN game_objects go ON mo.game_object=go.uuid "
             f"WHERE mo.x >= {x_coords[0]} AND mo.x <= {x_coords[1]} "
             f"AND mo.y >= {y_coords[0]} AND mo.y <= {y_coords[1]}"
         )
