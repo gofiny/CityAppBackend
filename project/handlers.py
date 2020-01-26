@@ -133,7 +133,7 @@ async def get_player_pawns(request: Request) -> json_response:
     response = {"status": True}
     try:
         data = await request.json()
-        pawns = staff.get_pawns(
+        pawns = await staff.get_pawns(
             pool=request.app['pool'],
             token=data['token']
         )
