@@ -109,7 +109,7 @@ async def create_object_on_map(conn: Connection, x: int, y: int, game_object: Op
         await conn.execute(
             f"WITH object AS (SELECT uuid FROM game_objects WHERE name='{game_object}') "
             "INSERT INTO map_objects (uuid, x, y, game_object, owner) "
-            f"VALUES ('{uuid.uuid4()}', {x}, {y}, (SELECT uuid FROM object), '{owner_uuid})'"
+            f"VALUES ('{uuid.uuid4()}', {x}, {y}, (SELECT uuid FROM object), '{owner_uuid}')"
         )
     else:
         await conn.execute(
