@@ -29,15 +29,6 @@ async def register_user(request: Request) -> json_response:
     return json_response(response)
 
 
-async def gen_mapobjects(request: Request) -> json_response:
-    '''Метод генерации рандомных объектов на карте'''
-    #try:
-    await staff.gen_objects(pool=request.app["pool"])
-    return Response()
-    # except:
-    #     return Response(status=300)
-
-
 async def get_map(request: Request) -> json_response:
     '''Возвращает объекты расположенные на карте'''
     response = {"status": True, "game_objects": None}
@@ -154,3 +145,17 @@ async def get_player_pawns(request: Request) -> json_response:
         response["errors"] = [2, "json is not correct"]
 
     return json_response(response)
+
+
+async def gen_new_object(request: Request) -> Response:
+    '''Отвечает за проверку и генерацию объектов с ресурсами на карте'''
+    try:
+        data = await request.json()
+        await staff.generate_object(
+            pool=request.app['pool'],
+            obj_name=data['obj_name'],
+            limit=data['limit']
+        )
+        return Response(status=200)
+    except (ValueError, KeyError, JSONDecodeError):
+        return Response(status=500)

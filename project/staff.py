@@ -81,15 +81,19 @@ def check_token(func):
     return wrapper
 
 
+async def check_object_on_pos(conn: Connection, x: int, y:int) -> Optional[int]:
+    return await conn.fetchval(
+        f"SELECT x FROM map_objects WHERE x = {x} AND y = {y}"
+    )
+
+
 async def get_free_pos(conn: Connection) -> Tuple[int, int]:
     '''Получение координат свободной позиции на карте'''
     while True:
         random_obj = await get_random_mapobject(conn)
         if random_obj:
             new_pos = await gen_random_pos(pos=(random_obj[0]['x'], random_obj[0]['y']))
-            is_exist: Optional[int] = await conn.fetchval(
-                f"SELECT x FROM map_objects WHERE x = {new_pos[0]} AND y = {new_pos[1]}"
-            )
+            is_exist: await check_object_on_pos(conn, new_pos[0], new_pos[1])
             if is_exist:
                 continue
             free_relay = await check_relay(conn, new_pos)
@@ -99,12 +103,19 @@ async def get_free_pos(conn: Connection) -> Tuple[int, int]:
         return (0, 0)
 
 
-async def create_object_on_map(conn: Connection, x: int, y: int, game_object_uuid: int, owner_uuid: int) -> None:
+async def create_object_on_map(conn: Connection, x: int, y: int, game_object: Optional[int, uuid.uuid4], owner_uuid: Optional[int]) -> None:
     '''Создаем объект на карте'''
-    await conn.execute(
-        "INSERT INTO map_objects (uuid, x, y, game_object, owner) "
-        f"VALUES ('{uuid.uuid4()}', {x}, {y}, '{game_object_uuid}', '{owner_uuid}');"
-    )
+    if isinstance(game_object, str):
+        await conn.execute(
+            f"WITH object AS (SELECT uuid FROM game_objects WHERE name='{game_object}') "
+            "INSERT INTO map_objects (uuid, x, y, game_object, owner) "
+            f"VALUES ('{uuid.uuid4()}', {x}, {y}, (SELECT uuid FROM object), '{owner_uuid})"
+        )
+    else:
+        await conn.execute(
+            "INSERT INTO map_objects (uuid, x, y, game_object, owner) "
+            f"VALUES ('{uuid.uuid4()}', {x}, {y}, '{game_object}', '{owner_uuid}');"
+        )
 
 
 async def create_spawn(conn: Connection, player_uuid: uuid.uuid4) -> Tuple[int, int]:
@@ -120,19 +131,19 @@ async def create_spawn(conn: Connection, player_uuid: uuid.uuid4) -> Tuple[int, 
             "INSERT INTO static_objects (game_object_ptr) "
             "VALUES ((SELECT uuid FROM go)) RETURNING (SELECT uuid FROM go);"
         )
-    await create_object_on_map(conn, x=pos[0], y=pos[1], game_object_uuid=spawn_uuid, owner_uuid=player_uuid)
+    await create_object_on_map(conn, x=pos[0], y=pos[1], game_object=spawn_uuid, owner_uuid=player_uuid)
     return pos
 
 
 async def create_pawn(conn: Connection, player_uuid: int, pawn_name: str, pos: Tuple[int, int]) -> None:
     '''Создает пешку'''
-    pawn_uuid: int = await conn.fetchval(
+    pawn_uuid: uuid.uuid4 = await conn.fetchval(
         "WITH go AS (INSERT INTO game_objects (uuid, name, health, object_type) "
         f"VALUES ('{uuid.uuid4()}', '{pawn_name}', 10, 'pawn') RETURNING uuid) "
         "INSERT INTO pawn_objects (game_object_ptr, max_tasks) "
-        "VALUES ((SELECT uuid FROM go), 2) RETURNING (SELECT uuid FROM go);"
+        "VALUES ((SELECT uuid FROM go), 1) RETURNING (SELECT uuid FROM go);"
     )
-    await create_object_on_map(conn, x=pos[0], y=pos[1], game_object_uuid=pawn_uuid, owner_uuid=player_uuid)
+    await create_object_on_map(conn, x=pos[0], y=pos[1], game_object=pawn_uuid, owner_uuid=player_uuid)
 
 
 async def create_user(conn: Connection, user_id: int, username: str) -> Tuple[uuid.uuid4, str]:
@@ -253,3 +264,40 @@ async def get_pawns(pool: Pool, token: str) -> List[Optional[Record]]:
             "LEFT JOIN players ON mo.owner=players.uuid "
             f"WHERE players.token='{token}';"
         )
+
+
+async def check_obj_limit(conn: Connection, obj_name: str, limit: int) -> bool:
+    '''Проверяем достигнут ли лимит объектов с ресурсами на карте'''
+    count: Optional[Record] = await conn.fetchrow(
+        "WITH pl_count AS (SELECT COUNT(*) FROM players), "
+        "ob_count AS (SELECT COUNT(go) FROM map_objects mo "
+        "INNER JOIN game_objects go ON mo.game_object=go.uuid "
+        f"WHERE go.name='{obj_name}') "
+        "SELECT pl_count.count as players, ob_count.count as objects "
+        "FROM pl_count, ob_count;"
+    )
+    if count["objects"] >= (limit * count["players"]):
+        return False
+    return True
+
+
+async def generate_object(pool: Pool, obj_name: str, limit: int):
+    '''Метод проверки и генерации объектов с ресурсами'''
+    async with pool.acquire() as conn:
+        can_generate = await check_obj_limit(conn, obj_name, limit)
+        if can_generate is False:
+            return
+        while True:
+            random_obj = await get_random_mapobject(conn)
+            random_pos = await gen_random_pos((random_obj[0], random_obj[1]), min_c=1)
+            is_exist = await check_object_on_pos(conn, random_pos[0], random_pos[1])
+            if is_exist:
+                continue
+            await create_object_on_map(
+                conn=conn,
+                x=random_pos[0],
+                y=random_pos[1],
+                game_object=obj_name,
+                owner_uuid=None
+            )
+            return
