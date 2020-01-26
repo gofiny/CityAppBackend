@@ -228,3 +228,15 @@ async def get_profile_info(pool: Pool, user_id: str) -> Optional[Record]:
             "INNER JOIN players_resources pr ON pr.player=players.uuid "
             f"WHERE players.user_id='{user_id}' AND go.name='spawn'"
         )
+
+
+async def get_object(pool: Pool, object_uuid: str):
+    '''Получает объект по uuid map_object'''
+    async with pool.acquire() as conn:
+        return await conn.fetchrow(
+            "SELECT go.name, go.object_type, players.username, go.health, mo.x, mo.y "
+            "FROM map_objects mo "
+            "INNER JOIN game_objects go ON mo.game_object=go.uuid "
+            "LEFT JOIN players ON map_objects.owner=players.uuid "
+            f"WHERE mo.uuid='{object_uuid}'"
+        )

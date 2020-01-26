@@ -76,7 +76,7 @@ async def get_map(request: Request) -> json_response:
 
 @staff.check_token
 async def get_profile(request: Request) -> json_response:
-    """Возвращает инфу о игроке"""
+    '''Возвращает инфу о игроке'''
     response = {"status": True}
     try:
         data = await request.json()
@@ -96,6 +96,33 @@ async def get_profile(request: Request) -> json_response:
         }
     except (KeyError, ValueError, JSONDecodeError):
         response["status"] = False
+        response["errors"] = [2, "json is not correct"]
+
+    return json_response(response)
+
+
+async def get_object_info(request: Request) -> json_response:
+    '''Возвращает информацию о конкретном объекте'''
+    response = {"status": False}
+    try:
+        data = await request.json()
+        game_object = await staff.get_object(
+            pool=request.app['pool'],
+            object_uuid=data["uuid"]
+        )
+        if game_object:
+            response["status"] = True
+            response["name"] = game_object["name"]
+            response["object_type"] = game_object["object_type"]
+            response["owner"] = game_object["username"]
+            response["health"] = game_object["health"]
+            response["coors"] = {
+                "x": game_object["x"],
+                "y": game_object["y"]
+            }
+        else:
+            response["errors"] = [6, "game_object is not found"]
+    except (KeyError, ValueError, JSONDecodeError):
         response["errors"] = [2, "json is not correct"]
 
     return json_response(response)
