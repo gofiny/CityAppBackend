@@ -143,7 +143,7 @@ async def get_player_pawns(request: Request) -> json_response:
             for pawn in pawns:
                 response_pawns.append(
                     {
-                        "uuid": pawn["uuid"],
+                        "uuid": str(pawn["uuid"]),
                         "name": pawn["name"],
                         "health": pawn["health"],
                         "max_tasks": pawn["max_tasks"]
