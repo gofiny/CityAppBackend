@@ -103,7 +103,7 @@ async def get_free_pos(conn: Connection) -> Tuple[int, int]:
         return (0, 0)
 
 
-async def create_object_on_map(conn: Connection, x: int, y: int, game_object: Optional[int, uuid.uuid4], owner_uuid: Optional[int]) -> None:
+async def create_object_on_map(conn: Connection, x: int, y: int, game_object: Optional[Union[int, uuid.uuid4]], owner_uuid: Optional[int]) -> None:
     '''Создаем объект на карте'''
     if isinstance(game_object, str):
         await conn.execute(
