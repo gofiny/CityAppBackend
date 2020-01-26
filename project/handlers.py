@@ -73,5 +73,28 @@ async def get_map(request: Request) -> json_response:
     return json_response(response)
 
 
+@staff.check_token
 async def get_profile(request: Request) -> json_response:
     """Возвращает инфу о игроке"""
+    response = {"status": True}
+    try:
+        data = await request.json()
+        profile_info = await staff.get_profile_info(
+            pool=request.app["pool"],
+            user_id=data["user_id"]
+        )
+        response["username"] = profile_info["username"]
+        response["resources"] = {
+            "money": profile_info["money"],
+            "stones": profile_info["stones"],
+            "wood": profile_info["wood"]
+        }
+        response["spawn"] = {
+            "x": profile_info['x'],
+            "y": profile_info['y']
+        }
+    except (KeyError, ValueError, JSONDecodeError):
+        response["status"] = False
+        response["errors"] = [2, "json is not correct"]
+
+    return json_response(response)
