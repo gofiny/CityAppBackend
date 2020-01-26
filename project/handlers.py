@@ -55,7 +55,7 @@ async def get_map(request: Request) -> json_response:
             game_objects = []
             for map_object in map_objects:
                 game_object = {
-                    "uuid": map_object["uuid"],
+                    "uuid": str(map_object["uuid"]),
                     "name": map_object["name"],
                     "owner": map_object["username"],
                     "health": map_object["health"],
