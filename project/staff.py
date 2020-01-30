@@ -93,7 +93,7 @@ async def get_free_pos(conn: Connection) -> Tuple[int, int]:
         random_obj = await get_random_mapobject(conn)
         if random_obj:
             new_pos = await gen_random_pos(pos=(random_obj[0]['x'], random_obj[0]['y']))
-            is_exist: await check_object_on_pos(conn, new_pos[0], new_pos[1])
+            is_exist = await check_object_on_pos(conn, new_pos[0], new_pos[1])
             if is_exist:
                 continue
             free_relay = await check_relay(conn, new_pos)
