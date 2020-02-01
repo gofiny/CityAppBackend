@@ -72,7 +72,7 @@ PlayerResources = '''CREATE TABLE IF NOT EXISTS "players_resources"
     "stones" integer NOT NULL
 );'''
 
-PawnActions = '''CREATE TABLE IF NOT EXIST "pawn_actions"
+PawnActions = '''CREATE TABLE IF NOT EXISTS "pawn_actions"
 (
     "uuid" uuid NOT NULL PRIMARY_KEY,
     "pawn" uuid NOT NULL REFERENCES "game_objects" ("uuid") ON DELETE cascade,
