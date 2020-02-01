@@ -78,7 +78,7 @@ Actions = '''CREATE TABLE IF NOT EXISTS "actions"
     "name" varchar(20)
 );'''
 
-AvailableActions = '''CREATE TABLE IF NO EXISTS "available_actions"
+AvailableActions = '''CREATE TABLE IF NOT EXISTS "available_actions"
 (
     "uuid" uuid NOT NULL PRIMARY KEY,
     "action" uuid NOT NULL REFERENCES "actions" ("uuid"),
