@@ -74,7 +74,7 @@ PlayerResources = '''CREATE TABLE IF NOT EXISTS "players_resources"
 
 Actions = '''CREATE TABLE IF NOT EXISTS "actions"
 (
-    "uuid" uuid NOT NULLL PRIMARY KEY,
+    "uuid" uuid NOT NULL PRIMARY KEY,
     "name" varchar(20)
 );'''
 
