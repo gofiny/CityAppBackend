@@ -245,11 +245,22 @@ async def get_object(pool: Pool, object_uuid: str) -> Optional[Record]:
     '''Получает объект по uuid map_object'''
     async with pool.acquire() as conn:
         return await conn.fetchrow(
-            "SELECT go.name, go.object_type, players.username, go.health, mo.x, mo.y "
+            "SELECT go.uuid, go.name, go.object_type, players.username, go.health, mo.x, mo.y "
             "FROM map_objects mo "
             "INNER JOIN game_objects go ON mo.game_object=go.uuid "
             "LEFT JOIN players ON mo.owner=players.uuid "
             f"WHERE mo.uuid='{object_uuid}';"
+        )
+
+
+async def get_pawn_actions(pool: Pool, object_uuid: str) -> Optional[List[Record]]:
+    '''Получение списка действий пешки'''
+    async with pool.acquire() as conn:
+        return await conn.fetch(
+            "SELECT pa.uuid, pa.action, pa.epoch FROM pawn_actions pa "
+            "LEFT JOIN game_objects go ON pawn_actions.pawn=go.uuid "
+            f"WHERE go.uuid='{object_uuid}' "
+            "ORDER BY epoch"
         )
 
 

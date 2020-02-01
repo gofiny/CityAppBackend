@@ -110,6 +110,21 @@ async def get_object_info(request: Request) -> json_response:
                 "x": game_object["x"],
                 "y": game_object["y"]
             }
+            if game_object["object_type"] == "pawn":
+                actions = await staff.get_pawn_actions(
+                    pool=request.app['pool'],
+                    object_uuid=game_object["uuid"]
+                )
+                if actions:
+                    pawn_actions = []
+                    for action in actions:
+                        pawn_actions.append({
+                            "uuid": action['uuid'],
+                            "action": action['action'],
+                            "start_time": action['epoch']
+                        })
+                    actions = pawn_actions
+                response["actions"] = actions
         else:
             response["errors"] = [6, "game_object is not found"]
     except (KeyError, ValueError, JSONDecodeError):
@@ -131,14 +146,12 @@ async def get_player_pawns(request: Request) -> json_response:
         if pawns:
             response_pawns = []
             for pawn in pawns:
-                response_pawns.append(
-                    {
-                        "uuid": str(pawn["uuid"]),
-                        "name": pawn["name"],
-                        "health": pawn["health"],
-                        "max_tasks": pawn["max_tasks"]
-                    }
-                )
+                response_pawns.append({
+                    "uuid": str(pawn["uuid"]),
+                    "name": pawn["name"],
+                    "health": pawn["health"],
+                    "max_tasks": pawn["max_tasks"]
+                })
         response["pawns"] = response_pawns
     except (KeyError, ValueError, JSONDecodeError):
         response["errors"] = [2, "json is not correct"]

@@ -72,6 +72,13 @@ PlayerResources = '''CREATE TABLE IF NOT EXISTS "players_resources"
     "stones" integer NOT NULL
 );'''
 
+PawnActions = '''CREATE TABLE IF NOT EXIST "pawn_actions"
+(
+    "uuid" uuid NOT NULL PRIMARY_KEY,
+    "pawn" uuid NOT NULL REFERENCES "game_objects" ("uuid") ON DELETE cascade,
+    "epoch" float
+);'''
+
 
 SQLS = [
     PLAYERS,
@@ -80,7 +87,8 @@ SQLS = [
     GENERATED_OBJECTS,
     MAP_OBJECTS,
     PawnObjects,
-    PlayerResources
+    PlayerResources,
+    PawnActions
 ]
 
 
