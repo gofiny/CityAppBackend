@@ -120,7 +120,7 @@ async def get_object_info(request: Request) -> json_response:
                     for action in actions:
                         pawn_actions.append({
                             "uuid": action["uuid"],
-                            "action": action["actio"n],
+                            "action": action["actio"],
                             "start_time": action["epoch"]
                         })
                     actions = pawn_actions
