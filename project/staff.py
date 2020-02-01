@@ -228,7 +228,7 @@ async def gen_objects(pool: Pool) -> None:
         )
 
 
-async def get_profile_info(pool: Pool, user_id: str) -> Optional[Record]:
+async def get_profile_info(pool: Pool, token: str) -> Optional[Record]:
     """Получаем информацию о профиле игрока"""
     async with pool.acquire() as conn:
         return await conn.fetchrow(
@@ -237,7 +237,7 @@ async def get_profile_info(pool: Pool, user_id: str) -> Optional[Record]:
             "INNER JOIN map_objects mo ON players.uuid=mo.owner "
             "INNER JOIN game_objects go ON mo.game_object=go.uuid "
             "INNER JOIN players_resources pr ON pr.player=players.uuid "
-            f"WHERE players.user_id='{user_id}' AND go.name='spawn'"
+            f"WHERE players.token='{token}' AND go.name='spawn'"
         )
 
 

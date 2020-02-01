@@ -65,7 +65,6 @@ async def get_map(request: Request) -> json_response:
     return json_response(response)
 
 
-@staff.check_token
 async def get_profile(request: Request) -> json_response:
     '''Возвращает инфу о игроке'''
     response = {"status": True}
@@ -73,7 +72,7 @@ async def get_profile(request: Request) -> json_response:
         data = await request.json()
         profile_info = await staff.get_profile_info(
             pool=request.app["pool"],
-            user_id=data["user_id"]
+            token=data["token"]
         )
         response["username"] = profile_info["username"]
         response["resources"] = {
