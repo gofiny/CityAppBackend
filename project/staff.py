@@ -258,7 +258,7 @@ async def get_pawn_actions(pool: Pool, object_uuid: str) -> Optional[List[Record
     async with pool.acquire() as conn:
         return await conn.fetch(
             "SELECT pa.uuid, pa.action, pa.epoch FROM pawn_actions pa "
-            "LEFT JOIN game_objects go ON pawn_actions.pawn=go.uuid "
+            "LEFT JOIN game_objects go ON pa.pawn=go.uuid "
             f"WHERE go.uuid='{object_uuid}' "
             "ORDER BY epoch"
         )
