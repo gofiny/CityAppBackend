@@ -146,7 +146,7 @@ async def create_pawn(conn: Connection, player_uuid: int, pawn_name: str, pos: T
         "INSERT INTO available_actions (uuid, action, pawn) "
         f"VALUES ('{uuid.uuid4()}', (SELECT uuid FROM act), (SELECT uuid FROM go))) "
         "INSERT INTO map_objects (uuid, x, y, game_object, owner) "
-        f"VALUES ('{uuid.uuid4()}', {pos[0]}, {pos[1]}, (SELECT uuid FROM go), {player_uuid})"
+        f"VALUES ('{uuid.uuid4()}', {pos[0]}, {pos[1]}, (SELECT uuid FROM go), '{player_uuid}')"
         "RETURNING (SELECT uuid FROM go);"
     )
     #await create_object_on_map(conn, x=pos[0], y=pos[1], game_object=pawn_uuid, owner_uuid=player_uuid)
