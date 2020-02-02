@@ -268,7 +268,7 @@ async def get_pawn_actions(pool: Pool, object_uuid: str) -> List[Optional[Record
             "SELECT pa.uuid, pa.action, pa.start_time FROM pawn_actions pa "
             "LEFT JOIN game_objects go ON pa.pawn=go.uuid "
             f"WHERE go.uuid='{object_uuid}' "
-            "ORDER BY start_time"
+            "ORDER BY pa.start_time"
         )
 
 
@@ -331,3 +331,12 @@ async def generate_object(pool: Pool, obj_name: str, limit: int):
                 owner_uuid=None
             )
             return
+
+
+async def get_nearest_obj(conn: Connection, x: int, y: int, obj_name: str):
+    await conn.fetchrow(
+        "WITH obj AS (SELECT mo.x, mo.y FROM map_objects mo "
+        "INNER JOIN game_objects go ON mo.game_object=go.uuid "
+        f"WHERE go.name='{obj_name}' AND mo.x >= {x} AND mo.x <= {x + 70} "
+        f"AND mo.y >= {y} AND mo.y <= {y + 70}) RETURNING mo.x, mo.y ) "
+    )
