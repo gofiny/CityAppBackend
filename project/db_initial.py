@@ -51,7 +51,9 @@ GENERATED_OBJECTS = '''CREATE TABLE IF NOT EXISTS "generated_objects"
 PawnObjects = '''CREATE TABLE IF NOT EXISTS "pawn_objects"
 (
     "game_object_ptr" uuid NOT NULL PRIMARY KEY REFERENCES "game_objects" ("uuid") ON DELETE cascade,
-    "max_actions" integer NOT NULL
+    "max_actions" integer NOT NULL,
+    "speed" float NOT NULL DEFAULT 0.33,
+    "power" integer NOT NULL DEFAULT 10
 )'''
 
 MAP_OBJECTS = '''CREATE TABLE IF NOT EXISTS "map_objects"
@@ -90,7 +92,8 @@ PawnActions = '''CREATE TABLE IF NOT EXISTS "pawn_actions"
     "uuid" uuid NOT NULL PRIMARY KEY,
     "pawn" uuid NOT NULL REFERENCES "game_objects" ("uuid") ON DELETE cascade,
     "action" uuid NOT NULL REFERENCES "actions" ("uuid"),
-    "epoch" float
+    "start_time" float,
+    "end_time" float
 );'''
 
 

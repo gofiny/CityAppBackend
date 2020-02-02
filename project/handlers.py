@@ -115,6 +115,9 @@ async def get_object_info(request: Request) -> json_response:
                     pool=request.app['pool'],
                     object_uuid=game_object["uuid"]
                 )
+                response["power"] = game_object["power"]
+                response["speed"] = game_object["speed"]
+                response["max_actions"] = game_object["max_actions"]
                 if actions:
                     pawn_actions = []
                     for action in actions:
@@ -125,6 +128,21 @@ async def get_object_info(request: Request) -> json_response:
                         })
                     actions = pawn_actions
                 response["actions"] = actions
+
+                available_actions = await staff.get_available_actions(
+                    pool=request.app["pool"],
+                    object_uuid=game_object["uuid"]
+                )
+                _enabled = False
+                if game_object["max_actions"] > len(actions):
+                    _enabled = True
+                actions = []
+                for action in available_actions:
+                    actions.append({
+                        "name": action["name"],
+                        "enabled": _enabled
+                    })
+                response["available_actions"] = actions
         else:
             response["errors"] = [6, "game_object is not found"]
     except (KeyError, ValueError, JSONDecodeError):

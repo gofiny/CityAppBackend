@@ -135,13 +135,16 @@ async def create_spawn(conn: Connection, player_uuid: uuid.uuid4) -> Tuple[int, 
     return pos
 
 
-async def create_pawn(conn: Connection, player_uuid: int, pawn_name: str, pos: Tuple[int, int]) -> None:
+async def create_pawn(conn: Connection, player_uuid: int, pawn_name: str, pos: Tuple[int, int], action_name: str) -> None:
     '''Создает пешку'''
     pawn_uuid: uuid.uuid4 = await conn.fetchval(
         "WITH go AS (INSERT INTO game_objects (uuid, name, health, object_type) "
-        f"VALUES ('{uuid.uuid4()}', '{pawn_name}', 10, 'pawn') RETURNING uuid) "
+        f"VALUES ('{uuid.uuid4()}', '{pawn_name}', 10, 'pawn')) WITH po AS ( "
         "INSERT INTO pawn_objects (game_object_ptr, max_actions) "
-        "VALUES ((SELECT uuid FROM go), 1) RETURNING (SELECT uuid FROM go);"
+        "VALUES ((SELECT uuid FROM go), 1)) WITH act AS ( "
+        f"SELECT uuid FROM actions WHERE name='{action_name}' )"
+        "WITH aa AS (INSERT INTO available_actions (uuid, action, pawn) "
+        f"VALUES ('{uuid.uuid4()}', (SELECT uuid FROM act), (SELECT uuid FROM go))) RETURNING (SELECT uuid FROM go)"
     )
     await create_object_on_map(conn, x=pos[0], y=pos[1], game_object=pawn_uuid, owner_uuid=player_uuid)
 
@@ -245,15 +248,16 @@ async def get_object(pool: Pool, object_uuid: str) -> Optional[Record]:
     '''Получает объект по uuid map_object'''
     async with pool.acquire() as conn:
         return await conn.fetchrow(
-            "SELECT go.uuid, go.name, go.object_type, players.username, go.health, mo.x, mo.y "
-            "FROM map_objects mo "
+            "SELECT go.uuid, go.name, go.object_type, players.username, go.health, mo.x, mo.y, "
+            "po.speed, po.power, po.max_actions FROM map_objects mo "
             "INNER JOIN game_objects go ON mo.game_object=go.uuid "
             "LEFT JOIN players ON mo.owner=players.uuid "
+            "LEFT JOIN pawn_objects po ON po.game_object_ptr=go.uuid "
             f"WHERE mo.uuid='{object_uuid}';"
         )
 
 
-async def get_pawn_actions(pool: Pool, object_uuid: str) -> Optional[List[Record]]:
+async def get_pawn_actions(pool: Pool, object_uuid: str) -> List[Optional[Record]]:
     '''Получение списка действий пешки'''
     async with pool.acquire() as conn:
         return await conn.fetch(
@@ -261,6 +265,17 @@ async def get_pawn_actions(pool: Pool, object_uuid: str) -> Optional[List[Record
             "LEFT JOIN game_objects go ON pa.pawn=go.uuid "
             f"WHERE go.uuid='{object_uuid}' "
             "ORDER BY epoch"
+        )
+
+
+async def get_available_actions(pool: Pool, object_uuid: str) -> List[Optional[Record]]:
+    '''Получает список доступных действий пешки'''
+    async with pool.acquire() as conn:
+        return await conn.fetch(
+            "SELECT actions.name FROM available_actions aa "
+            "LEFT JOIN game_objects go ON aa.pawn=go.uuid "
+            "LEFT JOIN actions ON aa.action=actions.uuid "
+            f"WHERE go.uuid='{object_uuid}'"
         )
 
 
