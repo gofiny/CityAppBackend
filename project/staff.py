@@ -125,12 +125,15 @@ async def create_spawn(conn: Connection, player_uuid: uuid.uuid4) -> Tuple[int, 
         "SELECT uuid FROM game_objects WHERE name = 'spawn';"
     )
     if not spawn_uuid:
-        spawn_uuid: uuid.uuid4 = await conn.fetchval(
+        await conn.fetchval(
             "WITH go AS (INSERT INTO game_objects (uuid, name, health, object_type) "
-            f"VALUES ('{uuid.uuid4()}', 'spawn', 1000, 'static') RETURNING uuid) "
+            f"VALUES ('{uuid.uuid4()}', 'spawn', 1000, 'static') RETURNING uuid), WITH so AS ( "
             "INSERT INTO static_objects (game_object_ptr) "
-            "VALUES ((SELECT uuid FROM go)) RETURNING (SELECT uuid FROM go);"
+            "VALUES ((SELECT uuid FROM go))) "
+            "INSERT INTO map_objects (uuid, x, y, game_object, owner) "
+            f"VALUES ('{uuid.uuid4()}', {pos[0]}, {pos[1]}, (SELECT uuid FROM go), '{player_uuid}')"
         )
+        return pos
     await create_object_on_map(conn, x=pos[0], y=pos[1], game_object=spawn_uuid, owner_uuid=player_uuid)
     return pos
 
@@ -262,10 +265,10 @@ async def get_pawn_actions(pool: Pool, object_uuid: str) -> List[Optional[Record
     '''Получение списка действий пешки'''
     async with pool.acquire() as conn:
         return await conn.fetch(
-            "SELECT pa.uuid, pa.action, pa.epoch FROM pawn_actions pa "
+            "SELECT pa.uuid, pa.action, pa.start_time FROM pawn_actions pa "
             "LEFT JOIN game_objects go ON pa.pawn=go.uuid "
             f"WHERE go.uuid='{object_uuid}' "
-            "ORDER BY epoch"
+            "ORDER BY start_time"
         )
 
 
