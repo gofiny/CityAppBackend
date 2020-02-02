@@ -168,7 +168,7 @@ async def get_player_pawns(request: Request) -> json_response:
                     "uuid": str(pawn["uuid"]),
                     "name": pawn["name"],
                     "health": pawn["health"],
-                    "max_tasks": pawn["max_tasks"]
+                    "max_tasks": pawn["max_actions"]
                 })
         response["pawns"] = response_pawns
     except (KeyError, ValueError, JSONDecodeError):
