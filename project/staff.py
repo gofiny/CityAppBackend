@@ -137,7 +137,7 @@ async def create_spawn(conn: Connection, player_uuid: uuid.uuid4) -> Tuple[int, 
 
 async def create_pawn(conn: Connection, player_uuid: int, pawn_name: str, pos: Tuple[int, int], action_name: str) -> None:
     '''Создает пешку'''
-    pawn_uuid: uuid.uuid4 = await conn.fetchval(
+    await conn.execute(
         "WITH go AS (INSERT INTO game_objects (uuid, name, health, object_type) "
         f"VALUES ('{uuid.uuid4()}', '{pawn_name}', 10, 'pawn') RETURNING uuid), po AS ( "
         "INSERT INTO pawn_objects (game_object_ptr, max_actions) "
@@ -146,10 +146,8 @@ async def create_pawn(conn: Connection, player_uuid: int, pawn_name: str, pos: T
         "INSERT INTO available_actions (uuid, action, pawn) "
         f"VALUES ('{uuid.uuid4()}', (SELECT uuid FROM act), (SELECT uuid FROM go))) "
         "INSERT INTO map_objects (uuid, x, y, game_object, owner) "
-        f"VALUES ('{uuid.uuid4()}', {pos[0]}, {pos[1]}, (SELECT uuid FROM go), '{player_uuid}')"
-        "RETURNING (SELECT uuid FROM go);"
+        f"VALUES ('{uuid.uuid4()}', {pos[0]}, {pos[1]}, (SELECT uuid FROM go), '{player_uuid}');"
     )
-    #await create_object_on_map(conn, x=pos[0], y=pos[1], game_object=pawn_uuid, owner_uuid=player_uuid)
 
 
 async def create_user(conn: Connection, user_id: int, username: str) -> Tuple[uuid.uuid4, str]:
