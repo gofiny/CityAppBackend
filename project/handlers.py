@@ -96,7 +96,7 @@ async def get_object_info(request: Request) -> json_response:
     response = {"status": False}
     try:
         data = await request.json()
-        game_object = await staff.get_object(
+        game_object = await staff.get_object_by_uuid(
             pool=request.app['pool'],
             object_uuid=data["uuid"]
         )
@@ -189,3 +189,28 @@ async def gen_new_object(request: Request) -> Response:
     return Response(status=200)
     #except (ValueError, KeyError, JSONDecodeError):
         #return Response(status=500)
+
+
+async def get_tile(request: Request) -> json_response:
+    '''Получение тайла по координатам'''
+    response = {"status": True, "game_object": None}
+    try:
+        data = await request.json()
+        tile = await staff.get_object_by_coors(
+            pool=request.app["pool"],
+            x=data["coors"]["x"],
+            y=data["coors"]["y"]
+        )
+        if tile:
+            response["game_object"] = {
+                "uuid": tile["uuid"],
+                "name": tile["name"],
+                "object_type": tile["object_type"],
+                "health": tile["health"],
+                "owner": tile["username"]
+            }
+    except (KeyError, ValueError, JSONDecodeError):
+        response["status"] = False
+        response["errors"] = [2, "json is not correct"]
+
+    return json_response(response)
