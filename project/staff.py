@@ -267,7 +267,7 @@ async def get_object_by_coors(pool: Pool, x: int, y: int) -> Optional[Record]:
         return await conn.fetchrow(
             "SELECT mo.uuid, go.name, go.object_type, players.username, go.health "
             "FROM map_objects mo "
-            "LEFT JOIN game_object go ON mo.game_object=go.uuid "
+            "LEFT JOIN game_objects go ON mo.game_object=go.uuid "
             "LEFT JOIN players ON mo.owner=players.uuid "
             f"WHERE mo.x={x} AND mo.y={y}"
         )
