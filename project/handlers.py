@@ -203,7 +203,7 @@ async def get_tile(request: Request) -> json_response:
         )
         if tile:
             response["game_object"] = {
-                "uuid": tile["uuid"],
+                "uuid": str(tile["uuid"]),
                 "name": tile["name"],
                 "object_type": tile["object_type"],
                 "health": tile["health"],
