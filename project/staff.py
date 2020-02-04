@@ -347,8 +347,10 @@ async def generate_object(pool: Pool, obj_name: str, limit: int):
 
 async def get_nearest_obj(conn: Connection, x: int, y: int, obj_name: str):
     await conn.fetchrow(
-        "WITH obj AS (SELECT mo.x, mo.y FROM map_objects mo "
+        f"SELECT mo.x, mo.y, |/((mo.x-({x}))^2 + (mo.y-({y}))^2) as length FROM map_objects mo "
         "INNER JOIN game_objects go ON mo.game_object=go.uuid "
         f"WHERE go.name='{obj_name}' AND mo.x >= {x} AND mo.x <= {x + 70} "
-        f"AND mo.y >= {y} AND mo.y <= {y + 70}) RETURNING mo.x, mo.y ) "
+        f"AND mo.y >= {y} AND mo.y <= {y + 70} "
+        "ORDER BY length LIMIT 1"
     )
+
