@@ -193,22 +193,24 @@ async def get_spawn_coords(pool: Pool, user_id: int) -> Record:
             raise UserOrSpawnNotExist
         return spawn
 
+async def get_objects_from_relay(conn: Connection, x_coords: Tuple[int, int], y_coords: Tuple[int, int]) -> List[Optional[Record]]:
+    '''Получает объекты из области на карте'''
+    return await conn.fetch(
+        "SELECT go.name, players.username, go.health, go.object_type, mo.x, mo.y, mo.uuid "
+        "FROM map_objects mo "
+        "LEFT JOIN players ON mo.owner=players.uuid "
+        "LEFT JOIN game_objects go ON mo.game_object=go.uuid "
+        f"WHERE mo.x >= {x_coords[0]} AND mo.x <= {x_coords[1]} "
+        f"AND mo.y >= {y_coords[0]} AND mo.y <= {y_coords[1]}"
+    )
+
 
 async def get_map(pool: Pool, x_coord: int, y_coord: int, width: int, height: int) -> List[Optional[Record]]:
     '''Возвращает объекты на карте из области'''
     x_coords = (x_coord - (width // 2), x_coord + (width // 2))
     y_coords = (y_coord - (height // 2), y_coord + (height // 2))
     async with pool.acquire() as conn:
-        all_objects: List[Optional[Record]] = await conn.fetch(
-            "SELECT go.name, players.username, go.health, go.object_type, mo.x, mo.y, mo.uuid "
-            "FROM map_objects mo "
-            "LEFT JOIN players ON mo.owner=players.uuid "
-            "LEFT JOIN game_objects go ON mo.game_object=go.uuid "
-            f"WHERE mo.x >= {x_coords[0]} AND mo.x <= {x_coords[1]} "
-            f"AND mo.y >= {y_coords[0]} AND mo.y <= {y_coords[1]}"
-        )
-
-        return all_objects
+        return await get_objects_from_relay(conn, x_coords, y_coords)
 
 
 async def gen_objects(pool: Pool) -> None:
@@ -345,8 +347,8 @@ async def generate_object(pool: Pool, obj_name: str, limit: int):
             return
 
 
-async def get_nearest_obj(conn: Connection, x: int, y: int, obj_name: str):
-    await conn.fetchrow(
+async def get_nearest_obj(conn: Connection, x: int, y: int, obj_name: str) -> Optional[Record]:
+    return await conn.fetchrow(
         f"SELECT mo.x, mo.y, |/((mo.x-({x}))^2 + (mo.y-({y}))^2) as length FROM map_objects mo "
         "INNER JOIN game_objects go ON mo.game_object=go.uuid "
         f"WHERE go.name='{obj_name}' AND mo.x >= {x} AND mo.x <= {x + 70} "
@@ -354,3 +356,25 @@ async def get_nearest_obj(conn: Connection, x: int, y: int, obj_name: str):
         "ORDER BY length LIMIT 1"
     )
 
+
+
+async def get_way(conn: Connection, start_pos: Tuple[int, int], finish_pos: Tuple[int, int]) -> list:
+    x_coors = tuple(sorted([start_pos[0], finish_pos[0]]))
+    y_coors = tuple(sorted([start_pos[1], finish_pos[1]]))
+    all_objects = await get_objects_from_relay(
+        conn=conn,
+        x_coords=x_coors,
+        y_coords=y_coors
+    )
+    x_way = []
+    y_way = []
+
+    current_x = start_pos[0]
+    current_y = start_pos[1]
+    while current_x != finish_pos[0] and current_y != finish_pos[1]:
+        if current_x == finish_pos[0]:
+            pass
+        elif current_y == finish_pos[1]:
+            pass
+        else:
+            pass
