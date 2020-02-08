@@ -1,7 +1,8 @@
 '''Подкапотка запросов к БД'''
 from json.decoder import JSONDecodeError
 from typing import Optional, Tuple, List, Union
-from exceptions import UserAlreadyExist, UserOrSpawnNotExist
+from exceptions import UserAlreadyExist, UserOrSpawnNotExist, DeadEnd
+from operator import itemgetter
 import random
 import string
 import hashlib
@@ -357,24 +358,146 @@ async def get_nearest_obj(conn: Connection, x: int, y: int, obj_name: str) -> Op
     )
 
 
+async def get_relay_objects(conn: Connection, min_x: int, min_y: int, max_x: int, max_y: int) -> List[Optional[Record]]:
+    return await conn.fetch(
+        "SELECT mo.x, mo.y "
+        "FROM map_objects mo "
+        "LEFT JOIN game_objects go ON mo.game_object=go.uuid "
+        f"WHERE mo.x >= {min_x} AND mo.x <= {max_x} "
+        f"AND mo.y >= {min_y} AND mo.y <= {max_y}"
+    )
+
+
+async def check_way_for_clear(static_coord: int, st_name: str, way: list, way_name: str, objects: List[Optional[Record]], reverse: bool = False):
+    objects.sort(key=itemgetter(way_name), reverse=reverse)
+    for obj in objects:
+        if obj[st_name] == static_coord and obj[way_name] in way:
+            return obj
+
+
+async def get_finish_coord(f_coord: int, f_name: str, st_coord: int, st_name: str, c_coord: int, objects: Optional[Record]):
+    way_side = f_coord - c_coord
+    way = [point for point in range(sorted([c_coord, f_coord]))]
+    obj = await check_way_for_clear(
+        static_coord=st_coord,
+        st_name=st_name,
+        way=way,
+        way_name=f_name,
+        reverse=False if way_side > 0 else True,
+        objects=objects
+    )
+    if obj:
+        finish_coord = c_coord + ((obj[f_name] - c_coord) + (-1) if way_side > 0 else 1)
+        response = (finish_coord, True)  # где bool это надо ли смещаться
+    else:
+        finish_coord = c_coord + way_side
+        response = (finish_coord, False)
+
+    return response
+
 
 async def get_way(conn: Connection, start_pos: Tuple[int, int], finish_pos: Tuple[int, int]) -> list:
-    x_coors = tuple(sorted([start_pos[0], finish_pos[0]]))
-    y_coors = tuple(sorted([start_pos[1], finish_pos[1]]))
-    all_objects = await get_objects_from_relay(
+    x_coors = sorted([start_pos[0], finish_pos[0]])
+    y_coors = sorted([start_pos[1], finish_pos[1]])
+    all_objects = await get_relay_objects(
         conn=conn,
-        x_coords=x_coors,
-        y_coords=y_coors
+        min_x=x_coors[0] - 10,
+        max_x=x_coors[1] + 10,
+        min_y=y_coors[0] - 10,
+        max_y=y_coors[1] + 10
     )
-    x_way = []
-    y_way = []
+
+    full_way = [{"x": start_pos[0], "y": start_pos[1]}]
 
     current_x = start_pos[0]
     current_y = start_pos[1]
     while current_x != finish_pos[0] and current_y != finish_pos[1]:
-        if current_x == finish_pos[0]:
-            pass
-        elif current_y == finish_pos[1]:
-            pass
+        if current_y == finish_pos[1]:
+            finish_x, need_move = await get_finish_coord(
+                f_coord=finish_pos[0],
+                f_name="x",
+                st_coord=current_y,
+                st_name="y",
+                c_coord=current_x,
+                objects=all_objects
+            )
+
+            current_x = finish_x
+            full_way.append({
+                "x": current_x,
+                "y": current_y
+            })
+
+            if need_move is True:
+                move_coord = finish_pos[1]
+                while True:
+                    finish_y, need_move = await get_finish_coord(
+                        f_coord=move_coord,
+                        f_name="y",
+                        st_coord=current_x,
+                        st_name="x",
+                        c_coord=current_y,
+                        objects=all_objects
+                    )
+                    if need_move is True and move_coord == finish_pos[1]:
+                        move_coord = current_y + 1
+                        continue
+                    elif need_move is True and move_coord == current_y + 1:
+                        move_coord = move_coord - 2
+                        continue
+                    elif need_move is True:
+                        raise DeadEnd
+                    else:
+                        break
+
+                current_y = finish_y
+                full_way.append({
+                    "x": current_x,
+                    "y": current_y
+                })
         else:
-            pass
+            finish_y, need_move = await get_finish_coord(
+                f_coord=finish_pos[1],
+                f_name="y",
+                st_coord=current_x,
+                st_name="x",
+                c_coord=current_y,
+                objects=all_objects
+            )
+
+            current_y = finish_y
+            full_way.append({
+                "x": current_x,
+                "y": current_y
+            })
+
+            if need_move is True:
+                move_coord = finish_pos[0]
+                while True:
+                    finish_x, need_move = await get_finish_coord(
+                        f_coord=move_coord,
+                        f_name="x",
+                        st_coord=current_y,
+                        st_name="y",
+                        c_coord=current_x,
+                        objects=all_objects
+                    )
+                    if need_move is True and move_coord == finish_pos[0]:
+                        move_coord = current_x + 1
+                        continue
+                    elif need_move is True and move_coord == current_x + 1:
+                        move_coord = move_coord - 2
+                        continue
+                    elif need_move is True:
+                        raise DeadEnd
+                    else:
+                        break
+
+                current_x = finish_x
+                full_way.append({
+                    "x": current_x,
+                    "y": current_y
+                })
+
+    return full_way
+

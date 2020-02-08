@@ -7,3 +7,7 @@ class UserAlreadyExist(Exception):
 
 class UserOrSpawnNotExist(Exception):
     '''Вызывается если пользователь или объект спауна не найден в базе'''
+
+
+class DeadEnd(Exception):
+    '''Если система просчета пути попала в тупик'''

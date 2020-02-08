@@ -214,3 +214,16 @@ async def get_tile(request: Request) -> json_response:
         response["errors"] = [2, "json is not correct"]
 
     return json_response(response)
+
+
+async def get_way(request: Request) -> json_response:
+    response = {"status": True}
+    pool = request.app["pool"]
+    async with pool.acquire() as conn:
+        way = await staff.get_way(
+            conn=conn,
+            start_pos=(1, 0),
+            finish_pos=(3, 5)
+        )
+    response["way"] = way
+    return response

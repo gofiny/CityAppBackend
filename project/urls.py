@@ -7,7 +7,8 @@ from handlers import (
     get_object_info,
     get_player_pawns,
     gen_new_object,
-    get_tile
+    get_tile,
+    get_way
 )
 
 
@@ -19,5 +20,6 @@ URLS = [
     web.post("/async/get_object_info", get_object_info),
     web.post("/async/get_player_pawns", get_player_pawns),
     web.post("/async/gen_new_object", gen_new_object),
-    web.post("/async/get_tile", get_tile)
+    web.post("/async/get_tile", get_tile),
+    web.post("/async/get_way", get_way)
 ]
