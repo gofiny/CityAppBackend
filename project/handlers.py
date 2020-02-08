@@ -226,4 +226,4 @@ async def get_way(request: Request) -> json_response:
             finish_pos=(3, 5)
         )
     response["way"] = way
-    return response
+    return json_response(response)
