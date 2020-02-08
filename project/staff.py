@@ -377,7 +377,8 @@ async def check_way_for_clear(static_coord: int, st_name: str, way: list, way_na
 
 async def get_finish_coord(f_coord: int, f_name: str, st_coord: int, st_name: str, c_coord: int, objects: Optional[Record]):
     way_side = f_coord - c_coord
-    way = [point for point in range(sorted([c_coord, f_coord]))]
+    sorted_coords = sorted([c_coord, f_coord])
+    way = [point for point in range(sorted_coords[0], sorted_coords[1])]
     obj = await check_way_for_clear(
         static_coord=st_coord,
         st_name=st_name,
