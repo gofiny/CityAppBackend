@@ -368,7 +368,7 @@ async def get_relay_objects(conn: Connection, min_x: int, min_y: int, max_x: int
     )
 
 
-async def check_way_for_clear(static_coord: int, st_name: str, way: list, way_name: str, objects: List[Optional[Record]], reverse: bool = False):
+async def check_way_for_clear(static_coord: int, st_name: str, way: list, way_name: str, objects: List[Optional[Record]], reverse: bool):
     objects.sort(key=itemgetter(way_name), reverse=reverse)
     for obj in objects:
         if obj[st_name] == static_coord and obj[way_name] in way:
@@ -378,7 +378,7 @@ async def check_way_for_clear(static_coord: int, st_name: str, way: list, way_na
 async def get_finish_coord(f_coord: int, f_name: str, st_coord: int, st_name: str, c_coord: int, objects: Optional[Record]):
     way_side = f_coord - c_coord
     sorted_coords = sorted([c_coord, f_coord])
-    way = [point for point in range(sorted_coords[0], sorted_coords[1])]
+    way = [point for point in range(sorted_coords[0] + 1, sorted_coords[1] + 1)]
     obj = await check_way_for_clear(
         static_coord=st_coord,
         st_name=st_name,
@@ -388,7 +388,7 @@ async def get_finish_coord(f_coord: int, f_name: str, st_coord: int, st_name: st
         objects=objects
     )
     if obj:
-        finish_coord = c_coord + ((obj[f_name] - c_coord) + (-1) if way_side > 0 else 1)
+        finish_coord = c_coord + ((obj[f_name] - c_coord) + ((-1) if way_side > 0 else 1))
         response = (finish_coord, True)  # где bool это надо ли смещаться
     else:
         finish_coord = c_coord + way_side

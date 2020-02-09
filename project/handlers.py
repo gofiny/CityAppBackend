@@ -223,7 +223,7 @@ async def get_way(request: Request) -> json_response:
         way = await staff.get_way(
             conn=conn,
             start_pos=(1, 0),
-            finish_pos=(3, 5)
+            finish_pos=(2, 5)
         )
     response["way"] = way
     return json_response(response)
