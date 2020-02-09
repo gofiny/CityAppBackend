@@ -219,7 +219,8 @@ async def get_tile(request: Request) -> json_response:
 async def get_way(request: Request) -> json_response:
     response = {"status": True}
     pool = request.app["pool"]
-    pos = await request.json()
+    data = await request.json()
+    pos = data["pos"]
     async with pool.acquire() as conn:
         way = await staff.get_way(
             conn=conn,
