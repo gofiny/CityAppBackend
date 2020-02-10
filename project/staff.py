@@ -376,11 +376,32 @@ async def check_way_for_clear(static_coord: int, st_name: str, way: list, way_na
             return obj
 
 
-async def make_map(min_x, max_x, min_y, max_y, map_objects):
-    matrix = {}
+async def make_map(min_x, max_x, min_y, max_y):
+    matrix = []
     for y in range(min_y, max_y + 1):
         for x in range(min_x, max_x + 1):
-            matrix[y] = {"x": x}
+            matrix.append({
+                "x": x,
+                "y": y,
+                "is_empty": True
+            })
+    matrix.sort(key=itemgetter("y"), reverse=True)
+    return matrix
+
+
+async def fill_matrix(matrix, map_objects):
+    for map_object in map_objects:
+        index = matrix.index({
+            "x": map_object["x"],
+            "y": map_object["y"],
+            "is_empty": True
+        })
+        matrix[index]["is_empty"] = False
+    return matrix
+
+
+async def find_way(filled_matrix, start_pos, finish_pos):
+    pass
 
 
 async def get_way(conn: Connection, start_pos: Tuple[int, int], finish_pos: Tuple[int, int]) -> list:
