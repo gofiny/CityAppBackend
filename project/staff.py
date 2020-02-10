@@ -364,7 +364,8 @@ async def get_relay_objects(conn: Connection, min_x: int, min_y: int, max_x: int
         "FROM map_objects mo "
         "LEFT JOIN game_objects go ON mo.game_object=go.uuid "
         f"WHERE mo.x >= {min_x} AND mo.x <= {max_x} "
-        f"AND mo.y >= {min_y} AND mo.y <= {max_y}"
+        f"AND mo.y >= {min_y} AND mo.y <= {max_y} "
+        "ORDER BY mo.y DESC, mo.x ASC"
     )
 
 
@@ -375,26 +376,11 @@ async def check_way_for_clear(static_coord: int, st_name: str, way: list, way_na
             return obj
 
 
-async def get_finish_coord(f_coord: int, f_name: str, st_coord: int, st_name: str, c_coord: int, objects: Optional[Record]):
-    way_side = f_coord - c_coord
-    sorted_coords = sorted([c_coord, f_coord])
-    way = [point for point in range(sorted_coords[0] + 1, sorted_coords[1] + 1)]
-    obj = await check_way_for_clear(
-        static_coord=st_coord,
-        st_name=st_name,
-        way=way,
-        way_name=f_name,
-        reverse=False if way_side > 0 else True,
-        objects=objects
-    )
-    if obj:
-        finish_coord = c_coord + ((obj[f_name] - c_coord) + ((-1) if way_side > 0 else 1))
-        response = (finish_coord, True)  # где bool это надо ли смещаться
-    else:
-        finish_coord = c_coord + way_side
-        response = (finish_coord, False)
-
-    return response
+async def make_map(min_x, max_x, min_y, max_y, map_objects):
+    matrix = {}
+    for y in range(min_y, max_y + 1):
+        for x in range(min_x, max_x + 1):
+            matrix[y] = {"x": x}
 
 
 async def get_way(conn: Connection, start_pos: Tuple[int, int], finish_pos: Tuple[int, int]) -> list:
@@ -407,98 +393,3 @@ async def get_way(conn: Connection, start_pos: Tuple[int, int], finish_pos: Tupl
         min_y=y_coors[0] - 10,
         max_y=y_coors[1] + 10
     )
-
-    full_way = [{"x": start_pos[0], "y": start_pos[1]}]
-
-    current_x = start_pos[0]
-    current_y = start_pos[1]
-    while current_x != finish_pos[0] and current_y != finish_pos[1]:
-        if current_y == finish_pos[1]:
-            finish_x, need_move = await get_finish_coord(
-                f_coord=finish_pos[0],
-                f_name="x",
-                st_coord=current_y,
-                st_name="y",
-                c_coord=current_x,
-                objects=all_objects
-            )
-
-            current_x = finish_x
-            full_way.append({
-                "x": current_x,
-                "y": current_y
-            })
-
-            if need_move is True:
-                move_coord = finish_pos[1]
-                while True:
-                    finish_y, need_move = await get_finish_coord(
-                        f_coord=move_coord,
-                        f_name="y",
-                        st_coord=current_x,
-                        st_name="x",
-                        c_coord=current_y,
-                        objects=all_objects
-                    )
-                    if need_move is True and move_coord == finish_pos[1]:
-                        move_coord = current_y + 1
-                        continue
-                    elif need_move is True and move_coord == current_y + 1:
-                        move_coord = move_coord - 2
-                        continue
-                    elif need_move is True:
-                        raise DeadEnd
-                    else:
-                        break
-
-                current_y = finish_y
-                full_way.append({
-                    "x": current_x,
-                    "y": current_y
-                })
-        else:
-            finish_y, need_move = await get_finish_coord(
-                f_coord=finish_pos[1],
-                f_name="y",
-                st_coord=current_x,
-                st_name="x",
-                c_coord=current_y,
-                objects=all_objects
-            )
-
-            current_y = finish_y
-            full_way.append({
-                "x": current_x,
-                "y": current_y
-            })
-
-            if need_move is True:
-                move_coord = finish_pos[0]
-                while True:
-                    finish_x, need_move = await get_finish_coord(
-                        f_coord=move_coord,
-                        f_name="x",
-                        st_coord=current_y,
-                        st_name="y",
-                        c_coord=current_x,
-                        objects=all_objects
-                    )
-                    if need_move is True and move_coord == finish_pos[0]:
-                        move_coord = current_x + 1
-                        continue
-                    elif need_move is True and move_coord == current_x + 1:
-                        move_coord = move_coord - 2
-                        continue
-                    elif need_move is True:
-                        raise DeadEnd
-                    else:
-                        break
-
-                current_x = finish_x
-                full_way.append({
-                    "x": current_x,
-                    "y": current_y
-                })
-
-    return full_way
-
