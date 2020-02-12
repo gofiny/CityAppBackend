@@ -227,6 +227,6 @@ async def get_way(request: Request) -> json_response:
             start_pos=(1, 0),
             finish_pos=(pos[0], pos[1])
         )
-    response["way"] = way
-    response["cost"] = cost
+    response["way"] = f"{way}"
+    response["cost"] = f"{cost}"
     return json_response(response)
