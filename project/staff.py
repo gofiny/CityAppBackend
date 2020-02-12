@@ -1,4 +1,5 @@
 '''Подкапотка запросов к БД'''
+import heapq
 from json.decoder import JSONDecodeError
 from typing import Optional, Tuple, List, Union
 from exceptions import UserAlreadyExist, UserOrSpawnNotExist, DeadEnd
@@ -11,6 +12,54 @@ from asyncpg import Record
 from asyncpg.pool import Pool
 from asyncpg.connection import Connection
 from aiohttp.web import json_response
+
+
+class PriorityQueue:
+    def __init__(self):
+        self.elements = []
+    
+    def empty(self):
+        return len(self.elements) == 0
+    
+    def put(self, item, priority):
+        heapq.heappush(self.elements, (priority, item))
+    
+    def get(self):
+        return heapq.heappop(self.elements)[1]
+
+
+class SquareGrid:
+    def __init__(self, min_x: int, max_x: int, min_y: int, max_y: int, map_objects: List[Optional[Record]]):
+        self.min_x = min_x
+        self.max_x = max_x
+        self.min_y = min_y
+        self.max_y = max_x
+        self.width = abs(min_x - max_x)
+        self.height = abs(min_y - max_y)
+        self.walls = []
+        self._make_walls(map_objects)
+
+    def _make_walls(self, map_objects: List[Optional[Record]]):
+        for map_objects in map_objects:
+            self.walls.append((
+                map_objects["x"] - self.min_x,
+                map_objects["y"] - self.min_y
+            ))
+
+    def in_bounds(self, pos: Tuple[int, int]):
+        (x, y) = pos
+        return 0 <= x < self.width and 0 <= y < self.height
+    
+    def passable(self, pos: Tuple[int, int]):
+        return pos not in self.walls
+    
+    def neighbors(self, pos: Tuple[int, int]):
+        (x, y) = pos
+        results = [(x+1, y), (x, y-1), (x-1, y), (x, y+1)]
+        if (x + y) % 2 == 0: results.reverse()
+        results = filter(self.in_bounds, results)
+        results = filter(self.passable, results)
+        return results
 
 
 async def gen_string(size: int = 18, chars: str = string.ascii_uppercase + string.digits) -> str:
@@ -376,32 +425,35 @@ async def check_way_for_clear(static_coord: int, st_name: str, way: list, way_na
             return obj
 
 
-async def make_map(min_x, max_x, min_y, max_y):
-    matrix = []
-    for y in range(min_y, max_y + 1):
-        for x in range(min_x, max_x + 1):
-            matrix.append({
-                "x": x,
-                "y": y,
-                "is_empty": True
-            })
-    matrix.sort(key=itemgetter("y"), reverse=True)
-    return matrix
+def heuristic(a: Tuple[int, int], b: Tuple[int, int]):
+    (x1, y1) = a
+    (x2, y2) = b
+    return abs(x1 - x2) + abs(y1 - y2)
 
 
-async def fill_matrix(matrix, map_objects):
-    for map_object in map_objects:
-        index = matrix.index({
-            "x": map_object["x"],
-            "y": map_object["y"],
-            "is_empty": True
-        })
-        matrix[index]["is_empty"] = False
-    return matrix
-
-
-async def find_way(filled_matrix, start_pos, finish_pos):
-    pass
+def a_star_search(graph, start, goal):
+    frontier = PriorityQueue()
+    frontier.put(start, 0)
+    came_from = {}
+    cost_so_far = {}
+    came_from[start] = None
+    cost_so_far[start] = 0
+    
+    while not frontier.empty():
+        current = frontier.get()
+        
+        if current == goal:
+            break
+        
+        for next in graph.neighbors(current):
+            new_cost = cost_so_far[current] + graph.cost(current, next)
+            if next not in cost_so_far or new_cost < cost_so_far[next]:
+                cost_so_far[next] = new_cost
+                priority = new_cost + heuristic(goal, next)
+                frontier.put(next, priority)
+                came_from[next] = current
+    
+    return came_from, cost_so_far
 
 
 async def get_way(conn: Connection, start_pos: Tuple[int, int], finish_pos: Tuple[int, int]) -> list:
@@ -409,8 +461,22 @@ async def get_way(conn: Connection, start_pos: Tuple[int, int], finish_pos: Tupl
     y_coors = sorted([start_pos[1], finish_pos[1]])
     all_objects = await get_relay_objects(
         conn=conn,
-        min_x=x_coors[0] - 10,
-        max_x=x_coors[1] + 10,
-        min_y=y_coors[0] - 10,
-        max_y=y_coors[1] + 10
+        min_x=x_coors[0] - 15,
+        max_x=x_coors[1] + 15,
+        min_y=y_coors[0] - 15,
+        max_y=y_coors[1] + 15
+    )
+
+    graph = SquareGrid(
+        min_x=x_coors[0] - 15,
+        max_x=x_coors[1] + 15,
+        min_y=y_coors[0] - 15,
+        max_y=y_coors[1] + 15,
+        map_objects=all_objects
+    )
+
+    return a_star_search(
+        graph=graph,
+        start=(start_pos[0] - graph.min_x, start_pos[1] - graph.min_y),
+        goal=(finish_pos[0] - graph.min_x, finish_pos[1] - graph.min_y)
     )
