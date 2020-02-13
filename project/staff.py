@@ -440,7 +440,7 @@ def a_star_search(graph, start, goal):
     frontier.put(start, 0)
     came_from = {}
     cost_so_far = {}
-    came_from[start] = None
+    came_from[start + graph.min_x] = None
     cost_so_far[start] = 0
     
     while not frontier.empty():
@@ -455,7 +455,7 @@ def a_star_search(graph, start, goal):
                 cost_so_far[next] = new_cost
                 priority = new_cost + heuristic(goal, next)
                 frontier.put(next, priority)
-                came_from[next] = current
+                came_from[next] = current + graph.min_x
     
     return came_from, cost_so_far
 
