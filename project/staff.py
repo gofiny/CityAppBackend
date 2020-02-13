@@ -455,7 +455,7 @@ def a_star_search(graph, start, goal):
                 cost_so_far[next] = new_cost
                 priority = new_cost + heuristic(goal, next)
                 frontier.put(next, priority)
-                came_from[next] = (curren[0] + graph.min_x, current[1] + graph.min_y)
+                came_from[next] = (current[0] + graph.min_x, current[1] + graph.min_y)
     
     return came_from, cost_so_far
 
