@@ -440,7 +440,7 @@ def a_star_search(graph, start, goal):
     frontier.put(start, 0)
     came_from = {}
     cost_so_far = {}
-    came_from[(start[0] + graph.min_x, start[1]) + graph.min_y] = None
+    came_from[(start[0] + graph.min_x, start[1] + graph.min_y)] = None
     cost_so_far[start] = 0
     
     while not frontier.empty():
