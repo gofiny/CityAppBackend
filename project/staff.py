@@ -457,7 +457,7 @@ def a_star_search(graph, start, goal):
                 frontier.put(next, priority)
                 came_from[next] = (current[0] + graph.min_x, current[1] + graph.min_y)
     
-    return came_from, cost_so_far
+    return came_from, cost_so_far, graph.walls
 
 
 async def get_way(conn: Connection, start_pos: Tuple[int, int], finish_pos: Tuple[int, int]) -> list:
