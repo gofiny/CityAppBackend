@@ -437,7 +437,7 @@ def heuristic(a: Tuple[int, int], b: Tuple[int, int]):
 
 def a_star_search(graph, start, goal):
     frontier = PriorityQueue()
-    frontier.put((start[0] - graph.min_x, start[1] + graph.min_y), 0)
+    frontier.put((start[0] + graph.min_x, start[1] + graph.min_y), 0)
     came_from = {}
     cost_so_far = {}
     came_from[(start[0] + graph.min_x, start[1] + graph.min_y)] = None
