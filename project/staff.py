@@ -43,8 +43,8 @@ class SquareGrid:
     def _make_walls(self, map_objects: List[Optional[Record]]):
         for map_objects in map_objects:
             self.walls.append((
-                map_objects["x"] - self.min_x,
-                map_objects["y"] - self.min_y
+                abs(map_objects["x"] - self.min_x),
+                abs(map_objects["y"] - self.min_y)
             ))
 
     def in_bounds(self, pos: Tuple[int, int]):
