@@ -460,13 +460,12 @@ def a_star_search(graph, start, goal):
     return came_from
 
 
-async def reconstruct_path(came_from, start, goal):
+async def reconstruct_path(came_from, start, goal, _x, _y):
     current = goal
     path = [current]
     while current != start:
         current = came_from[current]
-        path.append(current)
-    path.append(start) # необязательно
+        path.append((current[0] + _x, current[1] + _y))
     path.reverse() # необязательно
     return path
 
@@ -498,4 +497,4 @@ async def get_way(conn: Connection, start_pos: Tuple[int, int], finish_pos: Tupl
         goal=goal
     )
 
-    return await reconstruct_path(came_from=came_from, start=start, goal=goal)
+    return await reconstruct_path(came_from=came_from, start=start, goal=goal, _x=graph.min_x, _y=graph.min_y)
