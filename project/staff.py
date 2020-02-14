@@ -462,7 +462,7 @@ def a_star_search(graph, start, goal):
 
 async def reconstruct_path(came_from, start, goal, _x, _y):
     current = goal
-    path = [current]
+    path = [(current[0] + _x, current[1] + _y)]
     while current != start:
         current = came_from[current]
         path.append((current[0] + _x, current[1] + _y))
