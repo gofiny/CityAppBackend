@@ -222,12 +222,10 @@ async def get_way(request: Request) -> json_response:
     data = await request.json()
     pos = data["pos"]
     async with pool.acquire() as conn:
-        came_from, cost_so_far, walls = await staff.get_way(
+        path = await staff.get_way(
             conn=conn,
             start_pos=(1, 0),
             finish_pos=(pos[0], pos[1])
         )
-    response["came_from"] = f"{came_from}"
-    response["cost_so_far"] = f"{cost_so_far}"
-    response["walls"] = f"{walls}"
+    response["path"] = f"{path}"
     return json_response(response)

@@ -437,7 +437,6 @@ def heuristic(a: Tuple[int, int], b: Tuple[int, int]):
 
 def a_star_search(graph, start, goal):
     frontier = PriorityQueue()
-    start = (abs(start[0] - graph.min_x), abs(start[1] - graph.min_y))
     frontier.put(start, 0)
     came_from = {}
     cost_so_far = {}
@@ -456,9 +455,20 @@ def a_star_search(graph, start, goal):
                 cost_so_far[next] = new_cost
                 priority = new_cost + heuristic(goal, next)
                 frontier.put(next, priority)
-                came_from[next] = (abs(current[0] - graph.min_x), abs(current[1] - graph.min_y))
+                came_from[next] = current
     
-    return came_from, cost_so_far, graph.walls
+    return came_from
+
+
+async def reconstruct_path(came_from, start, goal):
+    current = goal
+    path = [current]
+    while current != start:
+        current = came_from[current]
+        path.append(current)
+    path.append(start) # необязательно
+    path.reverse() # необязательно
+    return path
 
 
 async def get_way(conn: Connection, start_pos: Tuple[int, int], finish_pos: Tuple[int, int]) -> list:
@@ -480,8 +490,12 @@ async def get_way(conn: Connection, start_pos: Tuple[int, int], finish_pos: Tupl
         map_objects=all_objects
     )
 
-    return a_star_search(
+    start=(abs(start_pos[0] - graph.min_x), abs(start_pos[1] - graph.min_y))
+    goal=(abs(finish_pos[0] - graph.min_x), abs(finish_pos[1] - graph.min_y)) 
+    came_from = a_star_search(
         graph=graph,
-        start=(start_pos[0] - graph.min_x, start_pos[1] - graph.min_y),
-        goal=(finish_pos[0] - graph.min_x, finish_pos[1] - graph.min_y)
+        start=start,
+        goal=goal
     )
+
+    path = await reconstruct_path(came_from=came_from, start=start, goal=goal)
