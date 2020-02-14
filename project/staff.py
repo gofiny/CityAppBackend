@@ -498,4 +498,4 @@ async def get_way(conn: Connection, start_pos: Tuple[int, int], finish_pos: Tupl
         goal=goal
     )
 
-    path = await reconstruct_path(came_from=came_from, start=start, goal=goal)
+    return await reconstruct_path(came_from=came_from, start=start, goal=goal)
