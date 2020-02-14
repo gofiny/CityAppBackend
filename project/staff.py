@@ -471,6 +471,8 @@ async def get_way(conn: Connection, start_pos: Tuple[int, int], finish_pos: Tupl
         max_y=y_coors[1] + 15
     )
 
+    return all_objects
+
     graph = SquareGrid(
         min_x=x_coors[0] - 15,
         max_x=x_coors[1] + 15,
