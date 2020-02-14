@@ -466,7 +466,7 @@ async def reconstruct_path(came_from, start, goal, _x, _y):
     while current != start:
         current = came_from[current]
         path.append((current[0] + _x, current[1] + _y))
-    path.reverse() # необязательно
+    path.reverse() 
     return path
 
 
