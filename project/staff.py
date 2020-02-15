@@ -14,6 +14,11 @@ from asyncpg.connection import Connection
 from aiohttp.web import json_response
 
 
+take_objname_by_action = {
+    "cut": "tree"
+}
+
+
 class PriorityQueue:
     def __init__(self):
         self.elements = []
@@ -318,7 +323,7 @@ async def get_object_by_uuid(pool: Pool, object_uuid: str) -> Optional[Record]:
 
 
 async def get_object_by_coors(pool: Pool, x: int, y: int) -> Optional[Record]:
-    ''''Получает объект на тайлей или ничего'''
+    ''''Получает объект на тайле или ничего'''
     async with pool.acquire() as conn:
         return await conn.fetchrow(
             "SELECT mo.uuid, go.name, go.object_type, players.username, go.health "
@@ -401,12 +406,19 @@ async def generate_object(pool: Pool, obj_name: str, limit: int):
             return
 
 
-async def get_nearest_obj(conn: Connection, x: int, y: int, obj_name: str) -> Optional[Record]:
+async def get_nearest_obj(conn: Connection, object_uuid: str, obj_name: str, token: str) -> Optional[Record]:
     return await conn.fetchrow(
-        f"SELECT mo.x, mo.y, |/((mo.x-({x}))^2 + (mo.y-({y}))^2) as length FROM map_objects mo "
+        "WITH pawn AS (SELECT mo.x, mo.y, po.power, po.speed FROM map_objects mo "
         "INNER JOIN game_objects go ON mo.game_object=go.uuid "
-        f"WHERE go.name='{obj_name}' AND mo.x >= {x} AND mo.x <= {x + 70} "
-        f"AND mo.y >= {y} AND mo.y <= {y + 70} "
+        "INNER JOIN pawn_objects po ON po.game_object_ptr=go.uuid "
+        "INNER JOIN players ON mo.owner=players.uuid "
+        f"WHERE players.token='{token}' AND go.uuid='{object_uuid}') "
+        "SELECT mo.x, mo.y, |/((mo.x-(SELECT x FROM pawn))^2 + (mo.y-(SELECT y FROM pawn))^2) AS length, "
+        "go.health, (SELECT x FROM pawn) AS pawn_x, (SELECT y FROM pawn) AS pawn_y "
+        "(SELECT power FROM pawn) AS pawn_power, (SELECT speed FROM pawn) AS pawn_speed "
+        "FROM map_objects mo INNER JOIN game_objects go ON mo.game_object=go.uuid "
+        f"WHERE go.name='{obj_name}' AND mo.x >= (SELECT x FROM pawn) AND mo.x <= (SELECT x FROM pawn + 100) "
+        "AND mo.y >= (SELECT y FROM pawn) AND mo.y <= (SELECT y FROM pawn + 100) "
         "ORDER BY length LIMIT 1"
     )
 
@@ -498,3 +510,25 @@ async def get_way(conn: Connection, start_pos: Tuple[int, int], finish_pos: Tupl
     )
 
     return await reconstruct_path(came_from=came_from, start=start, goal=goal, _x=graph.min_x, _y=graph.min_y)
+
+
+async def action_manager(pool: Pool, pawn_uuid: str, token: str, action: str):
+    async with pool.acquire() as conn:
+        nearest_obj = await get_nearest_obj(
+            conn=conn,
+            object_uuid=pawn_uuid,
+            obj_name=take_objname_by_action[action],
+            token=token
+        )
+
+        way = await get_way(
+            conn=conn,
+            start_pos=(nearest_obj["pawn_x"], nearest_obj["pawn_y"]),
+            finish_pos=(nearest_obj["x"], nearest_obj["y"])
+        )
+
+        walk_time = (len(way) - 1) / nearest_obj["pawn_speed"]
+        work_time_count = (nearest_obj["health"] // nearest_obj["pawn_power"])
+        common_time = walk_time * (work_time_count * 2) + (work_time_count * 20)
+
+        return way, common_time

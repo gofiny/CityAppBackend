@@ -218,16 +218,16 @@ async def get_tile(request: Request) -> json_response:
     return json_response(response)
 
 
-async def get_way(request: Request) -> json_response:
+async def add_action_to_pawn(request: Request) -> json_response:
     response = {"status": True}
-    pool = request.app["pool"]
     data = await request.json()
-    pos = data["pos"]
-    async with pool.acquire() as conn:
-        path = await staff.get_way(
-            conn=conn,
-            start_pos=(1, 0),
-            finish_pos=(pos[0], pos[1])
-        )
-    response["path"] = f"{path}"
+    way, time = await staff.action_manager(
+        pool=request.app["pool"],
+        pawn_uuid=data["pawn_uuid"],
+        token=data["token"],
+        action=data["action"]
+    )
+    response["way"] = way
+    response["time"] = time
+    
     return json_response(response)
