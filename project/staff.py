@@ -417,8 +417,8 @@ async def get_nearest_obj(conn: Connection, object_uuid: str, obj_name: str, tok
         "go.health, (SELECT x FROM pawn) AS pawn_x, (SELECT y FROM pawn) AS pawn_y "
         "(SELECT power FROM pawn) AS pawn_power, (SELECT speed FROM pawn) AS pawn_speed "
         "FROM map_objects mo INNER JOIN game_objects go ON mo.game_object=go.uuid "
-        f"WHERE go.name='{obj_name}' AND mo.x >= (SELECT x FROM pawn) AND mo.x <= (SELECT x FROM pawn + 100) "
-        "AND mo.y >= (SELECT y FROM pawn) AND mo.y <= (SELECT y FROM pawn + 100) "
+        f"WHERE go.name='{obj_name}' AND mo.x >= (SELECT x FROM pawn) AND mo.x <= ((SELECT x FROM pawn) + 100) "
+        "AND mo.y >= (SELECT y FROM pawn) AND mo.y <= ((SELECT y FROM) + 100) "
         "ORDER BY length LIMIT 1"
     )
 
