@@ -429,13 +429,13 @@ async def check_way_for_clear(static_coord: int, st_name: str, way: list, way_na
             return obj
 
 
-def heuristic(a: Tuple[int, int], b: Tuple[int, int]):
+def heuristic(a: Tuple[int, int], b: Tuple[int, int]) -> int:
     (x1, y1) = a
     (x2, y2) = b
     return abs(x1 - x2) + abs(y1 - y2)
 
 
-def a_star_search(graph, start, goal):
+async def a_star_search(graph: SquareGrid, start: Tuple[int, int], goal: Tuple[int, int]) -> dict:
     frontier = PriorityQueue()
     frontier.put(start, 0)
     came_from = {}
@@ -491,7 +491,7 @@ async def get_way(conn: Connection, start_pos: Tuple[int, int], finish_pos: Tupl
 
     start=(abs(start_pos[0] - graph.min_x), abs(start_pos[1] - graph.min_y))
     goal=(abs(finish_pos[0] - graph.min_x), abs(finish_pos[1] - graph.min_y)) 
-    came_from = a_star_search(
+    came_from = await a_star_search(
         graph=graph,
         start=start,
         goal=goal
