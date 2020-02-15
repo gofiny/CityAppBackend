@@ -168,6 +168,8 @@ async def get_player_pawns(request: Request) -> json_response:
                     "uuid": str(pawn["uuid"]),
                     "name": pawn["name"],
                     "health": pawn["health"],
+                    "speed": pawn["speed"],
+                    "power": pawn["power"],
                     "max_actions": pawn["max_actions"]
                 })
         response["pawns"] = response_pawns
