@@ -235,3 +235,16 @@ async def add_action_to_pawn(request: Request) -> json_response:
     response["time"] = common_time
     
     return json_response(response)
+
+
+async def get_available_actions_count(request: Request) -> json_response:
+    response = {"status": True}
+    data = await request.json()
+    available_actions = await staff.get_available_actions(
+        pool=request.app["pool"],
+        object_uuid=data["object_uuid"],
+    )
+
+    response["count"] = len(available_actions)
+
+    return json_response(response)

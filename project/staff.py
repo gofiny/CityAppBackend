@@ -1,4 +1,5 @@
 '''Подкапотка запросов к БД'''
+import math
 import heapq
 from json.decoder import JSONDecodeError
 from typing import Optional, Tuple, List, Union
@@ -533,15 +534,15 @@ async def action_manager(pool: Pool, object_uuid: str, token: str, action: str):
 
         start = (nearest_obj["pawn_x"], nearest_obj["pawn_y"])
         finish = get_near_finish(start=start, finish=(nearest_obj["x"], nearest_obj["y"]))
-        
+
         way = await get_way(
             conn=conn,
             start_pos=start,
             finish_pos=finish
         )
 
-        walk_time = (len(way) - 1) / nearest_obj["pawn_speed"]
+        walk_time = math.ceil((len(way) - 1) / nearest_obj["pawn_speed"])
         work_time_count = (nearest_obj["object_health"] // nearest_obj["pawn_power"])
-        common_time = walk_time * (work_time_count * 2) + (work_time_count * 20)
+        common_time = walk_time * (work_time_count * 2) + (work_time_count * 10)
 
         return way, common_time
