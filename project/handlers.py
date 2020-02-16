@@ -228,9 +228,6 @@ async def add_action_to_pawn(request: Request) -> json_response:
         token=data["token"],
         action=data["action"]
     )
-    response["x"] = obj["x"]
-    response["y"] = obj['y']
-    response["pawn_x"] = obj["pawn_x"]
-    response["pawn_y"] = obj["pawn_y"]
+    response["way"] = obj
     
     return json_response(response)

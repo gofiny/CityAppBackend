@@ -516,13 +516,13 @@ async def get_way(conn: Connection, start_pos: Tuple[int, int], finish_pos: Tupl
 
 async def action_manager(pool: Pool, object_uuid: str, token: str, action: str):
     async with pool.acquire() as conn:
-        return await get_nearest_obj(
+        nearest_obj = await get_nearest_obj(
             conn=conn,
             object_uuid=object_uuid,
             obj_name=take_objname_by_action[action],
             token=token
         )
-
+        return await get_way(conn=conn, start_pos=(1,0), finish_pos=(2,2))
         # way = await get_way(
         #     conn=conn,
         #     start_pos=(nearest_obj["pawn_x"] - 1, nearest_obj["pawn_y"]),
