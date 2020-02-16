@@ -522,7 +522,7 @@ async def action_manager(pool: Pool, object_uuid: str, token: str, action: str):
             obj_name=take_objname_by_action[action],
             token=token
         )
-        return await get_way(conn=conn, start_pos=(1,0), finish_pos=(2,2))
+        return await get_way(conn=conn, start_pos=(1,0), finish_pos=(1,2))
         # way = await get_way(
         #     conn=conn,
         #     start_pos=(nearest_obj["pawn_x"] - 1, nearest_obj["pawn_y"]),
