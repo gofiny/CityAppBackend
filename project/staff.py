@@ -514,11 +514,11 @@ async def get_way(conn: Connection, start_pos: Tuple[int, int], finish_pos: Tupl
     return await reconstruct_path(came_from=came_from, start=start, goal=goal, _x=graph.min_x, _y=graph.min_y)
 
 
-async def action_manager(pool: Pool, pawn_uuid: str, token: str, action: str):
+async def action_manager(pool: Pool, object_uuid: str, token: str, action: str):
     async with pool.acquire() as conn:
         nearest_obj = await get_nearest_obj(
             conn=conn,
-            object_uuid=pawn_uuid,
+            object_uuid=object_uuid,
             obj_name=take_objname_by_action[action],
             token=token
         )

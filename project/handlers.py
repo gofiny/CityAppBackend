@@ -222,13 +222,15 @@ async def get_tile(request: Request) -> json_response:
 async def add_action_to_pawn(request: Request) -> json_response:
     response = {"status": True}
     data = await request.json()
-    way, time = await staff.action_manager(
+    obj = await staff.action_manager(
         pool=request.app["pool"],
-        pawn_uuid=data["pawn_uuid"],
+        object_uuid=data["object_uuid"],
         token=data["token"],
         action=data["action"]
     )
-    response["way"] = way
-    response["time"] = time
+    response["x"] = obj["x"]
+    response["y"] = obj['y']
+    response["pawn_x"] = obj["pawn_x"]
+    response["pawn_y"] = obj["pawn_y"]
     
     return json_response(response)
