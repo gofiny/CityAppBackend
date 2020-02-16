@@ -105,7 +105,7 @@ async def get_object_info(request: Request) -> json_response:
         )
         if game_object:
             response["status"] = True
-            response["object_uuid"] = data["uuid"]
+            response["object_uuid"] = data["object_uuid"]
             response["name"] = game_object["name"]
             response["object_type"] = game_object["object_type"]
             response["owner"] = game_object["username"]
