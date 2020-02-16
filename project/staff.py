@@ -516,21 +516,21 @@ async def get_way(conn: Connection, start_pos: Tuple[int, int], finish_pos: Tupl
 
 async def action_manager(pool: Pool, object_uuid: str, token: str, action: str):
     async with pool.acquire() as conn:
-        nearest_obj = await get_nearest_obj(
+        return await get_nearest_obj(
             conn=conn,
             object_uuid=object_uuid,
             obj_name=take_objname_by_action[action],
             token=token
         )
 
-        way = await get_way(
-            conn=conn,
-            start_pos=(nearest_obj["pawn_x"] - 1, nearest_obj["pawn_y"]),
-            finish_pos=(nearest_obj["x"], nearest_obj["y"])
-        )
+        # way = await get_way(
+        #     conn=conn,
+        #     start_pos=(nearest_obj["pawn_x"] - 1, nearest_obj["pawn_y"]),
+        #     finish_pos=(nearest_obj["x"], nearest_obj["y"])
+        # )
 
-        walk_time = (len(way) - 1) / nearest_obj["pawn_speed"]
-        work_time_count = (nearest_obj["object_health"] // nearest_obj["pawn_power"])
-        common_time = walk_time * (work_time_count * 2) + (work_time_count * 20)
+        # walk_time = (len(way) - 1) / nearest_obj["pawn_speed"]
+        # work_time_count = (nearest_obj["object_health"] // nearest_obj["pawn_power"])
+        # common_time = walk_time * (work_time_count * 2) + (work_time_count * 20)
 
-        return way, common_time
+        # return way, common_time
