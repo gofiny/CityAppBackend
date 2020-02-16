@@ -360,7 +360,7 @@ async def get_pawns(pool: Pool, token: str) -> List[Optional[Record]]:
     '''Получает список пешек игрока'''
     async with pool.acquire() as conn:
         return await conn.fetch(
-            "SELECT go.uuid, go.name, go.health, po.speed, po.power, po.max_actions "
+            "SELECT mo.uuid, go.name, go.health, po.speed, po.power, po.max_actions "
             "FROM map_objects mo "
             "INNER JOIN game_objects go ON mo.game_object=go.uuid "
             "INNER JOIN pawn_objects po ON po.game_object_ptr=go.uuid "

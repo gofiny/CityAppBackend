@@ -102,6 +102,7 @@ async def get_object_info(request: Request) -> json_response:
         )
         if game_object:
             response["status"] = True
+            response["object_uuid"] = data["uuid"]
             response["name"] = game_object["name"]
             response["object_type"] = game_object["object_type"]
             response["owner"] = game_object["username"]
@@ -122,7 +123,7 @@ async def get_object_info(request: Request) -> json_response:
                     pawn_actions = []
                     for action in actions:
                         pawn_actions.append({
-                            "uuid": action["uuid"],
+                            "action_uuid": action["uuid"],
                             "action": action["action"],
                             "timestamp": action["epoch"]
                         })
@@ -165,7 +166,7 @@ async def get_player_pawns(request: Request) -> json_response:
             response_pawns = []
             for pawn in pawns:
                 response_pawns.append({
-                    "uuid": str(pawn["uuid"]),
+                    "object_uuid": str(pawn["uuid"]),
                     "name": pawn["name"],
                     "health": pawn["health"],
                     "speed": pawn["speed"],
