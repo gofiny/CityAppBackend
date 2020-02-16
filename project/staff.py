@@ -449,6 +449,14 @@ def heuristic(a: Tuple[int, int], b: Tuple[int, int]) -> int:
     return abs(x1 - x2) + abs(y1 - y2)
 
 
+def get_near_finish(start: Tuple[int, int], finish: Tuple[int, int]) -> Tuple[int, int]:
+    a = heuristic(start, (finish[0] - 1, finish[1]))
+    b = heuristic(start, (finish[0] + 1, finish[1]))
+    if a < b:
+        return (finish[0] - 1, finish[1])
+    return (finish[0] + 1, finish[1])
+
+
 async def a_star_search(graph: SquareGrid, start: Tuple[int, int], goal: Tuple[int, int]) -> dict:
     frontier = PriorityQueue()
     frontier.put(start, 0)
@@ -522,15 +530,18 @@ async def action_manager(pool: Pool, object_uuid: str, token: str, action: str):
             obj_name=take_objname_by_action[action],
             token=token
         )
-        return await get_way(conn=conn, start_pos=(1,0), finish_pos=(1,2))
-        # way = await get_way(
-        #     conn=conn,
-        #     start_pos=(nearest_obj["pawn_x"] - 1, nearest_obj["pawn_y"]),
-        #     finish_pos=(nearest_obj["x"], nearest_obj["y"])
-        # )
 
-        # walk_time = (len(way) - 1) / nearest_obj["pawn_speed"]
-        # work_time_count = (nearest_obj["object_health"] // nearest_obj["pawn_power"])
-        # common_time = walk_time * (work_time_count * 2) + (work_time_count * 20)
+        start = (nearest_obj["pawn_x"], nearest_obj["pawn_y"])
+        finish = get_near_finish(start=start, finish=(nearest_obj["x"], nearest_obj["y"]))
+        
+        way = await get_way(
+            conn=conn,
+            start_pos=start,
+            finish_pos=finish
+        )
 
-        # return way, common_time
+        walk_time = (len(way) - 1) / nearest_obj["pawn_speed"]
+        work_time_count = (nearest_obj["object_health"] // nearest_obj["pawn_power"])
+        common_time = walk_time * (work_time_count * 2) + (work_time_count * 20)
+
+        return way, common_time
