@@ -184,7 +184,7 @@ async def create_spawn(conn: Connection, player_uuid: uuid.uuid4) -> Tuple[int, 
         "SELECT uuid FROM game_objects WHERE name = 'spawn';"
     )
     if not spawn_uuid:
-        await conn.fetchval(
+        await conn.execute(
             "WITH go AS (INSERT INTO game_objects (uuid, name, health, object_type) "
             f"VALUES ('{uuid.uuid4()}', 'spawn', 1000, 'static') RETURNING uuid), WITH so AS ( "
             "INSERT INTO static_objects (game_object_ptr) "
