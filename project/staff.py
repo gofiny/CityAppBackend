@@ -390,7 +390,8 @@ async def generate_object(pool: Pool, obj_name: str, limit: int):
         can_generate = await check_obj_limit(conn, obj_name, limit)
         if can_generate is False:
             return
-        while True:
+        i = 0
+        while i < 100:
             random_obj = await get_random_mapobject(conn)
             random_pos = await gen_random_pos((random_obj[0]['x'], random_obj[0]['y']), min_c=1)
             is_exist = await check_object_on_pos(conn, random_pos[0], random_pos[1])
@@ -403,7 +404,8 @@ async def generate_object(pool: Pool, obj_name: str, limit: int):
                 game_object=obj_name,
                 owner_uuid=None
             )
-            return
+            i += 1
+            #return
 
 
 async def get_nearest_obj(conn: Connection, object_uuid: str, obj_name: str, token: str) -> Optional[Record]:
