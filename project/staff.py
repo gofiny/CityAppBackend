@@ -414,12 +414,13 @@ async def get_nearest_obj(conn: Connection, object_uuid: str, obj_name: str, tok
         "INNER JOIN game_objects go ON mo.game_object=go.uuid "
         "INNER JOIN pawn_objects po ON po.game_object_ptr=go.uuid "
         "INNER JOIN players ON mo.owner=players.uuid "
-        f"WHERE players.token='{token}' AND go.uuid='{object_uuid}') "
+        f"WHERE players.token='{token}' AND mo.uuid='{object_uuid}') "
         "SELECT mo.x, mo.y, |/((mo.x-(SELECT x FROM pawn))^2 + (mo.y-(SELECT y FROM pawn))^2) AS length, "
-        "go.health, pawn.x AS pawn_x, pawn.y AS pawn_y, pawn.power AS pawn_power, pawn.speed AS pawn_speed "
+        "go.health as object_health, (SELECT x FROM pawn) AS pawn_x, (SELECT y FROM pawn) AS pawn_y, "
+        "(SELECT power FROM pawn) AS pawn_power, (SELECT speed FROM pawn) AS pawn_speed "
         "FROM map_objects mo INNER JOIN game_objects go ON mo.game_object=go.uuid "
         f"WHERE go.name='{obj_name}' AND mo.x >= (SELECT x FROM pawn) AND mo.x <= ((SELECT x FROM pawn) + 100) "
-        "AND mo.y >= (SELECT y FROM pawn) AND mo.y <= ((SELECT y FROM) + 100) "
+        "AND mo.y >= (SELECT y FROM pawn) AND mo.y <= ((SELECT y FROM pawn) + 100) "
         "ORDER BY length LIMIT 1"
     )
 
@@ -529,7 +530,7 @@ async def action_manager(pool: Pool, pawn_uuid: str, token: str, action: str):
         )
 
         walk_time = (len(way) - 1) / nearest_obj["pawn_speed"]
-        work_time_count = (nearest_obj["health"] // nearest_obj["pawn_power"])
+        work_time_count = (nearest_obj["object_health"] // nearest_obj["pawn_power"])
         common_time = walk_time * (work_time_count * 2) + (work_time_count * 20)
 
         return way, common_time
