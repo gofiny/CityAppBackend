@@ -101,7 +101,7 @@ async def get_object_info(request: Request) -> json_response:
         data = await request.json()
         game_object = await staff.get_object_by_uuid(
             pool=request.app['pool'],
-            object_uuid=data["uuid"]
+            object_uuid=data["object_uuid"]
         )
         if game_object:
             response["status"] = True
