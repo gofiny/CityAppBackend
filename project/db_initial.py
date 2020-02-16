@@ -25,7 +25,7 @@ PLAYERS = '''CREATE TABLE IF NOT EXISTS "players"
 (
     "uuid" uuid NOT NULL PRIMARY KEY,
     "username" varchar(25) NOT NULL UNIQUE,
-    "user_id" varchar(35) NOT NULL UNIQUE,
+    "user_id" varchar(50) NOT NULL UNIQUE,
     "token" varchar(64) NOT NULL,
     "metadata" varchar(30)
 );'''
