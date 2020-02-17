@@ -365,7 +365,7 @@ async def get_available_actions_by_mo(pool: Pool, object_uuid: str, token: str) 
             "INNER JOIN game_objects go ON aa.pawn=go.uuid "
             "INNER JOIN map_objects mo ON mo.game_object=go.uuid "
             "INNER JOIN actions ON aa.action=actions.uuid "
-            "INNER JOIN players ON mo.owner=players.uuid"
+            "INNER JOIN players ON mo.owner=players.uuid "
             f"WHERE mo.uuid='{object_uuid}' AND players.token='{token}'"
         )
 
