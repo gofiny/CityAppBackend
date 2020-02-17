@@ -117,7 +117,7 @@ async def get_object_info(request: Request) -> json_response:
             if game_object["object_type"] == "pawn":
                 actions = await staff.get_pawn_actions(
                     pool=request.app['pool'],
-                    object_uuid=game_object["uuid"]
+                    gameobject_uuid=game_object["uuid"]
                 )
                 response["power"] = game_object["power"]
                 response["speed"] = game_object["speed"]
@@ -135,7 +135,7 @@ async def get_object_info(request: Request) -> json_response:
 
                 available_actions = await staff.get_available_actions(
                     pool=request.app["pool"],
-                    object_uuid=game_object["uuid"]
+                    gameobject_uuid=game_object["uuid"]
                 )
                 _enabled = False
                 if game_object["max_actions"] > len(actions):
@@ -240,7 +240,7 @@ async def add_action_to_pawn(request: Request) -> json_response:
 async def get_available_actions_count(request: Request) -> json_response:
     response = {"status": True}
     data = await request.json()
-    available_actions = await staff.get_available_actions(
+    available_actions = await staff.get_available_actions_by_mo(
         pool=request.app["pool"],
         object_uuid=data["object_uuid"],
     )

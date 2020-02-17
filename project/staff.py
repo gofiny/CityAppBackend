@@ -335,25 +335,37 @@ async def get_object_by_coors(pool: Pool, x: int, y: int) -> Optional[Record]:
         )
 
 
-async def get_pawn_actions(pool: Pool, object_uuid: str) -> List[Optional[Record]]:
+async def get_pawn_actions(pool: Pool, gameobject_uuid: str) -> List[Optional[Record]]:
     '''Получение списка действий пешки'''
     async with pool.acquire() as conn:
         return await conn.fetch(
             "SELECT pa.uuid, pa.action, pa.start_time FROM pawn_actions pa "
             "LEFT JOIN game_objects go ON pa.pawn=go.uuid "
-            f"WHERE go.uuid='{object_uuid}' "
+            f"WHERE go.uuid='{gameobject_uuid}' "
             "ORDER BY pa.start_time"
         )
 
 
-async def get_available_actions(pool: Pool, object_uuid: str) -> List[Optional[Record]]:
+async def get_available_actions(pool: Pool, gameobject_uuid: str) -> List[Optional[Record]]:
     '''Получает список доступных действий пешки'''
     async with pool.acquire() as conn:
         return await conn.fetch(
             "SELECT actions.name FROM available_actions aa "
             "LEFT JOIN game_objects go ON aa.pawn=go.uuid "
             "LEFT JOIN actions ON aa.action=actions.uuid "
-            f"WHERE go.uuid='{object_uuid}'"
+            f"WHERE go.uuid='{gameobject_uuid}'"
+        )
+
+
+async def get_available_actions_by_mo(pool: Pool, object_uuid: str) -> List[Optional[Record]]:
+    '''Получает список доступных действий пешки'''
+    async with pool.acquire() as conn:
+        return await conn.fetch(
+            "SELECT actions.name FROM available_actions aa "
+            "LEFT JOIN game_objects go ON aa.pawn=go.uuid "
+            "LEFT JOIN map_objects mo ON mo.game_object=go.uuid "
+            "LEFT JOIN actions ON aa.action=actions.uuid "
+            f"WHERE mo.uuid='{object_uuid}'"
         )
 
 
