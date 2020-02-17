@@ -357,15 +357,16 @@ async def get_available_actions(pool: Pool, gameobject_uuid: str) -> List[Option
         )
 
 
-async def get_available_actions_by_mo(pool: Pool, object_uuid: str) -> List[Optional[Record]]:
+async def get_available_actions_by_mo(pool: Pool, object_uuid: str, token: str) -> List[Optional[Record]]:
     '''Получает список доступных действий пешки'''
     async with pool.acquire() as conn:
         return await conn.fetch(
             "SELECT actions.name FROM available_actions aa "
-            "LEFT JOIN game_objects go ON aa.pawn=go.uuid "
-            "LEFT JOIN map_objects mo ON mo.game_object=go.uuid "
-            "LEFT JOIN actions ON aa.action=actions.uuid "
-            f"WHERE mo.uuid='{object_uuid}'"
+            "INNER JOIN game_objects go ON aa.pawn=go.uuid "
+            "INNER JOIN map_objects mo ON mo.game_object=go.uuid "
+            "INNER JOIN actions ON aa.action=actions.uuid "
+            "INNER JOIN players ON mo.owner=players.uuid"
+            f"WHERE mo.uuid='{object_uuid}' AND players.token='{token}'"
         )
 
 

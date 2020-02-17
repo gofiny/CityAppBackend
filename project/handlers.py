@@ -244,6 +244,7 @@ async def get_available_actions_count(request: Request) -> json_response:
         available_actions = await staff.get_available_actions_by_mo(
             pool=request.app["pool"],
             object_uuid=data["object_uuid"],
+            token=data["token"]
         )
 
         response["count"] = len(available_actions)
