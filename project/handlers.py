@@ -247,7 +247,7 @@ async def get_available_actions_count(request: Request) -> json_response:
         )
 
         response["count"] = len(available_actions)
-    except (KeyError, ValueError, JSONDecodeError):
+    except (KeyError, ValueError, JSONDecodeError, exceptions.InvalidTextRepresentationError):
         response["status"] = False
         response["errors"] = [2, "json is not correct"]
 
