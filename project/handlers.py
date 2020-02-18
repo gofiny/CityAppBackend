@@ -256,3 +256,19 @@ async def get_available_actions_count(request: Request) -> json_response:
         response["errors"] = [2, "json is not correct"]
 
     return json_response(response)
+
+
+async def get_player_resources(request: Request) -> json_response:
+    response = {"status": True}
+    data = await request.json()
+    resources = await staff.get_player_resources_by_names(
+        pool=request.app["pool"],
+        **data
+    )
+    if resources:
+        response["resources"] = dict(resources)
+    else:
+        response["status"] = False
+        response["errors"] = [6, "token or resource name are not correct"]
+
+    return json_response(response)

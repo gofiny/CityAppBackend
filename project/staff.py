@@ -559,3 +559,14 @@ async def action_manager(pool: Pool, object_uuid: str, token: str, action: str):
         common_time = walk_time * (work_time_count * 2) + (work_time_count * 10)
 
         return way, common_time
+
+
+async def get_player_resources_by_names(pool: Pool, token: str, resources: Union[list, str] = "*") -> Optional[Record]:
+    async with pool.acquire() as conn:
+        if isinstance(resources, list):
+            resources = ", ".join("pr." + res for res in resources)
+        return await conn.fetchrow(
+            f"SELECT {resources} FROM players "
+            "INNER JOIN players_resources pr ON players.uuid=pr.player "
+            f"WHERE players.token='{token}'"
+        )
