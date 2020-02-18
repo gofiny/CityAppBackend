@@ -238,7 +238,7 @@ async def add_action_to_pawn(request: Request) -> json_response:
 
 
 async def get_available_actions_count(request: Request) -> json_response:
-    response = {"status": True}
+    response = {"status": False}
     try:
         data = await request.json()
         available_actions = await staff.get_available_actions_by_mo(
@@ -247,9 +247,12 @@ async def get_available_actions_count(request: Request) -> json_response:
             token=data["token"]
         )
 
-        response["count"] = len(available_actions)
+        if not available_actions:
+            response["erros"] = [6, "object_uuid or token not correct"]
+        else:
+            response["status"] = True
+            response["count"] = len(available_actions)
     except (KeyError, ValueError, JSONDecodeError, exceptions.InvalidTextRepresentationError):
-        response["status"] = False
         response["errors"] = [2, "json is not correct"]
 
     return json_response(response)
