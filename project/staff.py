@@ -561,7 +561,7 @@ async def action_manager(pool: Pool, object_uuid: str, token: str, action: str):
         return way, common_time
 
 
-async def get_player_resources_by_names(pool: Pool, token: str, resources: Union[list, str] = "*") -> Optional[Record]:
+async def get_player_resources_by_names(pool: Pool, token: str, resources: Union[list, str] = "pr.*") -> Optional[Record]:
     async with pool.acquire() as conn:
         if isinstance(resources, list):
             resources = ", ".join("pr." + res for res in resources)
