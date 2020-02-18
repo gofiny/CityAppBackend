@@ -266,9 +266,10 @@ async def get_player_resources(request: Request) -> json_response:
         **data
     )
     if resources:
-        response["resources"] = dict(resources)
+        response["resources"] = [{k: v} for k, v in resources.items() if k not in ["uuid", "player"]]
     else:
         response["status"] = False
         response["errors"] = [6, "token or resource name are not correct"]
+        
 
     return json_response(response)
