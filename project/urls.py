@@ -10,7 +10,8 @@ from handlers import (
     get_tile,
     add_action_to_pawn,
     get_available_actions_count,
-    get_player_resources
+    get_player_resources,
+    check_connection
 )
 
 
@@ -25,5 +26,6 @@ URLS = [
     web.post("/async/get_tile", get_tile),
     web.post("/async/add_action_to_pawn", add_action_to_pawn),
     web.post("/async/get_available_actions_count", get_available_actions_count),
-    web.post("/async/get_player_resources", get_player_resources)
+    web.post("/async/get_player_resources", get_player_resources),
+    web.post("/async/check_connection", check_connection)
 ]

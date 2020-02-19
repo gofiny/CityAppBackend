@@ -276,3 +276,8 @@ async def get_player_resources(request: Request) -> json_response:
         
 
     return json_response(response)
+
+
+async def check_connection(request: Request) -> json_response:
+    """Тест соединения"""
+    return json_response({"status": True})
