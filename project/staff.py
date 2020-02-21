@@ -561,12 +561,11 @@ async def action_manager(pool: Pool, object_uuid: str, token: str, action: str):
         return way, common_time
 
 
-async def get_player_resources_by_names(pool: Pool, token: str, resources: Union[list, str] = "pr.*") -> Optional[Record]:
+async def get_player_resources_by_names(pool: Pool, token: str, res_name: Optional[str]) -> Optional[Record]:
     async with pool.acquire() as conn:
-        if isinstance(resources, list):
-            resources = ", ".join("pr." + res for res in resources)
+        res_name = "*" if not res_name else res_name 
         return await conn.fetchrow(
-            f"SELECT {resources} FROM players "
+            f"SELECT pr.{res_name} FROM players "
             "INNER JOIN players_resources pr ON players.uuid=pr.player "
             f"WHERE players.token='{token}'"
         )
