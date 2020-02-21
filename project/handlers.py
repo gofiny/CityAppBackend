@@ -271,9 +271,11 @@ async def get_player_resources(request: Request) -> json_response:
             response["status"] = True
             response["resources"] = [{k: v} for k, v in resources.items() if k not in ["uuid", "player"]]
         else:
-            response["errors"] = [6, "token or resource name are not correct"]
+            response["errors"] = [1, "token not correct"]
     except (KeyError, ValueError, TypeError, JSONDecodeError):
         response["erros"] = [2, "json is not correct"]
+    except exceptions.UndefinedColumnError:
+        response["errors"] = [5, "resource name is not correct"]
         
 
     return json_response(response)
