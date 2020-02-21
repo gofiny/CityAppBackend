@@ -260,20 +260,20 @@ async def get_available_actions_count(request: Request) -> json_response:
 
 async def get_player_resources(request: Request) -> json_response:
     response = {"status": False}
-    #try:
-    data = await request.json()
-    resources = await staff.get_player_resources_by_names(
-        pool=request.app["pool"],
-        token=data["token"],
-        res_name=data["resource"]
-    )
-    if resources:
-        response["status"] = True
-        response["resources"] = [{k: v} for k, v in resources.items() if k not in ["uuid", "player"]]
-    else:
-        response["errors"] = [6, "token or resource name are not correct"]
-    # except (KeyError, ValueError, TypeError, JSONDecodeError):
-    #     response["erros"] = [2, "json is not correct"]
+    try:
+        data = await request.json()
+        resources = await staff.get_player_resources_by_names(
+            pool=request.app["pool"],
+            token=data["token"],
+            res_name=data["resource"]
+        )
+        if resources:
+            response["status"] = True
+            response["resources"] = [{k: v} for k, v in resources.items() if k not in ["uuid", "player"]]
+        else:
+            response["errors"] = [6, "token or resource name are not correct"]
+    except (KeyError, ValueError, TypeError, JSONDecodeError):
+        response["erros"] = [2, "json is not correct"]
         
 
     return json_response(response)
