@@ -2,16 +2,18 @@
 from aiohttp import web
 from handlers import (
     register_user,
-    get_map, test,
+    get_map, 
+    test,
     get_profile,
     get_object_info,
     get_player_pawns,
     gen_new_object,
     get_tile,
-    add_action_to_pawn,
-    get_available_actions_count,
+    add_task_to_pawn,
+    get_available_tasks_count,
     get_player_resources,
-    check_connection
+    check_connection,
+    accept_task
 )
 
 
@@ -24,8 +26,9 @@ URLS = [
     web.post("/async/get_player_pawns", get_player_pawns),
     web.post("/async/gen_new_object", gen_new_object),
     web.post("/async/get_tile", get_tile),
-    web.post("/async/add_action_to_pawn", add_action_to_pawn),
-    web.post("/async/get_available_actions_count", get_available_actions_count),
+    web.post("/async/add_task_to_pawn", add_task_to_pawn),
+    web.post("/async/get_available_actions_count", get_available_tasks_count),
     web.post("/async/get_player_resources", get_player_resources),
-    web.post("/async/check_connection", check_connection)
+    web.post("/async/check_connection", check_connection),
+    web.post("/async/accept_task", accept_task)
 ]
