@@ -1,6 +1,6 @@
 '''Обработчик запросов приходящих на сервер'''
 from asyncpg import exceptions
-from exceptions import UserAlreadyExist, UserOrSpawnNotExist
+from exceptions import UserAlreadyExist, ObjectNotExist
 from json.decoder import JSONDecodeError
 from aiohttp.web import json_response, Request, Response
 import staff
@@ -115,7 +115,7 @@ async def get_object_info(request: Request) -> json_response:
                 "y": game_object["y"]
             }
             if game_object["object_type"] == "pawn":
-                actions = await staff.get_pawn_actions(
+                actions = await staff.get_pawn_tasks(
                     pool=request.app['pool'],
                     gameobject_uuid=game_object["uuid"]
                 )
@@ -133,7 +133,7 @@ async def get_object_info(request: Request) -> json_response:
                     actions = pawn_actions
                 response["actions"] = actions
 
-                available_actions = await staff.get_available_actions(
+                available_actions = await staff.get_available_tasks(
                     pool=request.app["pool"],
                     gameobject_uuid=game_object["uuid"]
                 )
@@ -222,36 +222,34 @@ async def get_tile(request: Request) -> json_response:
     return json_response(response)
 
 
-async def add_action_to_pawn(request: Request) -> json_response:
-    response = {"status": True}
+async def add_task_to_pawn(request: Request) -> json_response:
     data = await request.json()
-    way, common_time = await staff.action_manager(
+    response = await staff.add_pretask_to_pawn(
         pool=request.app["pool"],
         object_uuid=data["object_uuid"],
         token=data["token"],
-        action=data["action"]
+        task_name=data["task_name"]
     )
-    response["way"] = way
-    response["time"] = common_time
+    response["status"] = True
     
     return json_response(response)
 
 
-async def get_available_actions_count(request: Request) -> json_response:
+async def get_available_tasks_count(request: Request) -> json_response:
     response = {"status": False}
     try:
         data = await request.json()
-        available_actions = await staff.get_available_actions_by_mo(
+        available_tasks = await staff.get_available_tasks_by_mo(
             pool=request.app["pool"],
             object_uuid=data["object_uuid"],
             token=data["token"]
         )
 
-        if not available_actions:
+        if not available_tasks:
             response["erros"] = [6, "object_uuid or token not correct"]
         else:
             response["status"] = True
-            response["count"] = len(available_actions)
+            response["count"] = len(available_tasks)
     except (KeyError, ValueError, JSONDecodeError, exceptions.InvalidTextRepresentationError):
         response["errors"] = [2, "json is not correct"]
 
@@ -282,5 +280,22 @@ async def get_player_resources(request: Request) -> json_response:
 
 
 async def check_connection(request: Request) -> json_response:
-    """Тест соединения"""
+    '''Тест соединения'''
     return json_response({"status": True})
+
+
+async def accept_task(request: Request) -> json_response:
+    response = {"status": True}
+    data = await request.json()
+    action = await staff.procced_task(
+        pool=request.app["pool"],
+        task_uuid=data["task_uuid"],
+        accept=data["accept"]
+    )
+    if action:
+        response["task_uuid"] = action[1]
+        response["action_name"] = action[2]
+        response["start_time"] = action[3]
+        response["end_time"] = action[4]
+
+    return json_response(response)

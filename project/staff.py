@@ -3,7 +3,8 @@ import math
 import heapq
 from json.decoder import JSONDecodeError
 from typing import Optional, Tuple, List, Union
-from exceptions import UserAlreadyExist, UserOrSpawnNotExist, DeadEnd
+from time import time
+from exceptions import UserAlreadyExist, ObjectNotExist
 from operator import itemgetter
 import random
 import string
@@ -250,7 +251,7 @@ async def get_spawn_coords(pool: Pool, user_id: int) -> Record:
             f"WHERE players.user_id='{user_id}' AND go.name='spawn';"
         )
         if not spawn:
-            raise UserOrSpawnNotExist
+            raise ObjectNotExist
         return spawn
 
 async def get_objects_from_relay(conn: Connection, x_coords: Tuple[int, int], y_coords: Tuple[int, int]) -> List[Optional[Record]]:
@@ -536,12 +537,70 @@ async def get_way(conn: Connection, start_pos: Tuple[int, int], finish_pos: Tupl
     return await reconstruct_path(came_from=came_from, start=start, goal=goal, _x=graph.min_x, _y=graph.min_y)
 
 
-async def action_manager(pool: Pool, object_uuid: str, token: str, task: str):
+async def create_task(conn: Connection, pawn_mo_uuid: str, task_name: str, common_time: float, walk_time: float, work_time_count: int) -> str:
+    task_start_time = time()
+    task_end_time = task_start_time + common_time
+    task_uuid = await conn.fetchval(
+        "WITH pawn AS (SELECT uuid FROM game_objects go "
+        "INNER JOIN map_objects mo ON go.uuid=mo.game_object "
+        f"WHERE mo.uuid='{pawn_mo_uuid}'), task AS "
+        f"(SELECT uuid FROM tasks WHERE name='{task_name}') "
+        "INSERT INTO pawn_tasks (uuid, pawn, task, start_time, end_time, walk_time, work_time_count, common_time) "
+        f"VALUES ('{uuid.uuid4()}', (SELECT uuid FROM pawn), (SELECT uuid FROM task), "
+        f"{task_start_time}, {task_end_time}, {walk_time}, {work_time_count}, {common_time} RETURNING uuid"
+    )
+    return task_uuid
+
+
+async def get_pawn_task(conn: Connection, task_uuid: str) -> Optional[Record]:
+    return await conn.fetchrow(
+        f"SELECT * FROM pawn_tasks WHERE uuid='{task_uuid}'"
+    )
+
+
+async def delete_pawn_task(conn: Connection, task_uuid: str) -> None:
+    await conn.execute(
+        f"DELETE FROM pawn_tasks WHERE uuid='{task_uuid}'"
+    )
+
+
+async def create_actions(conn: Connection, task_uuid: str) -> tuple:
+    actions = []
+
+    pawn_task = await get_pawn_task(conn=conn, task_uuid=task_uuid)
+    walk_time = pawn_task["walk_time"]
+    work_time_count = pawn_task["work_time_count"]
+    task_name = pawn_task["name"]
+
+    start_time = time()
+    end_time = start_time + pawn_task["common_time"] 
+    current_action = "walk"
+    for _ in range(work_time_count + work_time_count * 2):
+        start_time = end_time
+        end_time = start_time + (walk_time if current_action == "walk" else 10) # where 10 is a work constant time
+        actions.append((
+            uuid.uuid4(),
+            task_uuid,
+            current_action,
+            start_time,
+            end_time
+        ))
+        current_action = task_name if current_action == "walk" else "walk"
+
+    await conn.executemany(
+        "INSERT INTO pawn_actions VALUES (uuid, task, name, start_time, end_time) "
+        "($1, $2, $3, $4, $5);", actions
+    )
+
+    return actions[0]
+
+
+async def add_pretask_to_pawn(pool: Pool, object_uuid: str, token: str, task_name: str) -> dict:
     async with pool.acquire() as conn:
         nearest_obj = await get_nearest_obj(
             conn=conn,
             object_uuid=object_uuid,
-            obj_name=take_objname_by_taskname[task],
+            obj_name=take_objname_by_taskname[task_name],
             token=token
         )
 
@@ -554,11 +613,35 @@ async def action_manager(pool: Pool, object_uuid: str, token: str, task: str):
             finish_pos=finish
         )
 
-        walk_time = math.ceil((len(way) - 1) / nearest_obj["pawn_speed"])
-        work_time_count = (nearest_obj["object_health"] // nearest_obj["pawn_power"])
-        common_time = walk_time * (work_time_count * 2) + (work_time_count * 10)
+        walk_time: float = (len(way) - 1) / nearest_obj["pawn_speed"]
+        work_time_count = math.ceil((nearest_obj["object_health"] // nearest_obj["pawn_power"]))
+        common_time: float = walk_time * (work_time_count * 2) + (work_time_count * 10)
 
-        return way, common_time
+        task_uuid = await create_task(
+            conn=conn,
+            pawn_mo_uuid=object_uuid,
+            task_name=task_name,
+            common_time=common_time,
+            walk_time=walk_time,
+            work_time_count=work_time_count,
+        )
+
+        response_dict = {
+            "task_uuid": task_uuid,
+            "common_time": common_time,
+            "way": way,
+        }
+        return response_dict
+
+
+async def procced_task(pool: Pool, task_uuid, accept: bool):
+    async with pool.acquire() as conn:
+        if accept is True:
+            return await create_actions(
+                conn=conn,
+                task_uuid=task_uuid
+            )
+        await delete_pawn_task(conn=conn, task_uuid=task_uuid)
 
 
 async def get_player_resources_by_names(pool: Pool, token: str, res_name: Optional[str]) -> Optional[Record]:
