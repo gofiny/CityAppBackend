@@ -628,7 +628,7 @@ async def add_pretask_to_pawn(pool: Pool, object_uuid: str, token: str, task_nam
         )
 
         response_dict = {
-            "task_uuid": task_uuid,
+            "task_uuid": str(task_uuid),
             "common_time": common_time,
             "way": way,
         }
