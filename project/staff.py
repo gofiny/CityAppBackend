@@ -352,9 +352,9 @@ async def get_available_tasks(pool: Pool, gameobject_uuid: str) -> List[Optional
     '''Получает список доступных действий пешки'''
     async with pool.acquire() as conn:
         return await conn.fetch(
-            "SELECT tasks.name FROM available_tasks aa "
-            "LEFT JOIN game_objects go ON aa.pawn=go.uuid "
-            "LEFT JOIN tasks ON aa.tasks=tasks.uuid "
+            "SELECT tasks.name FROM available_tasks at "
+            "LEFT JOIN game_objects go ON at.pawn=go.uuid "
+            "LEFT JOIN tasks ON at.task=tasks.uuid "
             f"WHERE go.uuid='{gameobject_uuid}'"
         )
 
