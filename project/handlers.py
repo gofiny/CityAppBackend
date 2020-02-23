@@ -121,14 +121,14 @@ async def get_object_info(request: Request) -> json_response:
                 )
                 response["power"] = game_object["power"]
                 response["speed"] = game_object["speed"]
-                response["max_actions"] = game_object["max_actions"]
+                response["max_tasks"] = game_object["max_tasks"]
                 if actions:
                     pawn_actions = []
                     for action in actions:
                         pawn_actions.append({
-                            "action_uuid": action["uuid"],
-                            "action": action["action"],
-                            "timestamp": action["epoch"]
+                            "task_uuid": action["uuid"],
+                            "task_name": action["task_name"],
+                            "start_time": action["start_time"]
                         })
                     actions = pawn_actions
                 response["actions"] = actions
