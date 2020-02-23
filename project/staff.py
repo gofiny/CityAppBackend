@@ -206,7 +206,7 @@ async def create_pawn(conn: Connection, player_uuid: int, pawn_name: str, pos: T
         f"VALUES ('{uuid.uuid4()}', '{pawn_name}', 10, 'pawn') RETURNING uuid), po AS ( "
         "INSERT INTO pawn_objects (game_object_ptr, max_tasks) "
         "VALUES ((SELECT uuid FROM go), 1)), act AS ( "
-        f"SELECT uuid FROM tasks WHERE name='{task_name}' ), aa AS ("
+        f"SELECT uuid FROM tasks WHERE name='{task_name}' ), at AS ("
         "INSERT INTO available_tasks (uuid, task, pawn) "
         f"VALUES ('{uuid.uuid4()}', (SELECT uuid FROM act), (SELECT uuid FROM go))) "
         "INSERT INTO map_objects (uuid, x, y, game_object, owner) "

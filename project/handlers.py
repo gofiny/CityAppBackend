@@ -115,14 +115,14 @@ async def get_object_info(request: Request) -> json_response:
                 "y": game_object["y"]
             }
             if game_object["object_type"] == "pawn":
-                actions = await staff.get_pawn_tasks(
+                tasks = await staff.get_pawn_tasks(
                     pool=request.app['pool'],
                     gameobject_uuid=game_object["uuid"]
                 )
                 response["power"] = game_object["power"]
                 response["speed"] = game_object["speed"]
                 response["max_tasks"] = game_object["max_tasks"]
-                if actions:
+                if tasks:
                     pawn_actions = []
                     for action in actions:
                         pawn_actions.append({
@@ -130,23 +130,23 @@ async def get_object_info(request: Request) -> json_response:
                             "task_name": action["task_name"],
                             "start_time": action["start_time"]
                         })
-                    actions = pawn_actions
-                response["actions"] = actions
+                    tasks = pawn_actions
+                response["tasks"] = tasks
 
-                available_actions = await staff.get_available_tasks(
+                available_tasks = await staff.get_available_tasks(
                     pool=request.app["pool"],
                     gameobject_uuid=game_object["uuid"]
                 )
                 _enabled = False
-                if game_object["max_actions"] > len(actions):
+                if game_object["max_tasks"] > len(tasks):
                     _enabled = True
                 actions = []
-                for action in available_actions:
+                for task in available_tasks:
                     actions.append({
-                        "name": action["name"],
+                        "task_name": task["name"],
                         "enabled": _enabled
                     })
-                response["available_actions"] = actions
+                response["available_tasks"] = tasks
         else:
             response["errors"] = [6, "game_object is not found"]
     except (KeyError, ValueError, JSONDecodeError):
