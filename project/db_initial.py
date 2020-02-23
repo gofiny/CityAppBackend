@@ -51,7 +51,7 @@ GENERATED_OBJECTS = '''CREATE TABLE IF NOT EXISTS "generated_objects"
 PawnObjects = '''CREATE TABLE IF NOT EXISTS "pawn_objects"
 (
     "game_object_ptr" uuid NOT NULL PRIMARY KEY REFERENCES "game_objects" ("uuid") ON DELETE cascade,
-    "max_actions" integer NOT NULL,
+    "max_tasks" integer NOT NULL,
     "speed" float NOT NULL DEFAULT 0.33,
     "power" integer NOT NULL DEFAULT 10
 )'''
@@ -74,24 +74,31 @@ PlayerResources = '''CREATE TABLE IF NOT EXISTS "players_resources"
     "stones" integer NOT NULL
 );'''
 
-Actions = '''CREATE TABLE IF NOT EXISTS "actions"
+Tasks = '''CREATE TABLE IF NOT EXISTS "tasks"
 (
     "uuid" uuid NOT NULL PRIMARY KEY,
     "name" varchar(20)
 );'''
 
-AvailableActions = '''CREATE TABLE IF NOT EXISTS "available_actions"
+AvailableTasks = '''CREATE TABLE IF NOT EXISTS "available_tasks"
 (
     "uuid" uuid NOT NULL PRIMARY KEY,
-    "action" uuid NOT NULL REFERENCES "actions" ("uuid"),
+    "task" uuid NOT NULL REFERENCES "tasks" ("uuid"),
     "pawn" uuid NOT NULL REFERENCES "game_objects" ("uuid")
 );'''
 
-PawnActions = '''CREATE TABLE IF NOT EXISTS "pawn_actions"
+PawnTasks = '''CREATE TABLE IF NOT EXISTS "pawn_tasks"
 (
     "uuid" uuid NOT NULL PRIMARY KEY,
     "pawn" uuid NOT NULL REFERENCES "game_objects" ("uuid") ON DELETE cascade,
-    "action" uuid NOT NULL REFERENCES "actions" ("uuid"),
+    "task" uuid NOT NULL REFERENCES "tasks" ("uuid"),
+    "start_time" float,
+    "end_time" float
+);'''
+
+PawnActions = '''CREATE TABLE IF NOT EXISTS "pawn_actions" (
+    "uuid" uuid NOT NULL PRIMARY_KEY,
+    "name" VARCHAR(20) NOT NULL,
     "start_time" float,
     "end_time" float
 );'''
@@ -105,8 +112,9 @@ SQLS = [
     MAP_OBJECTS,
     PawnObjects,
     PlayerResources,
-    Actions,
-    AvailableActions,
+    Tasks,
+    AvailableTasks,
+    PawnTasks,
     PawnActions
 ]
 

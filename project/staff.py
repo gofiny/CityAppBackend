@@ -15,7 +15,7 @@ from asyncpg.connection import Connection
 from aiohttp.web import json_response
 
 
-take_objname_by_action = {
+take_objname_by_taskname = {
     "cut": "tree"
 }
 
@@ -198,15 +198,15 @@ async def create_spawn(conn: Connection, player_uuid: uuid.uuid4) -> Tuple[int, 
     return pos
 
 
-async def create_pawn(conn: Connection, player_uuid: int, pawn_name: str, pos: Tuple[int, int], action_name: str) -> None:
+async def create_pawn(conn: Connection, player_uuid: int, pawn_name: str, pos: Tuple[int, int], task_name: str) -> None:
     '''Создает пешку'''
     await conn.execute(
         "WITH go AS (INSERT INTO game_objects (uuid, name, health, object_type) "
         f"VALUES ('{uuid.uuid4()}', '{pawn_name}', 10, 'pawn') RETURNING uuid), po AS ( "
-        "INSERT INTO pawn_objects (game_object_ptr, max_actions) "
+        "INSERT INTO pawn_objects (game_object_ptr, max_tasks) "
         "VALUES ((SELECT uuid FROM go), 1)), act AS ( "
-        f"SELECT uuid FROM actions WHERE name='{action_name}' ), aa AS ("
-        "INSERT INTO available_actions (uuid, action, pawn) "
+        f"SELECT uuid FROM tasks WHERE name='{task_name}' ), aa AS ("
+        "INSERT INTO available_tasks (uuid, task, pawn) "
         f"VALUES ('{uuid.uuid4()}', (SELECT uuid FROM act), (SELECT uuid FROM go))) "
         "INSERT INTO map_objects (uuid, x, y, game_object, owner) "
         f"VALUES ('{uuid.uuid4()}', {pos[0]}, {pos[1]}, (SELECT uuid FROM go), '{player_uuid}');"
@@ -235,7 +235,7 @@ async def make_user(pool: Pool, user_id: int, username: str) -> str:
     async with pool.acquire() as conn:
         player_uuid, token = await create_user(conn, user_id, username)
         spawn_pos = await create_spawn(conn, player_uuid)
-        await create_pawn(conn, player_uuid, "wood_cutter", (spawn_pos[0] + 1, spawn_pos[1]), action_name="cut")
+        await create_pawn(conn, player_uuid, "wood_cutter", (spawn_pos[0] + 1, spawn_pos[1]), task_name="cut")
 
         return token
 
@@ -315,7 +315,7 @@ async def get_object_by_uuid(pool: Pool, object_uuid: str) -> Optional[Record]:
     async with pool.acquire() as conn:
         return await conn.fetchrow(
             "SELECT go.uuid, go.name, go.object_type, players.username, go.health, mo.x, mo.y, "
-            "po.speed, po.power, po.max_actions FROM map_objects mo "
+            "po.speed, po.power, po.max_tasks FROM map_objects mo "
             "INNER JOIN game_objects go ON mo.game_object=go.uuid "
             "LEFT JOIN players ON mo.owner=players.uuid "
             "LEFT JOIN pawn_objects po ON po.game_object_ptr=go.uuid "
@@ -335,36 +335,36 @@ async def get_object_by_coors(pool: Pool, x: int, y: int) -> Optional[Record]:
         )
 
 
-async def get_pawn_actions(pool: Pool, gameobject_uuid: str) -> List[Optional[Record]]:
+async def get_pawn_tasks(pool: Pool, gameobject_uuid: str) -> List[Optional[Record]]:
     '''Получение списка действий пешки'''
     async with pool.acquire() as conn:
         return await conn.fetch(
-            "SELECT pa.uuid, pa.action, pa.start_time FROM pawn_actions pa "
+            "SELECT pa.uuid, pa.task, pa.start_time FROM pawn_tasks pa "
             "LEFT JOIN game_objects go ON pa.pawn=go.uuid "
             f"WHERE go.uuid='{gameobject_uuid}' "
             "ORDER BY pa.start_time"
         )
 
 
-async def get_available_actions(pool: Pool, gameobject_uuid: str) -> List[Optional[Record]]:
+async def get_available_tasks(pool: Pool, gameobject_uuid: str) -> List[Optional[Record]]:
     '''Получает список доступных действий пешки'''
     async with pool.acquire() as conn:
         return await conn.fetch(
-            "SELECT actions.name FROM available_actions aa "
+            "SELECT tasks.name FROM available_tasks aa "
             "LEFT JOIN game_objects go ON aa.pawn=go.uuid "
-            "LEFT JOIN actions ON aa.action=actions.uuid "
+            "LEFT JOIN tasks ON aa.tasks=tasks.uuid "
             f"WHERE go.uuid='{gameobject_uuid}'"
         )
 
 
-async def get_available_actions_by_mo(pool: Pool, object_uuid: str, token: str) -> List[Optional[Record]]:
+async def get_available_tasks_by_mo(pool: Pool, object_uuid: str, token: str) -> List[Optional[Record]]:
     '''Получает список доступных действий пешки'''
     async with pool.acquire() as conn:
         return await conn.fetch(
-            "SELECT actions.name FROM available_actions aa "
+            "SELECT tasks.name FROM available_tasks aa "
             "INNER JOIN game_objects go ON aa.pawn=go.uuid "
             "INNER JOIN map_objects mo ON mo.game_object=go.uuid "
-            "INNER JOIN actions ON aa.action=actions.uuid "
+            "INNER JOIN tasks ON aa.atask=tasks.uuid "
             "INNER JOIN players ON mo.owner=players.uuid "
             f"WHERE mo.uuid='{object_uuid}' AND players.token='{token}'"
         )
@@ -374,7 +374,7 @@ async def get_pawns(pool: Pool, token: str) -> List[Optional[Record]]:
     '''Получает список пешек игрока'''
     async with pool.acquire() as conn:
         return await conn.fetch(
-            "SELECT mo.uuid, go.name, go.health, po.speed, po.power, po.max_actions "
+            "SELECT mo.uuid, go.name, go.health, po.speed, po.power, po.max_tasks "
             "FROM map_objects mo "
             "INNER JOIN game_objects go ON mo.game_object=go.uuid "
             "INNER JOIN pawn_objects po ON po.game_object_ptr=go.uuid "
@@ -536,12 +536,12 @@ async def get_way(conn: Connection, start_pos: Tuple[int, int], finish_pos: Tupl
     return await reconstruct_path(came_from=came_from, start=start, goal=goal, _x=graph.min_x, _y=graph.min_y)
 
 
-async def action_manager(pool: Pool, object_uuid: str, token: str, action: str):
+async def action_manager(pool: Pool, object_uuid: str, token: str, task: str):
     async with pool.acquire() as conn:
         nearest_obj = await get_nearest_obj(
             conn=conn,
             object_uuid=object_uuid,
-            obj_name=take_objname_by_action[action],
+            obj_name=take_objname_by_taskname[task],
             token=token
         )
 
