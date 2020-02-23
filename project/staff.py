@@ -541,14 +541,14 @@ async def get_way(conn: Connection, start_pos: Tuple[int, int], finish_pos: Tupl
 async def create_task(conn: Connection, pawn_mo_uuid: str, task_name: str, common_time: float, walk_time: float, work_time_count: int) -> str:
     task_start_time = time()
     task_end_time = task_start_time + common_time
-    task_uuid = await conn.fetchval(
+    task_uuid: uuid.uuid4 = await conn.fetchval(
         "WITH pawn AS (SELECT uuid FROM game_objects go "
         "INNER JOIN map_objects mo ON go.uuid=mo.game_object "
         f"WHERE mo.uuid='{pawn_mo_uuid}'), task AS "
         f"(SELECT uuid FROM tasks WHERE name='{task_name}') "
         "INSERT INTO pawn_tasks (uuid, pawn, task, start_time, end_time, walk_time, work_time_count, common_time) "
         f"VALUES ('{uuid.uuid4()}', (SELECT uuid FROM pawn), (SELECT uuid FROM task), "
-        f"{task_start_time}, {task_end_time}, {walk_time}, {work_time_count}, {common_time}) RETURNING uuid"
+        f"{task_start_time}, {task_end_time}, {walk_time}, {work_time_count}, {common_time}) RETURNING pawn_tasks.uuid"
     )
     return task_uuid
 
