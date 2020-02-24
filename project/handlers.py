@@ -289,20 +289,20 @@ async def check_connection(request: Request) -> json_response:
 
 async def accept_task(request: Request) -> json_response:
     response = {"status": True}
-    #try:
-    data = await request.json()
-    action = await staff.procced_task(
-        pool=request.app["pool"],
-        task_uuid=data["task_uuid"],
-        accept=data["accept"]
-    )
-    if action:
-        response["task_uuid"] = action[1]
-        response["action_name"] = action[2]
-        response["start_time"] = action[3]
-        response["end_time"] = action[4]
-    # except (ValueError, TypeError, KeyError, JSONDecodeError):
-    #     response["status"] = True
-    #     response["errors"] = [2, "json is not correct"]
+    try:
+        data = await request.json()
+        action = await staff.procced_task(
+            pool=request.app["pool"],
+            task_uuid=data["task_uuid"],
+            accept=data["accept"]
+        )
+        if action:
+            response["task_uuid"] = action[1]
+            response["action_name"] = action[2]
+            response["start_time"] = action[3]
+            response["end_time"] = action[4]
+    except (ValueError, TypeError, KeyError, JSONDecodeError, exceptions.InvalidTextRepresentationError):
+        response["status"] = True
+        response["errors"] = [2, "json is not correct"]
 
     return json_response(response)
