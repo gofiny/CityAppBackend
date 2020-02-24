@@ -22,7 +22,7 @@ async def register_user(request: Request) -> json_response:
         )
         response["status"] = True
         response["token"] = token
-    except (ValueError, KeyError, JSONDecodeError):
+    except (TypeError, ValueError, KeyError, JSONDecodeError):
         response["errors"] = [2, "json is not correct"]
     except exceptions.StringDataRightTruncationError:
         response["errors"] = [7, "some data is too long"]
@@ -61,7 +61,7 @@ async def get_map(request: Request) -> json_response:
                 }
                 game_objects.append(game_object)
             response["game_objects"] = game_objects
-    except (ValueError, KeyError, JSONDecodeError):
+    except (TypeError, ValueError, KeyError, JSONDecodeError):
         response["status"] = False
         response["errors"] = [2, "json is not correct"]
 
@@ -87,7 +87,7 @@ async def get_profile(request: Request) -> json_response:
             "x": profile_info['x'],
             "y": profile_info['y']
         }
-    except (KeyError, ValueError, JSONDecodeError):
+    except (TypeError, KeyError, ValueError, JSONDecodeError):
         response["status"] = False
         response["errors"] = [2, "json is not correct"]
 
@@ -149,7 +149,7 @@ async def get_object_info(request: Request) -> json_response:
                 response["available_tasks"] = tasks
         else:
             response["errors"] = [6, "game_object is not found"]
-    except (KeyError, ValueError, JSONDecodeError):
+    except (TypeError, KeyError, ValueError, JSONDecodeError):
         response["errors"] = [2, "json is not correct"]
 
     return json_response(response)
@@ -177,7 +177,7 @@ async def get_player_pawns(request: Request) -> json_response:
                     "max_actions": pawn["max_actions"]
                 })
         response["pawns"] = response_pawns
-    except (KeyError, ValueError, JSONDecodeError):
+    except (TypeError, KeyError, ValueError, JSONDecodeError):
         response["errors"] = [2, "json is not correct"]
 
     return json_response(response)
@@ -215,7 +215,7 @@ async def get_tile(request: Request) -> json_response:
                 "health": tile["health"],
                 "owner": tile["username"]
             }
-    except (KeyError, ValueError, JSONDecodeError):
+    except (KeyError, ValueError, TypeError, JSONDecodeError):
         response["status"] = False
         response["errors"] = [2, "json is not correct"]
 
@@ -223,15 +223,18 @@ async def get_tile(request: Request) -> json_response:
 
 
 async def add_task_to_pawn(request: Request) -> json_response:
-    data = await request.json()
-    response = await staff.add_pretask_to_pawn(
-        pool=request.app["pool"],
-        object_uuid=data["object_uuid"],
-        token=data["token"],
-        task_name=data["task_name"]
-    )
-    response["status"] = True
-    
+    response = {"status": False}
+    try:
+        data = await request.json()
+        response = await staff.add_pretask_to_pawn(
+            pool=request.app["pool"],
+            object_uuid=data["object_uuid"],
+            token=data["token"],
+            task_name=data["task_name"]
+        )
+        response["status"] = True
+    except (KeyError, ValueError, TypeError, JSONDecodeError):
+        response["errors"] = [2, "json is not correct"]
     return json_response(response)
 
 
@@ -250,7 +253,7 @@ async def get_available_tasks_count(request: Request) -> json_response:
         else:
             response["status"] = True
             response["count"] = len(available_tasks)
-    except (KeyError, ValueError, JSONDecodeError, exceptions.InvalidTextRepresentationError):
+    except (KeyError, ValueError, TypeError, JSONDecodeError, exceptions.InvalidTextRepresentationError):
         response["errors"] = [2, "json is not correct"]
 
     return json_response(response)
@@ -286,16 +289,20 @@ async def check_connection(request: Request) -> json_response:
 
 async def accept_task(request: Request) -> json_response:
     response = {"status": True}
-    data = await request.json()
-    action = await staff.procced_task(
-        pool=request.app["pool"],
-        task_uuid=data["task_uuid"],
-        accept=data["accept"]
-    )
-    if action:
-        response["task_uuid"] = action[1]
-        response["action_name"] = action[2]
-        response["start_time"] = action[3]
-        response["end_time"] = action[4]
+    try:
+        data = await request.json()
+        action = await staff.procced_task(
+            pool=request.app["pool"],
+            task_uuid=data["task_uuid"],
+            accept=data["accept"]
+        )
+        if action:
+            response["task_uuid"] = action[1]
+            response["action_name"] = action[2]
+            response["start_time"] = action[3]
+            response["end_time"] = action[4]
+    except (ValueError, TypeError, KeyError, JSONDecodeError):
+        response["status"] = True
+        response["errors"] = [2, "json is not correct"]
 
     return json_response(response)
