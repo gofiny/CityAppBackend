@@ -596,8 +596,8 @@ async def create_actions(conn: Connection, task_uuid: str) -> tuple:
         actions_queue.append(current_action)
 
     await conn.executemany(
-        "INSERT INTO pawn_actions VALUES (uuid, task, name, start_time, end_time) "
-        "($1, $2, $3, $4, $5);", actions
+        "INSERT INTO pawn_actions (uuid, task, name, start_time, end_time) "
+        "VALUES ($1, $2, $3, $4, $5);", actions
     )
 
     return actions[0]
