@@ -557,7 +557,7 @@ async def get_pawn_task(conn: Connection, task_uuid: str) -> Optional[Record]:
     return await conn.fetchrow(
         "SELECT pt.*, tasks.name FROM pawn_tasks pt "
         "LEFT JOIN tasks ON pt.task=tasks.uuid "
-        f"WHERE uuid='{task_uuid}'"
+        f"WHERE pt.uuid='{task_uuid}'"
     )
 
 
