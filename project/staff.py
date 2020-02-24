@@ -16,8 +16,12 @@ from asyncpg.connection import Connection
 from aiohttp.web import json_response
 
 
-take_objname_by_taskname = {
+get_objname_by_taskname = {
     "cut": "tree"
+}
+
+get_resname_by_taskname = {
+    "cut": "wood"
 }
 
 
@@ -608,7 +612,7 @@ async def add_pretask_to_pawn(pool: Pool, object_uuid: str, token: str, task_nam
         nearest_obj = await get_nearest_obj(
             conn=conn,
             object_uuid=object_uuid,
-            obj_name=take_objname_by_taskname[task_name],
+            obj_name=get_objname_by_taskname[task_name],
             token=token
         )
 
@@ -662,8 +666,23 @@ async def get_player_resources_by_names(pool: Pool, token: str, res_name: Option
         )
 
 
-async def get_first_actions(conn: Connection) -> List[Optional[Record]]:
+async def get_finished_actions(conn: Connection) -> List[Optional[Record]]:
     current_time = time()
-    await conn.fetch(
-        f"SELECT * FROM pawn_actions WHERE end_time < {current_time}"
+    return await conn.fetch(
+        "SELECT p.uuid as player_uuid, pr.uuid as res_uuid, po.power as pawn_power, "
+        "pt.uuid as pt_uuid, t.name as task_name, pa.name as pa_name, pa.uuid as pa_uuid, "
+        "go.health as go_health FROM players p INNER JOIN players_resources pr ON p.uuid=pr.player "
+        "INNER JOIN map_objects mo ON mo.owner=p.uuid "
+        "INNER JOIN game_objects go ON mo.game_object=go.uuid "
+        "INNER JOIN pawn_objects po ON go.uuid=po.game_object_ptr "
+        "INNER JOIN pawn_tasks pt ON pt.pawn=go.uuid "
+        "INNER JOIN tasks t ON pt.task=t.uuid "
+        "INNER JOIN pawn_actions pa ON pt.uuid=pa.task "
+        f"WHERE pa.end_time < {current_time}"
+    )
+
+
+async def delete_actions(conn: Connection, actions: tuple) -> None:
+    await conn.execute(
+        f"DELETE FROM pawn_actions WHERE uuid IN {actions}"
     )
