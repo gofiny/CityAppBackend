@@ -575,18 +575,23 @@ async def create_actions(conn: Connection, task_uuid: str) -> tuple:
 
     start_time = time()
     end_time = start_time + pawn_task["common_time"] 
-    current_action = "walk"
+    actions_queue = [
+        {"action": "walk", "lead_time": walk_time},
+        {"action": task_name, "lead_time": 10},
+        {"action": "carry", "lead_time": walk_time}
+    ]
     for _ in range(work_time_count + work_time_count * 2):
         start_time = end_time
-        end_time = start_time + (walk_time if current_action == "walk" else 10) # where 10 is a work constant time
+        current_action = actions_queue.pop(0)
+        end_time = start_time + current_action["lead_time"]
         actions.append((
             uuid.uuid4(),
             task_uuid,
-            current_action,
+            current_action["action"],
             start_time,
             end_time
         ))
-        current_action = task_name if current_action == "walk" else "walk"
+        actions_queue.append(current_action)
 
     await conn.executemany(
         "INSERT INTO pawn_actions VALUES (uuid, task, name, start_time, end_time) "
@@ -653,3 +658,10 @@ async def get_player_resources_by_names(pool: Pool, token: str, res_name: Option
             "INNER JOIN players_resources pr ON players.uuid=pr.player "
             f"WHERE players.token='{token}'"
         )
+
+
+async def get_first_actions(conn: Connection) -> List[Optional[Record]]:
+    current_time = time()
+    await conn.fetch(
+        f"SELECT * FROM pawn_actions WHERE end_time < {current_time}"
+    )
