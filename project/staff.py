@@ -555,7 +555,9 @@ async def create_task(conn: Connection, pawn_mo_uuid: str, task_name: str, commo
 
 async def get_pawn_task(conn: Connection, task_uuid: str) -> Optional[Record]:
     return await conn.fetchrow(
-        f"SELECT * FROM pawn_tasks WHERE uuid='{task_uuid}'"
+        "SELECT pt.*, tasks.name FROM pawn_tasks pt "
+        "LEFT JOIN tasks ON pt.task=tasks.uuid "
+        f"WHERE uuid='{task_uuid}'"
     )
 
 
