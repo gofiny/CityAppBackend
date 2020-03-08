@@ -66,7 +66,7 @@ async def get_map(request: Request) -> json_response:
         response["status"] = False
         response["errors"] = [2, "json is not correct"]
 
-    return json_response(data=response, headers={"content-length": sys.getsizeof(response)})
+    return json_response(data=response)
 
 
 async def get_profile(request: Request) -> json_response:
