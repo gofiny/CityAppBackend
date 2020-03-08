@@ -4,6 +4,7 @@ from exceptions import UserAlreadyExist, ObjectNotExist
 from json.decoder import JSONDecodeError
 from aiohttp.web import json_response, Request, Response
 import staff
+import sys
 
 
 async def test(request: Request) -> json_response:
@@ -65,7 +66,7 @@ async def get_map(request: Request) -> json_response:
         response["status"] = False
         response["errors"] = [2, "json is not correct"]
 
-    return json_response(response)
+    return json_response(data=response, headers={"content-length": sys.getsizeof(response)})
 
 
 async def get_profile(request: Request) -> json_response:
@@ -235,7 +236,7 @@ async def add_task_to_pawn(request: Request) -> json_response:
         response["status"] = True
     except (KeyError, ValueError, TypeError, JSONDecodeError):
         response["errors"] = [2, "json is not correct"]
-    return json_response(response)
+    return json_response(response, )
 
 
 async def get_available_tasks_count(request: Request) -> json_response:
