@@ -67,7 +67,7 @@ async def get_map(request: Request) -> json_response:
         response["errors"] = [2, "json is not correct"]
     resp = json_response(data=response)
     size = sys.getsizeof(resp)
-    res.content_length = size
+    resp.content_length = size
     return resp
 
 
