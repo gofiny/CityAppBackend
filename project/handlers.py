@@ -65,10 +65,7 @@ async def get_map(request: Request) -> json_response:
     except (TypeError, ValueError, KeyError, JSONDecodeError):
         response["status"] = False
         response["errors"] = [2, "json is not correct"]
-    resp = json_response(data=response)
-    size = sys.getsizeof(resp)
-    resp.content_length = size
-    return resp
+    return json_response(data=response)
 
 
 async def get_profile(request: Request) -> json_response:
