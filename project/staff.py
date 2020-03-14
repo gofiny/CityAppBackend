@@ -669,11 +669,11 @@ async def get_player_resources_by_names(pool: Pool, token: str, res_name: Option
 async def get_finished_actions(conn: Connection) -> List[Optional[Record]]:
     current_time = time()
     return await conn.fetch(
-        "SELECT p.uuid as player_uuid, pr.uuid as res_uuid, po.power as pawn_power, "
+        "SELECT p.uuid as player_uuid, pr.uuid as storage_uuid, po.power as pawn_power, "
         "pt.uuid as pt_uuid, t.name as task_name, pa.name as pa_name, pa.uuid as pa_uuid, "
-        "go.health as go_health FROM players p INNER JOIN players_resources pr ON p.uuid=pr.player "
-        "INNER JOIN map_objects mo ON mo.owner=p.uuid "
-        "INNER JOIN game_objects go ON mo.game_object=go.uuid "
+        "coalesce(go.health, 0) as go_health FROM players p INNER JOIN players_resources pr ON p.uuid=pr.player "
+        "LEFT JOIN map_objects mo ON mo.owner=p.uuid "
+        "LEFT JOIN game_objects go ON mo.game_object=go.uuid "
         "INNER JOIN pawn_objects po ON go.uuid=po.game_object_ptr "
         "INNER JOIN pawn_tasks pt ON pt.pawn=go.uuid "
         "INNER JOIN tasks t ON pt.task=t.uuid "
@@ -686,3 +686,20 @@ async def delete_actions(conn: Connection, actions: tuple) -> None:
     await conn.execute(
         f"DELETE FROM pawn_actions WHERE uuid IN {actions}"
     )
+
+
+async def delete_tasks(conn: Connection, tasks: tuple) -> None:
+    await conn.execute(
+        f"DELETE FROM pawn_tasks WHERE uuid IN {tasks}"
+    )
+
+async def add_res_to_player(conn: Connection, storage_uuid: str, task_name: str, res_count: int):
+    res_name = get_resname_by_taskname[task_name]
+    await conn.execute(
+        f"UPDATE players_resources "
+        f"SET {res_name}={res_name}+{res_count} "
+        f"WHERE uuid='{storage_uuid}'"
+    )
+
+async def change_pawn_health(conn: Connection, go_uuid: uuid, new_health: int):
+    pass
