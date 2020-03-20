@@ -32,10 +32,10 @@ async def actions_handler(conn: Connection):
         go_health = action["go_health"]
         if action["pa_name"] == "carry":
             if go_health <= 0:
-                loot_count = pawn_power
+                loot_count = go_health + pawn_power
                 tasks_to_delete.append(action["pt_uuid"])
             else:
-                loot_count = go_health + pawn_power
+                loot_count = pawn_power
             await add_res_to_player(
                 conn=conn,
                 storage_uuid=action["storage_uuid"],
@@ -48,5 +48,5 @@ async def actions_handler(conn: Connection):
         actions_to_delete.append(action["pa_uuid"])
 
     await delete_actions(conn=conn, actions=tuple(actions_to_delete))
-    await delete_tasks(conn=conn, tasks=tuple(tasks_to_delete))
-    
+    if tasks_to_delete:
+        await delete_tasks(conn=conn, tasks=tuple(tasks_to_delete))
