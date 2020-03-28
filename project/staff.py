@@ -692,6 +692,7 @@ async def procced_task(pool: Pool, task_uuid, accept: bool):
             return await add_walk_pawn_action(
                 conn=conn,
                 task_uuid=task_uuid,
+                returning=True
             )
             # return await create_actions(
             #     conn=conn,
