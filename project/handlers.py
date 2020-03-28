@@ -263,7 +263,7 @@ async def get_player_resources(request: Request) -> json_response:
     response = {"status": False}
     try:
         data = await request.json()
-        resources = await staff.get_player_resources_by_names(
+        resources = await staff.get_player_resource_by_name(
             pool=request.app["pool"],
             token=data["token"],
             res_name=data["resource"]

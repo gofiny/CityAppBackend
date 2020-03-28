@@ -656,7 +656,7 @@ async def procced_task(pool: Pool, task_uuid, accept: bool):
         await delete_pawn_task(conn=conn, task_uuid=task_uuid)
 
 
-async def get_player_resources_by_names(pool: Pool, token: str, res_name: Optional[str]) -> Optional[Record]:
+async def get_player_resource_by_name(pool: Pool, token: str, res_name: Optional[str]) -> Optional[Record]:
     async with pool.acquire() as conn:
         res_name = "*" if not res_name else res_name
         return await conn.fetchrow(
