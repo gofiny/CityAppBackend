@@ -607,6 +607,30 @@ async def create_actions(conn: Connection, task_uuid: str) -> tuple:
     return actions[0]
 
 
+async def create_pawn_action(conn: Connection, task_uuid: str, action_name: str, start_time: float, end_time: float):
+    await conn.execute(
+        "INSERT INTO pawn_actions (uuid, task, name, start_time, end time) "
+        f"VALUES ('{uuid.uuid4()}', '{task_uuid}', {action_name}, {start_time}, {end_time})"
+    )
+
+
+async def add_pawn_action(conn: Connection, task: str, action_name: float, work_time: float, get_task: bool = True):
+    if get_task:
+        pawn_task = await get_pawn_task(conn=conn, task_uuid=task)
+    else:
+        pawn_task = task
+    walk_time = pawn_task["walk_time"]
+    start_time = time()
+    end_time = start_time + walk_time
+    await create_pawn_action(
+        conn=conn,
+        task_uuid=pawn_task["uuid"],
+        action_name=action_name,
+        start_time=start_time,
+        end_time=end_time
+    )
+
+
 async def add_pretask_to_pawn(pool: Pool, object_uuid: str, token: str, task_name: str) -> dict:
     async with pool.acquire() as conn:
         nearest_obj = await get_nearest_obj(
