@@ -610,7 +610,7 @@ async def create_actions(conn: Connection, task_uuid: str) -> tuple:
 async def create_pawn_action(conn: Connection, task_uuid: str, action_name: str, start_time: float, end_time: float):
     await conn.execute(
         "INSERT INTO pawn_actions (uuid, task, name, start_time, end_time) "
-        f"VALUES ('{uuid.uuid4()}', '{task_uuid}', {action_name}, {start_time}, {end_time})"
+        f"VALUES ('{uuid.uuid4()}', '{task_uuid}', '{action_name}', {start_time}, {end_time})"
     )
 
 
