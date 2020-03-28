@@ -93,6 +93,7 @@ PawnTasks = '''CREATE TABLE IF NOT EXISTS "pawn_tasks"
     "uuid" uuid NOT NULL PRIMARY KEY,
     "pawn" uuid NOT NULL REFERENCES "game_objects" ("uuid") ON DELETE cascade,
     "task" uuid NOT NULL REFERENCES "tasks" ("uuid"),
+    "mo_uuid" uuid REFERENCES "map_objects" ("uuid"),
     "start_time" float,
     "end_time" float,
     "walk_time" float,
@@ -105,7 +106,8 @@ PawnActions = '''CREATE TABLE IF NOT EXISTS "pawn_actions" (
     "task" uuid NOT NULL REFERENCES "pawn_tasks" ("uuid") ON DELETE cascade,
     "name" VARCHAR(20) NOT NULL,
     "start_time" float,
-    "end_time" float
+    "end_time" float,
+    "res_count" int
 );'''
 
 

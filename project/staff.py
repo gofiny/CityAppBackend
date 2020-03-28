@@ -435,7 +435,7 @@ async def get_nearest_obj(conn: Connection, object_uuid: str, obj_name: str, tok
         "INNER JOIN pawn_objects po ON po.game_object_ptr=go.uuid "
         "INNER JOIN players ON mo.owner=players.uuid "
         f"WHERE players.token='{token}' AND mo.uuid='{object_uuid}') "
-        "SELECT mo.x, mo.y, |/((mo.x-(SELECT x FROM pawn))^2 + (mo.y-(SELECT y FROM pawn))^2) AS length, "
+        "SELECT mo.uuid as mo_uuid, mo.x, mo.y, |/((mo.x-(SELECT x FROM pawn))^2 + (mo.y-(SELECT y FROM pawn))^2) AS length, "
         "go.health as object_health, (SELECT x FROM pawn) AS pawn_x, (SELECT y FROM pawn) AS pawn_y, "
         "(SELECT power FROM pawn) AS pawn_power, (SELECT speed FROM pawn) AS pawn_speed "
         "FROM map_objects mo INNER JOIN game_objects go ON mo.game_object=go.uuid "
@@ -542,7 +542,7 @@ async def get_way(conn: Connection, start_pos: Tuple[int, int], finish_pos: Tupl
     return await reconstruct_path(came_from=came_from, start=start, goal=goal, _x=graph.min_x, _y=graph.min_y)
 
 
-async def create_task(conn: Connection, pawn_mo_uuid: str, task_name: str, common_time: float, walk_time: float, work_time_count: int) -> str:
+async def create_task(conn: Connection, pawn_mo_uuid: str, mo_uuid: str, task_name: str, common_time: float, walk_time: float, work_time_count: int) -> str:
     task_start_time = time()
     task_end_time = task_start_time + common_time
     task_uuid: uuid.uuid4 = await conn.fetchval(
@@ -550,9 +550,9 @@ async def create_task(conn: Connection, pawn_mo_uuid: str, task_name: str, commo
         "INNER JOIN map_objects mo ON go.uuid=mo.game_object "
         f"WHERE mo.uuid='{pawn_mo_uuid}'), task AS "
         f"(SELECT uuid FROM tasks WHERE name='{task_name}') "
-        "INSERT INTO pawn_tasks (uuid, pawn, task, start_time, end_time, walk_time, work_time_count, common_time) "
+        "INSERT INTO pawn_tasks (uuid, pawn, task, start_time, end_time, walk_time, work_time_count, common_time, mo_uuid) "
         f"VALUES ('{uuid.uuid4()}', (SELECT uuid FROM pawn), (SELECT uuid FROM task), "
-        f"{task_start_time}, {task_end_time}, {walk_time}, {work_time_count}, {common_time}) RETURNING uuid"
+        f"{task_start_time}, {task_end_time}, {walk_time}, {work_time_count}, {common_time}, '{mo_uuid}') RETURNING uuid"
     )
     return task_uuid
 
@@ -607,14 +607,14 @@ async def create_actions(conn: Connection, task_uuid: str) -> tuple:
     return actions[0]
 
 
-async def create_pawn_action(conn: Connection, task_uuid: str, action_name: str, start_time: float, end_time: float):
+async def create_pawn_action(conn: Connection, task_uuid: str, action_name: str, start_time: float, end_time: float, res_count: Optional[int]):
     await conn.execute(
-        "INSERT INTO pawn_actions (uuid, task, name, start_time, end_time) "
-        f"VALUES ('{uuid.uuid4()}', '{task_uuid}', '{action_name}', {start_time}, {end_time})"
+        "INSERT INTO pawn_actions (uuid, task, name, start_time, end_time, res_count) "
+        f"VALUES ('{uuid.uuid4()}', '{task_uuid}', '{action_name}', {start_time}, {end_time}, {res_count})"
     )
 
 
-async def add_walk_pawn_action(conn: Connection, task_uuid: str, action_name: str = "walk", returning: bool = False) -> dict:
+async def add_walk_pawn_action(conn: Connection, task_uuid: str, action_name: str = "walk", returning: bool = False, res_count: Optional[int] = None) -> dict:
     pawn_task = await get_pawn_task(conn=conn, task_uuid=task_uuid)
     walk_time = pawn_task["walk_time"]
     start_time = time()
@@ -624,7 +624,8 @@ async def add_walk_pawn_action(conn: Connection, task_uuid: str, action_name: st
         task_uuid=pawn_task["uuid"],
         action_name=action_name,
         start_time=start_time,
-        end_time=end_time
+        end_time=end_time,
+        res_count=res_count
     )
     if returning is True:
         return {
@@ -635,7 +636,7 @@ async def add_walk_pawn_action(conn: Connection, task_uuid: str, action_name: st
         }
 
 
-async def add_work_pawn_action(conn: Connection, task_uuid: str, action_name: str):
+async def add_work_pawn_action(conn: Connection, task_uuid: str, action_name: str, res_count: Optional[int] = None):
     start_time = time()
     end_time = start_time + 10.0
     await create_pawn_action(
@@ -643,7 +644,8 @@ async def add_work_pawn_action(conn: Connection, task_uuid: str, action_name: st
         task_uuid=task_uuid,
         action_name=action_name,
         start_time=start_time,
-        end_time=end_time
+        end_time=end_time,
+        res_count=res_count
     )
 
 
@@ -672,6 +674,7 @@ async def add_pretask_to_pawn(pool: Pool, object_uuid: str, token: str, task_nam
         task_uuid = await create_task(
             conn=conn,
             pawn_mo_uuid=object_uuid,
+            mo_uuid=nearest_obj["mo_uuid"],
             task_name=task_name,
             common_time=common_time,
             walk_time=walk_time,
@@ -716,13 +719,16 @@ async def get_finished_actions(conn: Connection) -> List[Optional[Record]]:
     return await conn.fetch(
         "SELECT p.uuid as player_uuid, pr.uuid as storage_uuid, po.power as pawn_power, "
         "pt.uuid as pt_uuid, t.name as task_name, pa.name as pa_name, pa.uuid as pa_uuid, "
-        "coalesce(go.health, 0) as go_health FROM players p INNER JOIN players_resources pr ON p.uuid=pr.player "
-        "LEFT JOIN map_objects mo ON mo.owner=p.uuid "
+        "res_mo.uuid as mo_uuid, res_go.health as res_health, pa.res_count as res_count "
+        "FROM players p INNER JOIN players_resources pr ON p.uuid=pr.player "
+        "LEFT INNER JOIN map_objects mo ON mo.owner=p.uuid "
         "LEFT JOIN game_objects go ON mo.game_object=go.uuid "
         "INNER JOIN pawn_objects po ON go.uuid=po.game_object_ptr "
         "INNER JOIN pawn_tasks pt ON pt.pawn=go.uuid "
         "INNER JOIN tasks t ON pt.task=t.uuid "
         "INNER JOIN pawn_actions pa ON pt.uuid=pa.task "
+        "LEFT JOIN map_objects res_mo ON res_mo.uuid=pt.mo_uuid "
+        "LEFT JOIN game_objects res_go ON mo.game_object=res_go.uuid "
         f"WHERE pa.end_time < {current_time}"
     )
 
@@ -748,3 +754,9 @@ async def add_res_to_player(conn: Connection, storage_uuid: str, task_name: str,
 
 async def change_pawn_health(conn: Connection, go_uuid: uuid, new_health: int):
     pass
+
+
+async def delete_map_objects(conn: Connection, objects: tuple):
+    await conn.execute(
+        f"DELETE FROM map_objects WHERE uuid IN {objects}"
+    )
