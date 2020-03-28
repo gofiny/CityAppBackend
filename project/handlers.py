@@ -297,10 +297,10 @@ async def accept_task(request: Request) -> json_response:
             accept=data["accept"]
         )
         if action:
-            response["task_uuid"] = action[1]
-            response["action_name"] = action[2]
-            response["start_time"] = action[3]
-            response["end_time"] = action[4]
+            response["task_uuid"] = action["task_uuid"]
+            response["action_name"] = action["action_name"]
+            response["start_time"] = action["start_time"]
+            response["end_time"] = action["end_time"]
     except (ValueError, TypeError, KeyError, JSONDecodeError, exceptions.InvalidTextRepresentationError):
         response["status"] = True
         response["errors"] = [2, "json is not correct"]
