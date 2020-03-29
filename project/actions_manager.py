@@ -65,7 +65,7 @@ async def actions_handler(conn: Connection):
                 loot_count = pawn_power
             await add_walk_pawn_action(
                 conn=conn,
-                task_uuid=dtr(action["pt_uuid"]),
+                task_uuid=str(action["pt_uuid"]),
                 action_name="carry",
                 res_count=loot_count
             )
