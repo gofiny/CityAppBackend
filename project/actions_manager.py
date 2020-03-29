@@ -78,3 +78,18 @@ async def actions_handler(conn: Connection):
         await delete_tasks(conn=conn, tasks=tuple(tasks_to_delete))
     if objects_to_delete:
         await delete_map_objects(conn=conn, objects=tuple(objects_to_delete))
+
+
+async def main():
+    conn = await connect()
+    while True:
+        await actions_handler(conn=conn)
+
+
+if __name__ == "__main__":
+    try:
+        main_loop = asyncio.get_event_loop()
+        main_loop.run_until_complete(main())
+    finally:
+        main_loop.close()
+   
