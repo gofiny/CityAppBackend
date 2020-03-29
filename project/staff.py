@@ -735,13 +735,13 @@ async def get_finished_actions(conn: Connection) -> List[Optional[Record]]:
 
 async def delete_actions(conn: Connection, actions: tuple) -> None:
     await conn.execute(
-        f"DELETE FROM pawn_actions WHERE uuid IN {actions}"
+        f"DELETE FROM pawn_actions WHERE uuid IN {str(actions)[0:-2]})"
     )
 
 
 async def delete_tasks(conn: Connection, tasks: tuple) -> None:
     await conn.execute(
-        f"DELETE FROM pawn_tasks WHERE uuid IN {tasks}"
+        f"DELETE FROM pawn_tasks WHERE uuid IN {str(tasks)[0:-2]})"
     )
 
 async def add_res_to_player(conn: Connection, storage_uuid: str, task_name: str, res_count: int):
@@ -758,5 +758,5 @@ async def change_pawn_health(conn: Connection, go_uuid: uuid, new_health: int):
 
 async def delete_map_objects(conn: Connection, objects: tuple):
     await conn.execute(
-        f"DELETE FROM map_objects WHERE uuid IN {objects}"
+        f"DELETE FROM map_objects WHERE uuid IN {str(objects)[0:-2]})"
     )
