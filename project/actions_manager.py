@@ -47,10 +47,9 @@ async def actions_handler(conn: Connection):
                 print("delete object")
             else:
                 await add_walk_pawn_action(
-                conn=conn,
-                task_uuid=str(action["pt_uuid"]),
-                action_name=action["task_name"]
-            )
+                    conn=conn,
+                    task_uuid=str(action["pt_uuid"]),
+                )
         elif action_name == "walk":
             await add_work_pawn_action(
                 conn=conn,
