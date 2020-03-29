@@ -607,14 +607,14 @@ async def create_actions(conn: Connection, task_uuid: str) -> tuple:
     return actions[0]
 
 
-async def create_pawn_action(conn: Connection, task_uuid: str, action_name: str, start_time: float, end_time: float, res_count: Optional[int]):
+async def create_pawn_action(conn: Connection, task_uuid: str, action_name: str, start_time: float, end_time: float, res_count: Union[str, int]):
     await conn.execute(
         "INSERT INTO pawn_actions (uuid, task, name, start_time, end_time, res_count) "
         f"VALUES ('{uuid.uuid4()}', '{task_uuid}', '{action_name}', {start_time}, {end_time}, {res_count})"
     )
 
 
-async def add_walk_pawn_action(conn: Connection, task_uuid: str, action_name: str = "walk", returning: bool = False, res_count: Optional[int] = None) -> dict:
+async def add_walk_pawn_action(conn: Connection, task_uuid: str, action_name: str = "walk", returning: bool = False, res_count: Union[str, int] = "null") -> dict:
     pawn_task = await get_pawn_task(conn=conn, task_uuid=task_uuid)
     walk_time = pawn_task["walk_time"]
     start_time = time()
