@@ -728,7 +728,7 @@ async def get_finished_actions(conn: Connection) -> List[Optional[Record]]:
         "INNER JOIN tasks t ON pt.task=t.uuid "
         "INNER JOIN pawn_actions pa ON pt.uuid=pa.task "
         "LEFT JOIN map_objects res_mo ON res_mo.uuid=pt.mo_uuid "
-        "LEFT JOIN game_objects res_go ON mo.game_object=res_go.uuid "
+        "LEFT JOIN game_objects res_go ON res_mo.game_object=res_go.uuid "
         f"WHERE pa.end_time < {current_time}"
     )
 
