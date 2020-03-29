@@ -45,7 +45,7 @@ async def actions_handler(conn: Connection):
             if action["mo_uuid"] is None:
                 tasks_to_delete.append(action["pt_uuid"])
             else:
-                await add_work_pawn_action(
+                await add_walk_pawn_action(
                 conn=conn,
                 task_uuid=action["pt_uuid"],
                 action_name=action["task_name"]

@@ -636,7 +636,7 @@ async def add_walk_pawn_action(conn: Connection, task_uuid: str, action_name: st
         }
 
 
-async def add_work_pawn_action(conn: Connection, task_uuid: str, action_name: str, res_count: Optional[int] = None):
+async def add_work_pawn_action(conn: Connection, task_uuid: str, action_name: str, res_count: Union[str, int] = "null"):
     start_time = time()
     end_time = start_time + 10.0
     await create_pawn_action(
