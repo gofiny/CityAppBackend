@@ -71,6 +71,7 @@ async def actions_handler(conn: Connection):
             )
         
         actions_to_delete.append(action["pa_uuid"])
+        print(tuple(actions_to_delete))
 
     if actions_to_delete:
         await delete_actions(conn=conn, actions=tuple(actions_to_delete))
