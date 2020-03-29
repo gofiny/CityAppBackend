@@ -11,7 +11,8 @@ from staff import (
     add_res_to_player,
     add_work_pawn_action,
     add_walk_pawn_action,
-    delete_map_objects
+    delete_map_objects,
+    change_object_health
 )
 
 
@@ -63,6 +64,11 @@ async def actions_handler(conn: Connection):
                 objects_to_delete.append(str(action["mo_uuid"]))
             else:
                 loot_count = pawn_power
+                await change_object_health(
+                    conn=conn,
+                    go_uuid=action["res_uuid"],
+                    new_health=new_health
+                )
             await add_walk_pawn_action(
                 conn=conn,
                 task_uuid=str(action["pt_uuid"]),

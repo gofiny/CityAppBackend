@@ -719,7 +719,7 @@ async def get_finished_actions(conn: Connection) -> List[Optional[Record]]:
     return await conn.fetch(
         "SELECT p.uuid as player_uuid, pr.uuid as storage_uuid, po.power as pawn_power, "
         "pt.uuid as pt_uuid, t.name as task_name, pa.name as pa_name, pa.uuid as pa_uuid, "
-        "res_mo.uuid as mo_uuid, res_go.health as res_health, pa.res_count as res_count "
+        "res_mo.uuid as mo_uuid, res_go.health as res_health, res_go.uuid as res_uuid pa.res_count as res_count "
         "FROM players p INNER JOIN players_resources pr ON p.uuid=pr.player "
         "LEFT JOIN map_objects mo ON mo.owner=p.uuid "
         "LEFT JOIN game_objects go ON mo.game_object=go.uuid "
@@ -752,8 +752,10 @@ async def add_res_to_player(conn: Connection, storage_uuid: str, task_name: str,
         f"WHERE uuid='{storage_uuid}'"
     )
 
-async def change_pawn_health(conn: Connection, go_uuid: uuid, new_health: int):
-    pass
+async def change_object_health(conn: Connection, go_uuid: str, new_health: int):
+    await conn.execute(
+        f"UPDATE game_objects SET health={new_health} WHERE uuid='{go_uuid}'"
+    )
 
 
 async def delete_map_objects(conn: Connection, objects: tuple):
