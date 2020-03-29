@@ -721,7 +721,7 @@ async def get_finished_actions(conn: Connection) -> List[Optional[Record]]:
         "pt.uuid as pt_uuid, t.name as task_name, pa.name as pa_name, pa.uuid as pa_uuid, "
         "res_mo.uuid as mo_uuid, res_go.health as res_health, pa.res_count as res_count "
         "FROM players p INNER JOIN players_resources pr ON p.uuid=pr.player "
-        "LEFT INNER JOIN map_objects mo ON mo.owner=p.uuid "
+        "LEFT JOIN map_objects mo ON mo.owner=p.uuid "
         "LEFT JOIN game_objects go ON mo.game_object=go.uuid "
         "INNER JOIN pawn_objects po ON go.uuid=po.game_object_ptr "
         "INNER JOIN pawn_tasks pt ON pt.pawn=go.uuid "
