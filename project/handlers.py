@@ -60,6 +60,12 @@ async def get_map(request: Request) -> json_response:
                         "y": map_object["y"]
                     }
                 }
+                if map_object["pt_uuid"] is not None:
+                    game_object["task_uuid"] = map_object["pt_uuid"]
+                    game_object["action_name"] = map_object["pa_name"]
+                    game_object["start_time"] = map_object["start_time"]
+                    game_object["end_time"] = map_object["end_time"]
+                    
                 game_objects.append(game_object)
             response["game_objects"] = game_objects
     except (TypeError, ValueError, KeyError, JSONDecodeError):

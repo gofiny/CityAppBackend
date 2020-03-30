@@ -261,10 +261,12 @@ async def get_spawn_coords(pool: Pool, user_id: int) -> Record:
 async def get_objects_from_relay(conn: Connection, x_coords: Tuple[int, int], y_coords: Tuple[int, int]) -> List[Optional[Record]]:
     '''Получает объекты из области на карте'''
     return await conn.fetch(
-        "SELECT go.name, players.username, go.health, go.object_type, mo.x, mo.y, mo.uuid "
-        "FROM map_objects mo "
+        "SELECT go.name, players.username, go.health, go.object_type, mo.x, mo.y, mo.uuid, "
+        "pt.uuid as pt_uuid, pa.name as pa_name, pa.start_time, pa.end_time FROM map_objects mo "
         "LEFT JOIN players ON mo.owner=players.uuid "
         "LEFT JOIN game_objects go ON mo.game_object=go.uuid "
+        "LEFT JOIN pawn_tasks pt ON pt.pawn=go.uuid "
+        "LEFT JOIN pawn_actions pa ON pa.task=pt.uuid "
         f"WHERE mo.x >= {x_coords[0]} AND mo.x <= {x_coords[1]} "
         f"AND mo.y >= {y_coords[0]} AND mo.y <= {y_coords[1]}"
     )
