@@ -578,7 +578,7 @@ async def create_task(conn: Connection, pawn_mo_uuid: str, mo_uuid: str, task_na
         f"(SELECT uuid FROM tasks WHERE name='{task_name}') "
         "INSERT INTO pawn_tasks (uuid, pawn, task, start_time, end_time, walk_time, work_time_count, common_time, mo_uuid, way) "
         f"VALUES ('{uuid.uuid4()}', (SELECT uuid FROM pawn), (SELECT uuid FROM task), {task_start_time}, {task_end_time}, "
-        f"{walk_time}, {work_time_count}, {common_time}, '{mo_uuid}', {way}) RETURNING uuid"
+        f"{walk_time}, {work_time_count}, {common_time}, '{mo_uuid}', ARRAY{way}) RETURNING uuid"
     )
     return task_uuid
 
