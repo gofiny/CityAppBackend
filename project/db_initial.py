@@ -98,7 +98,8 @@ PawnTasks = '''CREATE TABLE IF NOT EXISTS "pawn_tasks"
     "end_time" float,
     "walk_time" float,
     "work_time_count" integer,
-    "common_time" float
+    "common_time" float,
+    "way" int[][]
 );'''
 
 PawnActions = '''CREATE TABLE IF NOT EXISTS "pawn_actions" (

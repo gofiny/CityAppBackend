@@ -514,6 +514,23 @@ async def reconstruct_path(came_from, start, goal, _x, _y):
     return path
 
 
+async def get_broken_line_dots(way_dots: List[List[int, int]]) -> List[List[int, int]]:
+    dots = []
+    for dot in way_dots:
+        if len(way_dots) == 0:
+            dots.append(dot)
+        else:
+            try:
+                previous = way_dots[way_dots.index(dot) - 1]
+                next = way_dots[way_dots.index(dot) + 1]
+                if ((previous[0] != dot[0] or dot[0] != next[0]) and (next[1] != dot[1])) or \
+                    ((previous[1] != dot[1] or dot[1] != next[1]) and (next[0] != dot[0])):
+                    dots.append(dot)
+            except IndexError:
+                dots.append(dot)
+    return dots
+
+
 async def get_way(conn: Connection, start_pos: Tuple[int, int], finish_pos: Tuple[int, int]) -> list:
     x_coors = sorted([start_pos[0], finish_pos[0]])
     y_coors = sorted([start_pos[1], finish_pos[1]])
@@ -541,10 +558,17 @@ async def get_way(conn: Connection, start_pos: Tuple[int, int], finish_pos: Tupl
         goal=goal
     )
 
-    return await reconstruct_path(came_from=came_from, start=start, goal=goal, _x=graph.min_x, _y=graph.min_y)
+    path = await reconstruct_path(
+        came_from=came_from,
+        start=start, goal=goal,
+        _x=graph.min_x,
+        _y=graph.min_y
+    )
+
+    return await get_broken_line_dots(way_dots=path) 
 
 
-async def create_task(conn: Connection, pawn_mo_uuid: str, mo_uuid: str, task_name: str, common_time: float, walk_time: float, work_time_count: int) -> str:
+async def create_task(conn: Connection, pawn_mo_uuid: str, mo_uuid: str, task_name: str, common_time: float, walk_time: float, work_time_count: int, way: List[List[int, int]]) -> str:
     task_start_time = time()
     task_end_time = task_start_time + common_time
     task_uuid: uuid.uuid4 = await conn.fetchval(
@@ -552,9 +576,9 @@ async def create_task(conn: Connection, pawn_mo_uuid: str, mo_uuid: str, task_na
         "INNER JOIN map_objects mo ON go.uuid=mo.game_object "
         f"WHERE mo.uuid='{pawn_mo_uuid}'), task AS "
         f"(SELECT uuid FROM tasks WHERE name='{task_name}') "
-        "INSERT INTO pawn_tasks (uuid, pawn, task, start_time, end_time, walk_time, work_time_count, common_time, mo_uuid) "
-        f"VALUES ('{uuid.uuid4()}', (SELECT uuid FROM pawn), (SELECT uuid FROM task), "
-        f"{task_start_time}, {task_end_time}, {walk_time}, {work_time_count}, {common_time}, '{mo_uuid}') RETURNING uuid"
+        "INSERT INTO pawn_tasks (uuid, pawn, task, start_time, end_time, walk_time, work_time_count, common_time, mo_uuid, way) "
+        f"VALUES ('{uuid.uuid4()}', (SELECT uuid FROM pawn), (SELECT uuid FROM task), {task_start_time}, {task_end_time}, "
+        f"{walk_time}, {work_time_count}, {common_time}, '{mo_uuid}', {way}) RETURNING uuid"
     )
     return task_uuid
 
@@ -681,6 +705,7 @@ async def add_pretask_to_pawn(pool: Pool, object_uuid: str, token: str, task_nam
             common_time=common_time,
             walk_time=walk_time,
             work_time_count=work_time_count,
+            way=way
         )
 
         response_dict = {
