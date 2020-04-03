@@ -521,10 +521,10 @@ async def get_broken_line_dots(way_dots: List[list]) -> List[list]:
             dots.append(dot)
         else:
             try:
-                previous = way_dots[way_dots.index(dot) - 1]
-                next = way_dots[way_dots.index(dot) + 1]
-                if ((previous[0] != dot[0] or dot[0] != next[0]) and (next[1] != dot[1])) or \
-                    ((previous[1] != dot[1] or dot[1] != next[1]) and (next[0] != dot[0])):
+                previous_dot = way_dots[way_dots.index(dot) - 1]
+                next_dot = way_dots[way_dots.index(dot) + 1]
+                if ((previous_dot[0] != dot[0] or dot[0] != next_dot[0]) and (next_dot[1] != dot[1])) or \
+                    ((previous_dot[1] != dot[1] or dot[1] != next_dot[1]) and (next_dot[0] != dot[0])):
                     dots.append(dot)
             except IndexError:
                 dots.append(dot)
