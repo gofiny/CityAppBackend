@@ -514,7 +514,7 @@ async def reconstruct_path(came_from, start, goal, _x, _y):
     return path
 
 
-async def get_broken_line_dots(way_dots: List[List[int, int]]) -> List[List[int, int]]:
+async def get_broken_line_dots(way_dots: List[list]) -> List[list]:
     dots = []
     for dot in way_dots:
         if len(way_dots) == 0:
@@ -568,7 +568,7 @@ async def get_way(conn: Connection, start_pos: Tuple[int, int], finish_pos: Tupl
     return await get_broken_line_dots(way_dots=path) 
 
 
-async def create_task(conn: Connection, pawn_mo_uuid: str, mo_uuid: str, task_name: str, common_time: float, walk_time: float, work_time_count: int, way: List[List[int, int]]) -> str:
+async def create_task(conn: Connection, pawn_mo_uuid: str, mo_uuid: str, task_name: str, common_time: float, walk_time: float, work_time_count: int, way: List[list]) -> str:
     task_start_time = time()
     task_end_time = task_start_time + common_time
     task_uuid: uuid.uuid4 = await conn.fetchval(
