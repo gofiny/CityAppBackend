@@ -531,7 +531,7 @@ async def get_broken_line_dots(way_dots: List[list]) -> List[list]:
     return dots
 
 
-async def get_way(conn: Connection, start_pos: Tuple[int, int], finish_pos: Tuple[int, int]) -> list:
+async def get_way(conn: Connection, start_pos: Tuple[int, int], finish_pos: Tuple[int, int]) -> dict:
     x_coors = sorted([start_pos[0], finish_pos[0]])
     y_coors = sorted([start_pos[1], finish_pos[1]])
     all_objects = await get_relay_objects(
@@ -565,7 +565,9 @@ async def get_way(conn: Connection, start_pos: Tuple[int, int], finish_pos: Tupl
         _y=graph.min_y
     )
 
-    return await get_broken_line_dots(way_dots=path) 
+    way = await get_broken_line_dots(way_dots=path)
+
+    return {"way": way, "full_way_dots": len(path)}
 
 
 async def create_task(conn: Connection, pawn_mo_uuid: str, mo_uuid: str, task_name: str, common_time: float, walk_time: float, work_time_count: int, way: List[list]) -> str:
@@ -693,7 +695,7 @@ async def add_pretask_to_pawn(pool: Pool, object_uuid: str, token: str, task_nam
             finish_pos=finish
         )
 
-        walk_time: float = (len(way) - 1) / nearest_obj["pawn_speed"]
+        walk_time: float = (way["full_way_dots"] - 1) / nearest_obj["pawn_speed"]
         work_time_count = math.ceil((nearest_obj["object_health"] // nearest_obj["pawn_power"]))
         common_time: float = walk_time * (work_time_count * 2) + (work_time_count * 10)
 
@@ -705,13 +707,13 @@ async def add_pretask_to_pawn(pool: Pool, object_uuid: str, token: str, task_nam
             common_time=common_time,
             walk_time=walk_time,
             work_time_count=work_time_count,
-            way=way
+            way=way["way"]
         )
 
         response_dict = {
             "task_uuid": str(task_uuid),
             "common_time": common_time,
-            "way": way,
+            "way": way["way"],
         }
         return response_dict
 
