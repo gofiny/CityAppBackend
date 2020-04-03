@@ -506,10 +506,10 @@ async def a_star_search(graph: SquareGrid, start: Tuple[int, int], goal: Tuple[i
 
 async def reconstruct_path(came_from, start, goal, _x, _y):
     current = goal
-    path = [(current[0] + _x, current[1] + _y)]
+    path = [[current[0] + _x, current[1] + _y]]
     while current != start:
         current = came_from[current]
-        path.append((current[0] + _x, current[1] + _y))
+        path.append([current[0] + _x, current[1] + _y])
     path.reverse() 
     return path
 
