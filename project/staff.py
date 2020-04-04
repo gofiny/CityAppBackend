@@ -642,7 +642,7 @@ async def create_pawn_action(conn: Connection, task_uuid: str, action_name: str,
     )
 
 
-async def add_walk_pawn_action(conn: Connection, task_uuid: str, action_name: str = "walk", returning: bool = False, res_count: Union[str, int] = "null") -> dict:
+async def add_walk_pawn_action(conn: Connection, task_uuid: str, action_name: str = "walk", returning: bool = False, res_count: Union[str, int] = "null") -> Optional[dict]:
     pawn_task = await get_pawn_task(conn=conn, task_uuid=task_uuid)
     walk_time = pawn_task["walk_time"]
     start_time = time()
@@ -660,7 +660,8 @@ async def add_walk_pawn_action(conn: Connection, task_uuid: str, action_name: st
             "task_uuid": task_uuid,
             "action_name": action_name,
             "start_time": start_time,
-            "end_time": end_time
+            "end_time": end_time,
+            "way": pawn_task["way"]
         }
 
 
