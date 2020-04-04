@@ -65,6 +65,7 @@ async def get_map(request: Request) -> json_response:
                     game_object["action_name"] = map_object["pa_name"]
                     game_object["start_time"] = map_object["start_time"]
                     game_object["end_time"] = map_object["end_time"]
+                    game_object["way"] = map_object["way"]
 
                 game_objects.append(game_object)
             response["game_objects"] = game_objects

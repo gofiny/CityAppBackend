@@ -45,7 +45,6 @@ async def actions_handler(conn: Connection):
             )
             if action["mo_uuid"] is None:
                 tasks_to_delete.append(str(action["pt_uuid"]))
-                print("delete object")
             else:
                 await add_walk_pawn_action(
                     conn=conn,
@@ -77,7 +76,6 @@ async def actions_handler(conn: Connection):
             )
         
         actions_to_delete.append(str(action["pa_uuid"]))
-        print(action_name)
 
     if actions_to_delete:
         await delete_actions(conn=conn, actions=tuple(actions_to_delete))

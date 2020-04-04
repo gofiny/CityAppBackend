@@ -262,7 +262,7 @@ async def get_objects_from_relay(conn: Connection, x_coords: Tuple[int, int], y_
     '''Получает объекты из области на карте'''
     return await conn.fetch(
         "SELECT go.name, players.username, go.health, go.object_type, mo.x, mo.y, mo.uuid, "
-        "pt.uuid as pt_uuid, pa.name as pa_name, pa.start_time, pa.end_time FROM map_objects mo "
+        "pt.uuid as pt_uuid, pa.name as pa_name, pa.start_time, pa.end_time, pt.way FROM map_objects mo "
         "LEFT JOIN players ON mo.owner=players.uuid "
         "LEFT JOIN game_objects go ON mo.game_object=go.uuid "
         "LEFT JOIN pawn_tasks pt ON pt.pawn=go.uuid "
@@ -773,6 +773,7 @@ async def delete_tasks(conn: Connection, tasks: tuple) -> None:
         f"DELETE FROM pawn_tasks WHERE uuid IN {str(tasks)[0:-2]})"
     )
 
+
 async def add_res_to_player(conn: Connection, storage_uuid: str, task_name: str, res_count: int):
     res_name = get_resname_by_taskname[task_name]
     await conn.execute(
@@ -780,6 +781,7 @@ async def add_res_to_player(conn: Connection, storage_uuid: str, task_name: str,
         f"SET {res_name}={res_name}+{res_count} "
         f"WHERE uuid='{storage_uuid}'"
     )
+
 
 async def change_object_health(conn: Connection, go_uuid: str, new_health: int):
     await conn.execute(
