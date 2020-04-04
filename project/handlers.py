@@ -61,11 +61,14 @@ async def get_map(request: Request) -> json_response:
                     }
                 }
                 if map_object["pt_uuid"] is not None:
-                    game_object["task_uuid"] = str(map_object["pt_uuid"])
-                    game_object["action_name"] = map_object["pa_name"]
-                    game_object["start_time"] = map_object["start_time"]
-                    game_object["end_time"] = map_object["end_time"]
-                    game_object["way"] = map_object["way"]
+                    action = {
+                        "task_uuid": str(map_object["pt_uuid"]),
+                        "action_name": map_object["pa_name"],
+                        "start_time": map_object["start_time"],
+                        "end_time": map_object["end_time"],
+                        "way": map_object["way"]
+                    }
+                    game_object["action"] = action
 
                 game_objects.append(game_object)
             response["game_objects"] = game_objects
@@ -296,20 +299,21 @@ async def check_connection(request: Request) -> json_response:
 
 async def accept_task(request: Request) -> json_response:
     response = {"status": True}
-    #try:
-    data = await request.json()
-    action = await staff.procced_task(
-        pool=request.app["pool"],
-        task_uuid=data["task_uuid"],
-        accept=data["accept"]
-    )
-    if action:
-        response["task_uuid"] = action["task_uuid"]
-        response["action_name"] = action["action_name"]
-        response["start_time"] = action["start_time"]
-        response["end_time"] = action["end_time"]
-    # except (ValueError, TypeError, KeyError, JSONDecodeError, exceptions.InvalidTextRepresentationError):
-    #     response["status"] = True
-    #     response["errors"] = [2, "json is not correct"]
+    try:
+        data = await request.json()
+        action = await staff.procced_task(
+            pool=request.app["pool"],
+            task_uuid=data["task_uuid"],
+            accept=data["accept"]
+        )
+        if action:
+            response["task_uuid"] = action["task_uuid"]
+            response["action_name"] = action["action_name"]
+            response["start_time"] = action["start_time"]
+            response["end_time"] = action["end_time"]
+            response["way"] = action["way"]
+    except (ValueError, TypeError, KeyError, JSONDecodeError, exceptions.InvalidTextRepresentationError):
+        response["status"] = True
+        response["errors"] = [2, "json is not correct"]
 
     return json_response(response)
