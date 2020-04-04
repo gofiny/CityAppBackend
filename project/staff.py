@@ -346,7 +346,8 @@ async def get_pawn_tasks(pool: Pool, gameobject_uuid: str) -> List[Optional[Reco
     '''Получение списка действий пешки'''
     async with pool.acquire() as conn:
         return await conn.fetch(
-            "SELECT pt.uuid, tasks.name as task_name, pt.start_time FROM pawn_tasks pt "
+            "SELECT pt.uuid, tasks.name as task_name, pt.start_time, "
+            "pt.end_time, pa.way, FROM pawn_tasks pt "
             "LEFT JOIN game_objects go ON pt.pawn=go.uuid "
             "INNER JOIN tasks ON pt.task=tasks.uuid "
             f"WHERE go.uuid='{gameobject_uuid}' "

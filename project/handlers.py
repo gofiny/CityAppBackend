@@ -133,14 +133,16 @@ async def get_object_info(request: Request) -> json_response:
                 response["speed"] = game_object["speed"]
                 response["max_tasks"] = game_object["max_tasks"]
                 if tasks:
-                    pawn_actions = []
-                    for action in actions:
-                        pawn_actions.append({
-                            "task_uuid": action["uuid"],
-                            "task_name": action["task_name"],
-                            "start_time": action["start_time"]
+                    pawn_tasks = []
+                    for task in tasks:
+                        pawn_tasks.append({
+                            "task_uuid": task["uuid"],
+                            "task_name": task["task_name"],
+                            "start_time": task["start_time"],
+                            "end_time": task["end_time"],
+                            "way": task["way"]
                         })
-                    tasks = pawn_actions
+                    tasks = pawn_tasks
                 response["tasks"] = tasks
 
                 available_tasks = await staff.get_available_tasks(
@@ -150,9 +152,9 @@ async def get_object_info(request: Request) -> json_response:
                 _enabled = False
                 if game_object["max_tasks"] > len(tasks):
                     _enabled = True
-                actions = []
+                tasks = []
                 for task in available_tasks:
-                    actions.append({
+                    tasks.append({
                         "task_name": task["name"],
                         "enabled": _enabled
                     })
