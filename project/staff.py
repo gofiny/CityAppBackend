@@ -395,7 +395,7 @@ async def check_obj_limit(conn: Connection, obj_name: str, limit: int) -> bool:
 async def create_generated_map_object(conn: Connection, game_object: object, coors: list) -> None:
     await conn.execute(
         "WITH go AS (INSERT INTO game_objects (uuid, name, health, object_type) "
-        f"VALUES ('{game_object.uuid}', '{game_object.name}', {game_object.health}, '{game_object.object_type}')), gen_o AS ( "
+        f"VALUES ('{game_object.uuid}', '{game_object.name}', {game_object.health}, '{game_object.object_type}')), gen_o AS ("
         f"INSERT INTO generated_objects (game_object_ptr) VALUES ('{game_object.uuid}') "
         "INSERT INTO map_objects (uuid, x, y, game_object) "
         f"VALUES ('{uuid.uuid4()}', {coors[0]}, {coors[1]}, '{game_object.uuid}')"
