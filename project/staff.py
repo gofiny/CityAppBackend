@@ -14,6 +14,11 @@ from asyncpg import Record
 from asyncpg.pool import Pool
 from asyncpg.connection import Connection
 from aiohttp.web import json_response
+from game_objects import (
+    Spawn,
+    Tree,
+    Rock
+)
 
 
 get_objname_by_taskname = {
@@ -186,20 +191,15 @@ async def create_object_on_map(conn: Connection, x: int, y: int, game_object: Op
 async def create_spawn(conn: Connection, player_uuid: uuid.uuid4) -> Tuple[int, int]:
     '''Создает точку спауна игрока'''
     pos = await get_free_pos(conn)
-    spawn_uuid: Optional[uuid.uuid4] = await conn.fetchval(
-        "SELECT uuid FROM game_objects WHERE name = 'spawn';"
+    spawn_obj = Spawn()
+    await conn.execute(
+        "WITH go AS (INSERT INTO game_objects (uuid, name, health, object_type) "
+        f"VALUES ('{spawn_obj.uuid}', '{spawn_obj.name}', {spawn_obj.health}, '{spawn_obj.object_type}') RETURNING uuid), WITH so AS ( "
+        "INSERT INTO static_objects (game_object_ptr) "
+        "VALUES ((SELECT uuid FROM go))) "
+        "INSERT INTO map_objects (uuid, x, y, game_object, owner) "
+        f"VALUES ('{uuid.uuid4()}', {pos[0]}, {pos[1]}, (SELECT uuid FROM go), '{player_uuid}')"
     )
-    if not spawn_uuid:
-        await conn.execute(
-            "WITH go AS (INSERT INTO game_objects (uuid, name, health, object_type) "
-            f"VALUES ('{uuid.uuid4()}', 'spawn', 1000, 'static') RETURNING uuid), WITH so AS ( "
-            "INSERT INTO static_objects (game_object_ptr) "
-            "VALUES ((SELECT uuid FROM go))) "
-            "INSERT INTO map_objects (uuid, x, y, game_object, owner) "
-            f"VALUES ('{uuid.uuid4()}', {pos[0]}, {pos[1]}, (SELECT uuid FROM go), '{player_uuid}')"
-        )
-        return pos
-    await create_object_on_map(conn, x=pos[0], y=pos[1], game_object=spawn_uuid, owner_uuid=player_uuid)
     return pos
 
 
