@@ -236,17 +236,17 @@ async def get_tile(request: Request) -> json_response:
 
 async def add_task_to_pawn(request: Request) -> json_response:
     response = {"status": False}
-    #try:
-    data = await request.json()
-    response = await staff.add_pretask_to_pawn(
-        pool=request.app["pool"],
-        object_uuid=data["object_uuid"],
-        token=data["token"],
-        task_name=data["task_name"]
-    )
-    response["status"] = True
-    # except (KeyError, ValueError, TypeError, JSONDecodeError):
-    #     response["errors"] = [2, "json is not correct"]
+    try:
+        data = await request.json()
+        response = await staff.add_pretask_to_pawn(
+            pool=request.app["pool"],
+            object_uuid=data["object_uuid"],
+            token=data["token"],
+            task_name=data["task_name"]
+        )
+        response["status"] = True
+    except (KeyError, ValueError, TypeError, JSONDecodeError):
+        response["errors"] = [2, "json is not correct"]
     return json_response(response, )
 
 
