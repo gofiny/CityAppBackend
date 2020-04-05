@@ -23,3 +23,10 @@ class Spawn:
         self.name = "spawn"
         self.object_type = "static"
         self.health = 1000
+
+
+get_gameobject_by_name = {
+    "tree": Tree,
+    "rock": Rock,
+    "spawn": Spawn
+}

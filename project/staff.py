@@ -17,7 +17,8 @@ from aiohttp.web import json_response
 from game_objects import (
     Spawn,
     Tree,
-    Rock
+    Rock,
+    get_gameobject_by_name
 )
 
 
@@ -407,12 +408,23 @@ async def check_obj_limit(conn: Connection, obj_name: str, limit: int) -> bool:
     return True
 
 
+async def create_generated_map_object(conn: Connection, game_object: object, coors: list) -> None:
+    await conn.execute(
+        "WITH go AS (INSERT INTO game_objects (uuid, name, health, object_type) "
+        f"VALUES ('{game_object.uuid}', '{game_object.name}', {game_object.halth}, '{game_object.object_type}')), gen_o AS ( "
+        f"INSERT INTO generated_objects (game_object_ptr) VALUES ('{game_object.uuid}') "
+        "INSERT INTO map_objects (uuid, x, y, game_object) "
+        f"VALUES ('{uuid.uuid4()}', {coors[0]}, {coors[1]}, '{game_object.uuid}')"
+    )
+
+
 async def generate_object(pool: Pool, obj_name: str, limit: int):
     '''Метод проверки и генерации объектов с ресурсами'''
     async with pool.acquire() as conn:
         can_generate = await check_obj_limit(conn, obj_name, limit)
         if can_generate is False:
             return
+        game_object = get_gameobject_by_name[obj_name]
         i = 0
         while i < 100:
             random_obj = await get_random_mapobject(conn)
@@ -420,12 +432,10 @@ async def generate_object(pool: Pool, obj_name: str, limit: int):
             is_exist = await check_object_on_pos(conn, random_pos[0], random_pos[1])
             if is_exist:
                 continue
-            await create_object_on_map(
+            await create_generated_map_object(
                 conn=conn,
-                x=random_pos[0],
-                y=random_pos[1],
-                game_object=obj_name,
-                owner_uuid=None
+                game_object=game_object(),
+                coors=random_pos
             )
             i += 1
             #return
