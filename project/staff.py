@@ -174,21 +174,6 @@ async def get_free_pos(conn: Connection) -> Tuple[int, int]:
         return (0, 0)
 
 
-async def create_object_on_map(conn: Connection, x: int, y: int, game_object: Optional[Union[int, uuid.uuid4]], owner_uuid: Optional[int]) -> None:
-    '''Создаем объект на карте'''
-    if isinstance(game_object, str):
-        await conn.execute(
-            f"WITH object AS (SELECT uuid FROM game_objects WHERE name='{game_object}') "
-            "INSERT INTO map_objects (uuid, x, y, game_object) "
-            f"VALUES ('{uuid.uuid4()}', {x}, {y}, (SELECT uuid FROM object))"
-        )
-    else:
-        await conn.execute(
-            "INSERT INTO map_objects (uuid, x, y, game_object, owner) "
-            f"VALUES ('{uuid.uuid4()}', {x}, {y}, '{game_object}', '{owner_uuid}');"
-        )
-
-
 async def create_spawn(conn: Connection, player_uuid: uuid.uuid4) -> Tuple[int, int]:
     '''Создает точку спауна игрока'''
     pos = await get_free_pos(conn)
@@ -410,7 +395,7 @@ async def check_obj_limit(conn: Connection, obj_name: str, limit: int) -> bool:
 async def create_generated_map_object(conn: Connection, game_object: object, coors: list) -> None:
     await conn.execute(
         "WITH go AS (INSERT INTO game_objects (uuid, name, health, object_type) "
-        f"VALUES ('{game_object.uuid}', '{game_object.name}', {game_object.halth}, '{game_object.object_type}')), gen_o AS ( "
+        f"VALUES ('{game_object.uuid}', '{game_object.name}', {game_object.health}, '{game_object.object_type}')), gen_o AS ( "
         f"INSERT INTO generated_objects (game_object_ptr) VALUES ('{game_object.uuid}') "
         "INSERT INTO map_objects (uuid, x, y, game_object) "
         f"VALUES ('{uuid.uuid4()}', {coors[0]}, {coors[1]}, '{game_object.uuid}')"
