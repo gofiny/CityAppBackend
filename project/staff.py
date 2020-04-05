@@ -195,11 +195,11 @@ async def create_spawn(conn: Connection, player_uuid: uuid.uuid4) -> Tuple[int, 
     spawn_obj = Spawn()
     await conn.execute(
         "WITH go AS (INSERT INTO game_objects (uuid, name, health, object_type) "
-        f"VALUES ('{spawn_obj.uuid}', '{spawn_obj.name}', {spawn_obj.health}, '{spawn_obj.object_type}') RETURNING uuid), WITH so AS ( "
+        f"VALUES ('{spawn_obj.uuid}', '{spawn_obj.name}', {spawn_obj.health}, '{spawn_obj.object_type}')), so AS ( "
         "INSERT INTO static_objects (game_object_ptr) "
-        "VALUES ((SELECT uuid FROM go))) "
+        f"VALUES ('{spawn_obj.uuid}')) "
         "INSERT INTO map_objects (uuid, x, y, game_object, owner) "
-        f"VALUES ('{uuid.uuid4()}', {pos[0]}, {pos[1]}, (SELECT uuid FROM go), '{player_uuid}')"
+        f"VALUES ('{uuid.uuid4()}', {pos[0]}, {pos[1]}, '{spawn_obj.uuid}, '{player_uuid}')"
     )
     return pos
 
