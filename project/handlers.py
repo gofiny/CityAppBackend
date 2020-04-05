@@ -115,7 +115,7 @@ async def get_object_info(request: Request) -> json_response:
         )
         if game_object:
             response["status"] = True
-            response["object_uuid"] = data["object_uuid"]
+            response["object_uuid"] = str(data["object_uuid"])
             response["name"] = game_object["name"]
             response["object_type"] = game_object["object_type"]
             response["owner"] = game_object["username"]
@@ -136,7 +136,7 @@ async def get_object_info(request: Request) -> json_response:
                     pawn_tasks = []
                     for task in tasks:
                         pawn_tasks.append({
-                            "task_uuid": task["uuid"],
+                            "task_uuid": str(task["uuid"]),
                             "task_name": task["task_name"],
                             "start_time": task["start_time"],
                             "end_time": task["end_time"],
@@ -147,7 +147,7 @@ async def get_object_info(request: Request) -> json_response:
 
                 available_tasks = await staff.get_available_tasks(
                     pool=request.app["pool"],
-                    gameobject_uuid=game_object["uuid"]
+                    gameobject_uuid=str(game_object["uuid"])
                 )
                 _enabled = False
                 if game_object["max_tasks"] > len(tasks):

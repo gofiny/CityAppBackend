@@ -85,7 +85,7 @@ AvailableTasks = '''CREATE TABLE IF NOT EXISTS "available_tasks"
 (
     "uuid" uuid NOT NULL PRIMARY KEY,
     "task" uuid NOT NULL REFERENCES "tasks" ("uuid"),
-    "pawn" uuid NOT NULL REFERENCES "game_objects" ("uuid")
+    "pawn" uuid NOT NULL REFERENCES "game_objects" ("uuid") ON DELETE CASCADE
 );'''
 
 PawnTasks = '''CREATE TABLE IF NOT EXISTS "pawn_tasks"
