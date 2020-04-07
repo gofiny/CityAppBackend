@@ -209,7 +209,7 @@ async def create_user(conn: Connection, GP_ID: str, username: str) -> uuid.uuid4
         f"SELECT GP_ID, username FROM players WHERE GP_ID = '{GP_ID}' OR username = '{username}'"
     )
     if user:
-        if user["GP_ID"] == GP_ID:
+        if user["gp_id"] == GP_ID:
             raise UserRegistered
         else:
             raise UserAlreadyExist
