@@ -13,7 +13,7 @@ async def test(request: Request) -> json_response:
 
 async def register_user(request: Request) -> json_response:
     '''Метод регистрации игрока'''
-    response = {"status": True}
+    response = {"status": False}
     try:
         data: dict = await request.json()
         await staff.make_user(
@@ -21,6 +21,7 @@ async def register_user(request: Request) -> json_response:
             GP_ID=data["GP_ID"],
             username=data["username"]
         )
+        response["status"] = True
     except (TypeError, ValueError, KeyError, JSONDecodeError):
         response["errors"] = [2, "json is not correct"]
     except exceptions.StringDataRightTruncationError:
@@ -29,7 +30,7 @@ async def register_user(request: Request) -> json_response:
         response["errors"] = [3, "User with this username already exist"]
     except UserRegistered:
         response["status"] = False
-
+   
     return json_response(response)
 
 

@@ -205,14 +205,14 @@ async def create_pawn(conn: Connection, player_uuid: int, pawn_name: str, pos: T
 
 async def create_user(conn: Connection, GP_ID: str, username: str) -> uuid.uuid4:
     '''Создает игрока'''
-    user: Optional[str] = await conn.fetchval(
-        f"SELECT username FROM players WHERE GP_ID = '{GP_ID}' OR username = '{username}';"
+    user: Optional[Record] = await conn.fetchrow(
+        f"SELECT GP_ID, username FROM players WHERE GP_ID = '{GP_ID}' OR username = '{username}'"
     )
     if user:
-        if user["username"] == username:
-            raise UserAlreadyExist
-        else:
+        if user["GP_ID"] == GP_ID:
             raise UserRegistered
+        else:
+            raise UserAlreadyExist
     player_uuid: int = await conn.fetchval(
         "WITH pl AS (INSERT INTO players (uuid, GP_ID, username) "
         f"VALUES ('{uuid.uuid4()}', '{GP_ID}', '{username}') RETURNING uuid) "
