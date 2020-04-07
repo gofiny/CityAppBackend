@@ -230,14 +230,14 @@ async def make_user(pool: Pool, GP_ID: str, username: str) -> None:
         await create_pawn(conn, player_uuid, "wood_cutter", (spawn_pos[0] + 1, spawn_pos[1]), task_name="cut")
 
 
-async def get_spawn_coords(pool: Pool, user_id: int) -> Record:
+async def get_spawn_coords(pool: Pool, GP_ID: str) -> Record:
     '''Возвращает точку спауна игрока'''
     async with pool.acquire() as conn:
         spawn: Optional[Record] = await conn.fetchrow(
             "SELECT mo.x, mo.y FROM map_objects mo "
             "INNER JOIN game_objects go ON mo.game_object_id=go.id "
             "INNER JOIN players ON mo.owner_id=players.id "
-            f"WHERE players.user_id='{user_id}' AND go.name='spawn';"
+            f"WHERE players.GP_ID='{GP_ID}' AND go.name='spawn';"
         )
         if not spawn:
             raise ObjectNotExist
@@ -289,7 +289,7 @@ async def gen_objects(pool: Pool) -> None:
         )
 
 
-async def get_profile_info(pool: Pool, token: str) -> Optional[Record]:
+async def get_profile_info(pool: Pool, GP_ID: str) -> Optional[Record]:
     """Получаем информацию о профиле игрока"""
     async with pool.acquire() as conn:
         return await conn.fetchrow(
@@ -298,7 +298,7 @@ async def get_profile_info(pool: Pool, token: str) -> Optional[Record]:
             "INNER JOIN map_objects mo ON players.uuid=mo.owner "
             "INNER JOIN game_objects go ON mo.game_object=go.uuid "
             "INNER JOIN players_resources pr ON pr.player=players.uuid "
-            f"WHERE players.token='{token}' AND go.name='spawn'"
+            f"WHERE players.GP_ID='{GP_ID}' AND go.name='spawn'"
         )
 
 
@@ -351,7 +351,7 @@ async def get_available_tasks(pool: Pool, gameobject_uuid: str) -> List[Optional
         )
 
 
-async def get_available_tasks_by_mo(pool: Pool, object_uuid: str, token: str) -> List[Optional[Record]]:
+async def get_available_tasks_by_mo(pool: Pool, object_uuid: str, GP_ID: str) -> List[Optional[Record]]:
     '''Получает список доступных действий пешки'''
     async with pool.acquire() as conn:
         return await conn.fetch(
@@ -360,11 +360,11 @@ async def get_available_tasks_by_mo(pool: Pool, object_uuid: str, token: str) ->
             "INNER JOIN map_objects mo ON mo.game_object=go.uuid "
             "INNER JOIN tasks ON aa.atask=tasks.uuid "
             "INNER JOIN players ON mo.owner=players.uuid "
-            f"WHERE mo.uuid='{object_uuid}' AND players.token='{token}'"
+            f"WHERE mo.uuid='{object_uuid}' AND players.GP_ID='{GP_ID}'"
         )
 
 
-async def get_pawns(pool: Pool, token: str) -> List[Optional[Record]]:
+async def get_pawns(pool: Pool, GP_ID: str) -> List[Optional[Record]]:
     '''Получает список пешек игрока'''
     async with pool.acquire() as conn:
         return await conn.fetch(
@@ -373,7 +373,7 @@ async def get_pawns(pool: Pool, token: str) -> List[Optional[Record]]:
             "INNER JOIN game_objects go ON mo.game_object=go.uuid "
             "INNER JOIN pawn_objects po ON po.game_object_ptr=go.uuid "
             "LEFT JOIN players ON mo.owner=players.uuid "
-            f"WHERE players.token='{token}';"
+            f"WHERE players.GP_ID='{GP_ID}';"
         )
 
 
@@ -425,13 +425,13 @@ async def generate_object(pool: Pool, obj_name: str, limit: int):
             #return
 
 
-async def get_nearest_obj(conn: Connection, object_uuid: str, obj_name: str, token: str) -> Optional[Record]:
+async def get_nearest_obj(conn: Connection, object_uuid: str, obj_name: str, GP_ID: str) -> Optional[Record]:
     return await conn.fetchrow(
         "WITH pawn AS (SELECT mo.x, mo.y, po.power, po.speed FROM map_objects mo "
         "INNER JOIN game_objects go ON mo.game_object=go.uuid "
         "INNER JOIN pawn_objects po ON po.game_object_ptr=go.uuid "
         "INNER JOIN players ON mo.owner=players.uuid "
-        f"WHERE players.token='{token}' AND mo.uuid='{object_uuid}') "
+        f"WHERE players.GP_ID='{GP_ID}' AND mo.uuid='{object_uuid}') "
         "SELECT mo.uuid as mo_uuid, mo.x, mo.y, |/((mo.x-(SELECT x FROM pawn))^2 + (mo.y-(SELECT y FROM pawn))^2) AS length, "
         "go.health as object_health, (SELECT x FROM pawn) AS pawn_x, (SELECT y FROM pawn) AS pawn_y, "
         "(SELECT power FROM pawn) AS pawn_power, (SELECT speed FROM pawn) AS pawn_speed "
@@ -673,13 +673,13 @@ async def add_work_pawn_action(conn: Connection, task_uuid: str, action_name: st
     )
 
 
-async def add_pretask_to_pawn(pool: Pool, object_uuid: str, token: str, task_name: str) -> dict:
+async def add_pretask_to_pawn(pool: Pool, object_uuid: str, GP_ID: str, task_name: str) -> dict:
     async with pool.acquire() as conn:
         nearest_obj = await get_nearest_obj(
             conn=conn,
             object_uuid=object_uuid,
             obj_name=get_objname_by_taskname[task_name],
-            token=token
+            GP_ID=GP_ID
         )
 
         start = (nearest_obj["pawn_x"], nearest_obj["pawn_y"])
@@ -729,13 +729,13 @@ async def procced_task(pool: Pool, task_uuid, accept: bool):
         await delete_pawn_task(conn=conn, task_uuid=task_uuid)
 
 
-async def get_player_resource_by_name(pool: Pool, token: str, res_name: Optional[str]) -> Optional[Record]:
+async def get_player_resource_by_name(pool: Pool, GP_ID: str, res_name: Optional[str]) -> Optional[Record]:
     async with pool.acquire() as conn:
         res_name = "*" if not res_name else res_name
         return await conn.fetchrow(
             f"SELECT pr.{res_name} FROM players "
             "INNER JOIN players_resources pr ON players.uuid=pr.player "
-            f"WHERE players.token='{token}'"
+            f"WHERE players.GP_ID='{GP_ID}'"
         )
 
 

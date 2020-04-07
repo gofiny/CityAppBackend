@@ -86,7 +86,7 @@ async def get_profile(request: Request) -> json_response:
         data = await request.json()
         profile_info = await staff.get_profile_info(
             pool=request.app["pool"],
-            token=data["token"]
+            GP_ID=data["GP_ID"]
         )
         response["username"] = profile_info["username"]
         response["resources"] = {
@@ -175,7 +175,7 @@ async def get_player_pawns(request: Request) -> json_response:
         data = await request.json()
         pawns = await staff.get_pawns(
             pool=request.app['pool'],
-            token=data['token']
+            GP_ID=data['GP_ID']
         )
         response_pawns = None
         if pawns:
@@ -242,7 +242,7 @@ async def add_task_to_pawn(request: Request) -> json_response:
         response = await staff.add_pretask_to_pawn(
             pool=request.app["pool"],
             object_uuid=data["object_uuid"],
-            token=data["token"],
+            GP_ID=data["GP_ID"],
             task_name=data["task_name"]
         )
         response["status"] = True
@@ -258,11 +258,11 @@ async def get_available_tasks_count(request: Request) -> json_response:
         available_tasks = await staff.get_available_tasks_by_mo(
             pool=request.app["pool"],
             object_uuid=data["object_uuid"],
-            token=data["token"]
+            GP_ID=data["GP_ID"]
         )
 
         if not available_tasks:
-            response["erros"] = [6, "object_uuid or token not correct"]
+            response["erros"] = [6, "object_uuid or GP_ID not correct"]
         else:
             response["status"] = True
             response["count"] = len(available_tasks)
@@ -278,14 +278,14 @@ async def get_player_resources(request: Request) -> json_response:
         data = await request.json()
         resources = await staff.get_player_resource_by_name(
             pool=request.app["pool"],
-            token=data["token"],
+            GP_ID=data["GP_ID"],
             res_name=data["resource"]
         )
         if resources:
             response["status"] = True
             response["resources"] = [{k: v} for k, v in resources.items() if k not in ["uuid", "player"]]
         else:
-            response["errors"] = [1, "token not correct"]
+            response["errors"] = [1, "GP_ID not correct"]
     except (KeyError, ValueError, TypeError, JSONDecodeError):
         response["erros"] = [2, "json is not correct"]
     except exceptions.UndefinedColumnError:
