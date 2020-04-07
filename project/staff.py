@@ -4,7 +4,7 @@ import heapq
 from json.decoder import JSONDecodeError
 from typing import Optional, Tuple, List, Union
 from time import time
-from exceptions import UserAlreadyExist, ObjectNotExist
+from exceptions import UserAlreadyExist, ObjectNotExist, UserRegistered
 from operator import itemgetter
 import random
 import string
@@ -203,31 +203,31 @@ async def create_pawn(conn: Connection, player_uuid: int, pawn_name: str, pos: T
     )
 
 
-async def create_user(conn: Connection, user_id: int, username: str) -> Tuple[uuid.uuid4, str]:
+async def create_user(conn: Connection, GP_ID: str, username: str) -> uuid.uuid4:
     '''Создает игрока'''
     user: Optional[str] = await conn.fetchval(
-        f"SELECT username FROM players WHERE user_id = '{user_id}' OR username = '{username}';"
+        f"SELECT username FROM players WHERE GP_ID = '{GP_ID}' OR username = '{username}';"
     )
     if user:
-        raise UserAlreadyExist
-    token = await generate_token(user_id)
+        if user["username"] == username:
+            raise UserAlreadyExist
+        else:
+            raise UserRegistered
     player_uuid: int = await conn.fetchval(
-        "WITH pl AS (INSERT INTO players (uuid, user_id, username, token) "
-        f"VALUES ('{uuid.uuid4()}', '{user_id}', '{username}', '{token}') RETURNING uuid) "
+        "WITH pl AS (INSERT INTO players (uuid, GP_ID, username) "
+        f"VALUES ('{uuid.uuid4()}', '{GP_ID}', '{username}') RETURNING uuid) "
         "INSERT INTO players_resources (uuid, player, money, wood, stones) "
         f"VALUES ('{uuid.uuid4()}', (SELECT uuid FROM pl), 0, 20, 0) RETURNING (SELECT uuid FROM pl)"
     )
-    return (player_uuid, token)
+    return player_uuid
 
 
-async def make_user(pool: Pool, user_id: int, username: str) -> str:
+async def make_user(pool: Pool, GP_ID: str, username: str) -> None:
     '''Создает игрока, генерирует ему точку спауна и выдает пешку'''
     async with pool.acquire() as conn:
-        player_uuid, token = await create_user(conn, user_id, username)
+        player_uuid = await create_user(conn, GP_ID, username)
         spawn_pos = await create_spawn(conn, player_uuid)
         await create_pawn(conn, player_uuid, "wood_cutter", (spawn_pos[0] + 1, spawn_pos[1]), task_name="cut")
-
-        return token
 
 
 async def get_spawn_coords(pool: Pool, user_id: int) -> Record:

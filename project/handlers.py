@@ -1,6 +1,6 @@
 '''Обработчик запросов приходящих на сервер'''
 from asyncpg import exceptions
-from exceptions import UserAlreadyExist, ObjectNotExist
+from exceptions import UserAlreadyExist, ObjectNotExist, UserRegistered
 from json.decoder import JSONDecodeError
 from aiohttp.web import json_response, Request, Response
 import staff
@@ -13,22 +13,22 @@ async def test(request: Request) -> json_response:
 
 async def register_user(request: Request) -> json_response:
     '''Метод регистрации игрока'''
-    response = {"status": False}
+    response = {"status": True}
     try:
         data: dict = await request.json()
-        token = await staff.make_user(
+        await staff.make_user(
             pool=request.app["pool"],
-            user_id=data["user_id"],
+            GP_ID=data["GP_ID"],
             username=data["username"]
         )
-        response["status"] = True
-        response["token"] = token
     except (TypeError, ValueError, KeyError, JSONDecodeError):
         response["errors"] = [2, "json is not correct"]
     except exceptions.StringDataRightTruncationError:
         response["errors"] = [7, "some data is too long"]
     except UserAlreadyExist:
-        response["errors"] = [3, "user already exist"]
+        response["errors"] = [3, "User with this username already exist"]
+    except UserRegistered:
+        response["status"] = False
 
     return json_response(response)
 
