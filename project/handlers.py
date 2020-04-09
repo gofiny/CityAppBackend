@@ -22,6 +22,7 @@ async def register_user(request: Request) -> json_response:
             username=data["username"]
         )
         response["status"] = True
+        response["is_new_user"] = True
     except (TypeError, ValueError, KeyError, JSONDecodeError):
         response["errors"] = [2, "json is not correct"]
     except exceptions.StringDataRightTruncationError:
@@ -29,7 +30,8 @@ async def register_user(request: Request) -> json_response:
     except UserAlreadyExist:
         response["errors"] = [3, "User with this username already exist"]
     except UserRegistered:
-        response["status"] = False
+        response["is_new_user"] = False
+        response["status"] = True
    
     return json_response(response)
 
