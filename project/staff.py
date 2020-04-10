@@ -433,7 +433,7 @@ async def check_valid_task_name(conn: Connection, mo_uuid: str, task_name: str, 
         "LEFT JOIN game_objects go ON mo.game_object=go.uuid "
         "LEFT JOIN available_tasks at ON go.uuid=at.pawn "
         "LEFT JOIN tasks ON tasks.uuid=at.task "
-        "LEFT JOIN players ON players.uuid=mo.onwer "
+        "LEFT JOIN players ON players.uuid=mo.owner "
         f"WHERE players.GP_ID='{GP_ID}' AND mo.uuid='{mo_uuid}' AND tasks.name='{task_name}'"
     )
 
