@@ -1,6 +1,6 @@
 '''Обработчик запросов приходящих на сервер'''
 from asyncpg import exceptions
-from exceptions import UserAlreadyExist, ObjectNotExist, UserRegistered
+from exceptions import UserAlreadyExist, ObjectNotExist, UserRegistered, NotValidTask
 from json.decoder import JSONDecodeError
 from aiohttp.web import json_response, Request, Response
 import staff
@@ -250,7 +250,9 @@ async def add_task_to_pawn(request: Request) -> json_response:
         response["status"] = True
     except (KeyError, ValueError, TypeError, JSONDecodeError):
         response["errors"] = [2, "json is not correct"]
-    return json_response(response, )
+    except NotValidTask:
+        response["errors"] = [7, "data is not valid or correct"]
+    return json_response(response)
 
 
 async def get_available_tasks_count(request: Request) -> json_response:

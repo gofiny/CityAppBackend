@@ -11,3 +11,7 @@ class UserAlreadyExist(Exception):
 
 class ObjectNotExist(Exception):
     '''Вызывается если пользователь или объект спауна не найден в базе'''
+
+
+class NotValidTask(Exception):
+    """If not correct data for to add task to pawn"""

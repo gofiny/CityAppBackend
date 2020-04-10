@@ -4,7 +4,7 @@ import heapq
 from json.decoder import JSONDecodeError
 from typing import Optional, Tuple, List, Union
 from time import time
-from exceptions import UserAlreadyExist, ObjectNotExist, UserRegistered
+from exceptions import UserAlreadyExist, ObjectNotExist, UserRegistered, NotValidTask
 from operator import itemgetter
 import random
 import string
@@ -425,6 +425,17 @@ async def generate_object(pool: Pool, obj_name: str, limit: int):
             #return
 
 
+async def check_valid_task_name(conn: Connection, mo_uuid: str, task_name: str, GP_ID: str) -> Optional[Record]:
+    return await conn.fetchrow(
+        "SELECT tasks.name FROM map_objects mo "
+        "LEFT JOIN game_object go ON mo.game_object=go.uuid "
+        "LEFT JOIN available_tasks at ON go.uuid=at.pawn "
+        "LEFT JOIN tasks ON tasks.uuid=at.task "
+        "LEFT JOIN players ON players.uuid=mo.onwer "
+        f"WHERE players.GP_ID='{GP_ID}' AND mo.uuid='{mo_uuid}' AND tasks.name='{task_name}'"
+    )
+
+
 async def get_nearest_obj(conn: Connection, object_uuid: str, obj_name: str, GP_ID: str) -> Optional[Record]:
     return await conn.fetchrow(
         "WITH pawn AS (SELECT mo.x, mo.y, po.power, po.speed FROM map_objects mo "
@@ -675,6 +686,16 @@ async def add_work_pawn_action(conn: Connection, task_uuid: str, action_name: st
 
 async def add_pretask_to_pawn(pool: Pool, object_uuid: str, GP_ID: str, task_name: str) -> dict:
     async with pool.acquire() as conn:
+        is_valid_task_name = await check_valid_task_name(
+            conn=conn,
+            mo_uuid=object_uuid,
+            task_name=task_name,
+            GP_ID=GP_ID
+        )
+        
+        if not is_valid_task_name:
+            raise NotValidTask
+
         nearest_obj = await get_nearest_obj(
             conn=conn,
             object_uuid=object_uuid,

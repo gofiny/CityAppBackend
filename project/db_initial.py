@@ -97,7 +97,8 @@ PawnTasks = '''CREATE TABLE IF NOT EXISTS "pawn_tasks"
     "walk_time" float,
     "work_time_count" integer,
     "common_time" float,
-    "way" int[][]
+    "way" int[][],
+    "is_active" bool not null default false;
 );'''
 
 PawnActions = '''CREATE TABLE IF NOT EXISTS "pawn_actions" (
@@ -105,7 +106,7 @@ PawnActions = '''CREATE TABLE IF NOT EXISTS "pawn_actions" (
     "task" uuid NOT NULL REFERENCES "pawn_tasks" ("uuid") ON DELETE cascade,
     "name" VARCHAR(20) NOT NULL,
     "start_time" float,
-    "end_time" float,
+    "end_time" float,rк
     "res_count" int
 );'''
 
