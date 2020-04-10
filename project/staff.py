@@ -23,11 +23,13 @@ from game_objects import (
 
 
 get_objname_by_taskname = {
-    "cut": "tree"
+    "cut": "tree",
+    "mine": "rock"
 }
 
 get_resname_by_taskname = {
-    "cut": "wood"
+    "cut": "wood",
+    "mine": "stone"
 }
 
 
@@ -692,7 +694,7 @@ async def add_pretask_to_pawn(pool: Pool, object_uuid: str, GP_ID: str, task_nam
             task_name=task_name,
             GP_ID=GP_ID
         )
-        
+
         if not is_valid_task_name:
             raise NotValidTask
 
