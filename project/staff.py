@@ -430,7 +430,7 @@ async def generate_object(pool: Pool, obj_name: str, limit: int):
 async def check_valid_task_name(conn: Connection, mo_uuid: str, task_name: str, GP_ID: str) -> Optional[Record]:
     return await conn.fetchrow(
         "SELECT tasks.name FROM map_objects mo "
-        "LEFT JOIN game_object go ON mo.game_object=go.uuid "
+        "LEFT JOIN game_objects go ON mo.game_object=go.uuid "
         "LEFT JOIN available_tasks at ON go.uuid=at.pawn "
         "LEFT JOIN tasks ON tasks.uuid=at.task "
         "LEFT JOIN players ON players.uuid=mo.onwer "
