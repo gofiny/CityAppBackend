@@ -1,6 +1,6 @@
 '''Обработчик запросов приходящих на сервер'''
 from asyncpg import exceptions
-from exceptions import UserAlreadyExist, ObjectNotExist, UserRegistered, NotValidTask
+from exceptions import UserAlreadyExist, ObjectNotExist, UserRegistered, NotValidTask, PawnLimit
 from json.decoder import JSONDecodeError
 from aiohttp.web import json_response, Request, Response
 import staff
@@ -323,7 +323,7 @@ async def accept_task(request: Request) -> json_response:
         response["status"] = True
     except (ValueError, TypeError, KeyError, JSONDecodeError, exceptions.InvalidTextRepresentationError):
         response["errors"] = [2, "json is not correct"]
-    except NotValidTask:
+    except PawnLimit:
         response["errors"] = [8, "pawn has tasks limit"]
 
     return json_response(response)

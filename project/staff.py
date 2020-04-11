@@ -4,7 +4,7 @@ import heapq
 from json.decoder import JSONDecodeError
 from typing import Optional, Tuple, List, Union
 from time import time
-from exceptions import UserAlreadyExist, ObjectNotExist, UserRegistered, NotValidTask
+from exceptions import UserAlreadyExist, ObjectNotExist, UserRegistered, NotValidTask, PawnLimit
 from operator import itemgetter
 import random
 import string
@@ -438,14 +438,14 @@ async def check_valid_task_name(conn: Connection, mo_uuid: str, task_name: str, 
     )
 
 
-async def check_pawn_task_limit(conn: Connection, GP_ID: str) -> dict:
+async def check_pawn_task_limit(conn: Connection, GP_ID: str, mo_uuid: str) -> dict:
     data = await conn.fetchrow(
         "SELECT COUNT(pt.uuid) as active_tasks, po.max_tasks FROM game_objects go "
         "LEFT JOIN pawn_tasks pt ON go.uuid=pt.pawn "
         "LEFT JOIN pawn_objects po ON go.uuid=po.game_object_ptr "
         "LEFT JOIN map_objects mo ON go.uuid=mo.game_object "
         "LEFT JOIN players ON mo.owner=players.uuid "
-        f"WHERE players.GP_ID='{GP_ID}'"
+        f"WHERE players.GP_ID='{GP_ID}', WHERE mo.uuid='{mo_uuid}'"
     )
     return dir(data)
 
@@ -698,17 +698,32 @@ async def add_work_pawn_action(conn: Connection, task_uuid: str, action_name: st
     )
 
 
+async def check_valid_task(conn: Connection, mo_uuid: str, task_name: str, GP_ID: str):
+    is_valid_task_name = await check_valid_task_name(
+            conn=conn,
+            mo_uuid=mo_uuid,
+            task_name=task_name,
+            GP_ID=GP_ID
+        )
+    if not is_valid_task_name:
+        raise NotValidTask
+
+    pawn_tasks = await check_pawn_task_limit(
+        conn=conn,
+        GP_ID= GP_ID
+    )
+    if pawn_tasks.get("pawn_tasks", 0) > pawn_tasks.get("max_tasks", 0):
+        raise PawnLimit
+
+
 async def add_pretask_to_pawn(pool: Pool, object_uuid: str, GP_ID: str, task_name: str) -> dict:
     async with pool.acquire() as conn:
-        is_valid_task_name = await check_valid_task_name(
+        await check_valid_task(
             conn=conn,
             mo_uuid=object_uuid,
             task_name=task_name,
             GP_ID=GP_ID
         )
-
-        if not is_valid_task_name:
-            raise NotValidTask
 
         nearest_obj = await get_nearest_obj(
             conn=conn,
@@ -756,8 +771,8 @@ async def procced_task(pool: Pool, task_uuid, GP_ID: str, accept: bool):
                 conn=conn,
                 GP_ID=GP_ID
             )
-            if (pawn_tasks) and (pawn_tasks.get("pawn_tasks") > pawn_tasks.get("max_tasks")):
-                raise NotValidTask
+            if (not pawn_tasks) or (pawn_tasks.get("pawn_tasks", 0) > pawn_tasks.get("max_tasks", 0)):
+                raise PawnLimit
             return await add_walk_pawn_action(
                 conn=conn,
                 task_uuid=task_uuid,

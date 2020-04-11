@@ -15,3 +15,7 @@ class ObjectNotExist(Exception):
 
 class NotValidTask(Exception):
     """If not correct data for to add task to pawn"""
+
+
+class PawnLimit(Exception):
+    """If pawn has limit tasks count"""
