@@ -305,12 +305,13 @@ async def check_connection(request: Request) -> json_response:
 
 
 async def accept_task(request: Request) -> json_response:
-    response = {"status": True}
+    response = {"status": False}
     try:
         data = await request.json()
         action = await staff.procced_task(
             pool=request.app["pool"],
             task_uuid=data["task_uuid"],
+            GP_ID=data["GP_ID"],
             accept=data["accept"]
         )
         if action:
@@ -319,8 +320,10 @@ async def accept_task(request: Request) -> json_response:
             response["start_time"] = action["start_time"]
             response["end_time"] = action["end_time"]
             response["way"] = action["way"]
-    except (ValueError, TypeError, KeyError, JSONDecodeError, exceptions.InvalidTextRepresentationError):
         response["status"] = True
+    except (ValueError, TypeError, KeyError, JSONDecodeError, exceptions.InvalidTextRepresentationError):
         response["errors"] = [2, "json is not correct"]
+    except NotValidTask:
+        response["errors"] = [8, "pawn has tasks limit"]
 
     return json_response(response)

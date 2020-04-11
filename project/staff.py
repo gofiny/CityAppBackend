@@ -438,6 +438,18 @@ async def check_valid_task_name(conn: Connection, mo_uuid: str, task_name: str, 
     )
 
 
+async def check_pawn_task_limit(conn: Connection, GP_ID: str) -> dict:
+    data = await conn.fetchrow(
+        "SELECT COUNT(pt.uuid) as active_tasks, po.max_tasks FROM game_objects go "
+        "LEFT JOIN pawn_tasks pt ON go.uuid=pt.pawn "
+        "LEFT JOIN pawn_objects po ON go.uuid=po.game_object_ptr "
+        "LEFT JOIN map_objects mo ON go.uuid=mo.game_object "
+        "LEFT JOIN players ON mo.owner=players.uuid "
+        f"WHERE players.GP_ID='{GP_ID}'"
+    )
+    return dir(data)
+
+
 async def get_nearest_obj(conn: Connection, object_uuid: str, obj_name: str, GP_ID: str) -> Optional[Record]:
     return await conn.fetchrow(
         "WITH pawn AS (SELECT mo.x, mo.y, po.power, po.speed FROM map_objects mo "
@@ -737,18 +749,20 @@ async def add_pretask_to_pawn(pool: Pool, object_uuid: str, GP_ID: str, task_nam
         return response_dict
 
 
-async def procced_task(pool: Pool, task_uuid, accept: bool):
+async def procced_task(pool: Pool, task_uuid, GP_ID: str, accept: bool):
     async with pool.acquire() as conn:
         if accept is True:
+            pawn_tasks = await check_pawn_task_limit(
+                conn=conn,
+                GP_ID=GP_ID
+            )
+            if (pawn_tasks) and (pawn_tasks.get("pawn_tasks") > pawn_tasks.get("max_tasks")):
+                raise NotValidTask
             return await add_walk_pawn_action(
                 conn=conn,
                 task_uuid=task_uuid,
                 returning=True
             )
-            # return await create_actions(
-            #     conn=conn,
-            #     task_uuid=task_uuid
-            # )
         await delete_pawn_task(conn=conn, task_uuid=task_uuid)
 
 
