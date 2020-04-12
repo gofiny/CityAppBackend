@@ -450,7 +450,7 @@ async def check_pawn_task_limit_by_task_uuid(conn: Connection, GP_ID: str, task_
         "LEFT JOIN map_objects mo ON go.uuid=mo.game_object "
         "LEFT JOIN players ON mo.owner=players.uuid "
         "GROUP BY po.max_tasks, players.GP_ID, mo.uuid "
-        f"HAVING players.GP_ID='{GP_ID}' AND mo.uuid=(SELECT uuid FROM pawn_task) LIMIT 1"
+        f"HAVING players.GP_ID='{GP_ID}' AND mo.uuid=(SELECT uuid FROM pawn_task)"
     )
     
     if not tasks_data:
@@ -466,7 +466,7 @@ async def check_pawn_task_limit_by_mo_uuid(conn: Connection, GP_ID: str, mo_uuid
         "LEFT JOIN map_objects mo ON go.uuid=mo.game_object "
         "LEFT JOIN players ON mo.owner=players.uuid "
         "GROUP BY po.max_tasks, players.GP_ID, mo.uuid "
-        f"HAVING players.GP_ID='{GP_ID}' AND mo.uuid='{mo_uuid}' LIMIT 1"
+        f"HAVING players.GP_ID='{GP_ID}' AND mo.uuid='{mo_uuid}'"
     )
 
     if not tasks_data:
@@ -737,7 +737,7 @@ async def check_valid_task(conn: Connection, task_name: str, GP_ID: str, mo_uuid
         GP_ID=GP_ID,
         mo_uuid=mo_uuid
     )
-    if pawn_tasks.get("active_tasks", 0) > pawn_tasks.get("max_tasks", 0):
+    if pawn_tasks.get("active_tasks") >= pawn_tasks.get("max_tasks"):
         raise PawnLimit
 
 
@@ -799,7 +799,7 @@ async def procced_task(pool: Pool, task_uuid, GP_ID: str, accept: bool):
             )
             if not pawn_tasks:
                 raise NotValidTask
-            if pawn_tasks.get("active_tasks", 0) > pawn_tasks.get("max_tasks", 0):
+            if pawn_tasks.get("active_tasks") >= pawn_tasks.get("max_tasks"):
                 raise PawnLimit
             return await add_walk_pawn_action(
                 conn=conn,
