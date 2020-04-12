@@ -449,7 +449,7 @@ async def check_pawn_task_limit_by_task_uuid(conn: Connection, GP_ID: str, task_
         "LEFT JOIN pawn_objects po ON go.uuid=po.game_object_ptr "
         "LEFT JOIN map_objects mo ON go.uuid=mo.game_object "
         "LEFT JOIN players ON mo.owner=players.uuid "
-        "GROUP BY pt.uuid, po.max_tasks, players.GP_ID. mo.uuid "
+        "GROUP BY pt.uuid, po.max_tasks, players.GP_ID, mo.uuid "
         f"HAVING players.GP_ID='{GP_ID}' AND mo.uuid=(SELECT uuid FROM pawn_task) LIMIT 1"
     )
 
@@ -463,7 +463,7 @@ async def check_pawn_task_limit_by_mo_uuid(conn: Connection, GP_ID: str, mo_uuid
         "LEFT JOIN pawn_objects po ON go.uuid=po.game_object_ptr "
         "LEFT JOIN map_objects mo ON go.uuid=mo.game_object "
         "LEFT JOIN players ON mo.owner=players.uuid "
-        "GROUP BY pt.uuid, po.max_tasks, players.GP_ID. mo.uuid "
+        "GROUP BY pt.uuid, po.max_tasks, players.GP_ID, mo.uuid "
         f"HAVING players.GP_ID='{GP_ID}' AND mo.uuid='{mo_uuid}' LIMIT 1"
     )
 
