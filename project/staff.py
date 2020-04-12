@@ -449,8 +449,8 @@ async def check_pawn_task_limit_by_task_uuid(conn: Connection, GP_ID: str, task_
         "LEFT JOIN pawn_objects po ON go.uuid=po.game_object_ptr "
         "LEFT JOIN map_objects mo ON go.uuid=mo.game_object "
         "LEFT JOIN players ON mo.owner=players.uuid "
-        "GROUP BY po.max_tasks, players.GP_ID, mo.uuid "
-        f"HAVING players.GP_ID='{GP_ID}' AND mo.uuid=(SELECT uuid FROM pawn_task)"
+        "GROUP BY pt.uuid, po.max_tasks, players.GP_ID, mo.uuid "
+        f"HAVING players.GP_ID='{GP_ID}' AND mo.uuid=(SELECT uuid FROM pawn_task) AND pt.is_active=true"
     )
     
     if not tasks_data:
@@ -681,6 +681,7 @@ async def create_actions(conn: Connection, task_uuid: str) -> tuple:
 
 async def create_pawn_action(conn: Connection, task_uuid: str, action_name: str, start_time: float, end_time: float, res_count: Union[str, int]):
     await conn.execute(
+        f"WITH pt as (UPDATE pawn_tasks SET is_active=true WHERE uuid='{task_uuid}') "
         "INSERT INTO pawn_actions (uuid, task, name, start_time, end_time, res_count) "
         f"VALUES ('{uuid.uuid4()}', '{task_uuid}', '{action_name}', {start_time}, {end_time}, {res_count})"
     )
