@@ -722,7 +722,7 @@ async def add_work_pawn_action(conn: Connection, task_uuid: str, action_name: st
     )
 
 
-async def check_valid_task(conn: Connection, task_name: str, GP_ID: str, mo_uuid: str = None, task_uuid: str = None):
+async def check_valid_task(conn: Connection, task_name: str, GP_ID: str, mo_uuid: str = None):
     is_valid_task_name = await check_valid_task_name(
             conn=conn,
             mo_uuid=mo_uuid,
@@ -731,16 +731,11 @@ async def check_valid_task(conn: Connection, task_name: str, GP_ID: str, mo_uuid
         )
     if not is_valid_task_name:
         raise NotValidTask
-    if mo_uuid:
-        method = {"method": check_pawn_task_limit_by_mo_uuid}
-        args = {"mo_uuid":mo_uuid}
-    else:
-        method = {"method": check_pawn_task_limit_by_task_uuid},
-        args = {"task_uuid": task_uuid}
-    pawn_tasks = await method["method"](
+
+    pawn_tasks = await check_pawn_task_limit_by_mo_uuid(
         conn=conn,
         GP_ID=GP_ID,
-       **args
+       mo_uuid=mo_uuid
     )
     if pawn_tasks["tasks_count"] > pawn_tasks.get("max_tasks", 0):
         raise PawnLimit
@@ -797,11 +792,12 @@ async def add_pretask_to_pawn(pool: Pool, object_uuid: str, GP_ID: str, task_nam
 async def procced_task(pool: Pool, task_uuid, GP_ID: str, accept: bool):
     async with pool.acquire() as conn:
         if accept is True:
-            pawn_tasks = await check_pawn_task_limit(
+            pawn_tasks = await check_pawn_task_limit_by_task_uuid(
                 conn=conn,
-                GP_ID=GP_ID
+                GP_ID=GP_ID,
+                task_uuid=task_uuid
             )
-            if (not pawn_tasks) or (pawn_tasks.get("pawn_tasks", 0) > pawn_tasks.get("max_tasks", 0)):
+            if (pawn_tasks["tasks_count"] == 0) or (pawn_tasks["tasks_count"] > pawn_tasks.get("max_tasks", 0)):
                 raise PawnLimit
             return await add_walk_pawn_action(
                 conn=conn,
