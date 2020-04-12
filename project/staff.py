@@ -800,7 +800,7 @@ async def procced_task(pool: Pool, task_uuid, GP_ID: str, accept: bool):
             )
             # if not pawn_tasks:
             #     raise NotValidTask
-            if pawn_tasks.get("active_tasks") >= pawn_tasks.get("max_tasks"):
+            if pawn_tasks.get("active_tasks", 0) >= pawn_tasks.get("max_tasks", 1):
                 raise PawnLimit
             return await add_walk_pawn_action(
                 conn=conn,
