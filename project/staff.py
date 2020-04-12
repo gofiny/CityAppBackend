@@ -440,7 +440,7 @@ async def check_valid_task_name(conn: Connection, mo_uuid: str, task_name: str, 
 
 async def check_pawn_task_limit_by_task_uuid(conn: Connection, GP_ID: str, task_uuid: str) -> dict:
     tasks_data = await conn.fetch(
-        "WITH pawn_task as (SELECT mo.uuid FROM map_objects mo "
+        "WITH pt.uuid, pawn_task as (SELECT mo.uuid FROM map_objects mo "
         "LEFT JOIN game_objects go ON mo.game_object=go.uuid "
         "LEFT JOIN pawn_tasks pt ON go.uuid=pt.pawn "
         f"WHERE pt.uuid='{task_uuid}') "
@@ -451,6 +451,8 @@ async def check_pawn_task_limit_by_task_uuid(conn: Connection, GP_ID: str, task_
         "LEFT JOIN players ON mo.owner=players.uuid "
         f"WHERE players.GP_ID='{GP_ID}' AND mo.uuid=(SELECT uuid FROM pawn_task)"
     )
+
+    tasks = filter(lambda item: item.get("uuid", 0) )
     tasks_count = len(tasks_data)
     data = {"tasks_count": tasks_count}
     if tasks_count:
@@ -460,7 +462,7 @@ async def check_pawn_task_limit_by_task_uuid(conn: Connection, GP_ID: str, task_
 
 async def check_pawn_task_limit_by_mo_uuid(conn: Connection, GP_ID: str, mo_uuid: str) -> dict:
     tasks_data = await conn.fetch(
-        "SELECT po.max_tasks FROM game_objects go "
+        "SELECT pt.uuid, po.max_tasks FROM game_objects go "
         "LEFT JOIN pawn_tasks pt ON go.uuid=pt.pawn "
         "LEFT JOIN pawn_objects po ON go.uuid=po.game_object_ptr "
         "LEFT JOIN map_objects mo ON go.uuid=mo.game_object "
@@ -735,7 +737,7 @@ async def check_valid_task(conn: Connection, task_name: str, GP_ID: str, mo_uuid
     pawn_tasks = await check_pawn_task_limit_by_mo_uuid(
         conn=conn,
         GP_ID=GP_ID,
-       mo_uuid=mo_uuid
+        mo_uuid=mo_uuid
     )
     if pawn_tasks["tasks_count"] > pawn_tasks.get("max_tasks", 0):
         raise PawnLimit

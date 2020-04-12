@@ -252,6 +252,8 @@ async def add_task_to_pawn(request: Request) -> json_response:
         response["errors"] = [2, "json is not correct"]
     except NotValidTask:
         response["errors"] = [7, "data is not valid or correct"]
+    except PawnLimit:
+        response["errors"] = [8, "pawn has tasks limit"]
     return json_response(response)
 
 
