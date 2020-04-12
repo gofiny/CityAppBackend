@@ -438,16 +438,40 @@ async def check_valid_task_name(conn: Connection, mo_uuid: str, task_name: str, 
     )
 
 
-async def check_pawn_task_limit(conn: Connection, GP_ID: str, mo_uuid: str) -> dict:
-    data = await conn.fetchrow(
-        "SELECT COUNT(pt.uuid) as active_tasks, po.max_tasks FROM game_objects go "
+async def check_pawn_task_limit_by_task_uuid(conn: Connection, GP_ID: str, task_uuid: str) -> dict:
+    tasks_data = await conn.fetch(
+        "WITH pawn_task as (SELECT mo.uuid FROM map_objects mo "
+        "LEFT JOIN game_objects go ON mo.game_object=go.uuid "
+        "LEFT JOIN pawn_tasks pt ON go.uuid=pt.pawn "
+        f"WHERE pt.uuid='{task_uuid}') "
+        "SELECT po.max_tasks FROM game_objects go "
         "LEFT JOIN pawn_tasks pt ON go.uuid=pt.pawn "
         "LEFT JOIN pawn_objects po ON go.uuid=po.game_object_ptr "
         "LEFT JOIN map_objects mo ON go.uuid=mo.game_object "
         "LEFT JOIN players ON mo.owner=players.uuid "
-        f"WHERE players.GP_ID='{GP_ID}', WHERE mo.uuid='{mo_uuid}'"
+        f"WHERE players.GP_ID='{GP_ID}', WHERE mo.uuid=(SELECT uuid FROM pawn_task)"
     )
-    return dir(data)
+    tasks_count = len(tasks_data)
+    data = {"tasks_count": tasks_count}
+    if tasks_count:
+        data["max_pawn_tasks"] = tasks_data[0]["max_tasks"]
+    return data
+
+
+async def check_pawn_task_limit_by_mo_uuid(conn: Connection, GP_ID: str, mo_uuid: str) -> dict:
+    tasks_data = await conn.fetch(
+        "SELECT po.max_tasks FROM game_objects go "
+        "LEFT JOIN pawn_tasks pt ON go.uuid=pt.pawn "
+        "LEFT JOIN pawn_objects po ON go.uuid=po.game_object_ptr "
+        "LEFT JOIN map_objects mo ON go.uuid=mo.game_object "
+        "LEFT JOIN players ON mo.owner=players.uuid "
+        f"WHERE players.GP_ID='{GP_ID}', WHERE mo.uuid={mo_uuid}"
+    )
+    tasks_count = len(tasks_data)
+    data = {"tasks_count": tasks_count}
+    if tasks_count:
+        data["max_pawn_tasks"] = tasks_data[0].get("max_tasks", 0)
+    return data
 
 
 async def get_nearest_obj(conn: Connection, object_uuid: str, obj_name: str, GP_ID: str) -> Optional[Record]:
@@ -698,7 +722,7 @@ async def add_work_pawn_action(conn: Connection, task_uuid: str, action_name: st
     )
 
 
-async def check_valid_task(conn: Connection, mo_uuid: str, task_name: str, GP_ID: str):
+async def check_valid_task(conn: Connection, task_name: str, GP_ID: str, mo_uuid: str = None, task_uuid: str = None):
     is_valid_task_name = await check_valid_task_name(
             conn=conn,
             mo_uuid=mo_uuid,
@@ -707,12 +731,18 @@ async def check_valid_task(conn: Connection, mo_uuid: str, task_name: str, GP_ID
         )
     if not is_valid_task_name:
         raise NotValidTask
-
-    pawn_tasks = await check_pawn_task_limit(
+    if mo_uuid:
+        method = {"method": check_pawn_task_limit_by_mo_uuid}
+        args = {"mo_uuid":mo_uuid}
+    else:
+        method = {"method": check_pawn_task_limit_by_task_uuid},
+        args = {"task_uuid": task_uuid}
+    pawn_tasks = await method["method"](
         conn=conn,
-        GP_ID= GP_ID
+        GP_ID=GP_ID,
+       **args
     )
-    if pawn_tasks.get("pawn_tasks", 0) > pawn_tasks.get("max_tasks", 0):
+    if pawn_tasks["tasks_count"] > pawn_tasks.get("max_tasks", 0):
         raise PawnLimit
 
 
