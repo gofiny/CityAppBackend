@@ -444,36 +444,30 @@ async def check_pawn_task_limit_by_task_uuid(conn: Connection, GP_ID: str, task_
         "LEFT JOIN game_objects go ON mo.game_object=go.uuid "
         "LEFT JOIN pawn_tasks pt ON go.uuid=pt.pawn "
         f"WHERE pt.uuid='{task_uuid}') "
-        "SELECT po.max_tasks FROM game_objects go "
+        "SELECT COUNT(pt.uuid) as active_tasks, po.max_tasks, mo_uuid FROM game_objects go "
         "LEFT JOIN pawn_tasks pt ON go.uuid=pt.pawn "
         "LEFT JOIN pawn_objects po ON go.uuid=po.game_object_ptr "
         "LEFT JOIN map_objects mo ON go.uuid=mo.game_object "
         "LEFT JOIN players ON mo.owner=players.uuid "
-        f"WHERE players.GP_ID='{GP_ID}' AND mo.uuid=(SELECT uuid FROM pawn_task)"
+        "GROUP BY pt.uuid, po.max_tasks, players.GP_ID. mo.uuid "
+        f"HAVING players.GP_ID='{GP_ID}' AND mo.uuid=(SELECT uuid FROM pawn_task) LIMIT 1"
     )
 
-    tasks = filter(lambda item: item.get("uuid", 0) )
-    tasks_count = len(tasks_data)
-    data = {"tasks_count": tasks_count}
-    if tasks_count:
-        data["max_pawn_tasks"] = tasks_data[0]["max_tasks"]
-    return data
+    return dir(tasks_data)
 
 
 async def check_pawn_task_limit_by_mo_uuid(conn: Connection, GP_ID: str, mo_uuid: str) -> dict:
-    tasks_data = await conn.fetch(
-        "SELECT pt.uuid, po.max_tasks FROM game_objects go "
+    tasks_data = await conn.fetchrow(
+        "SELECT COUNT(pt.uuid) as active_tasks, po.max_tasks, mo_uuid FROM game_objects go "
         "LEFT JOIN pawn_tasks pt ON go.uuid=pt.pawn "
         "LEFT JOIN pawn_objects po ON go.uuid=po.game_object_ptr "
         "LEFT JOIN map_objects mo ON go.uuid=mo.game_object "
         "LEFT JOIN players ON mo.owner=players.uuid "
-        f"WHERE players.GP_ID='{GP_ID}' AND mo.uuid='{mo_uuid}'"
+        "GROUP BY pt.uuid, po.max_tasks, players.GP_ID. mo.uuid "
+        f"HAVING players.GP_ID='{GP_ID}' AND mo.uuid='{mo_uuid}' LIMIT 1"
     )
-    tasks_count = len(tasks_data)
-    data = {"tasks_count": tasks_count}
-    if tasks_count:
-        data["max_pawn_tasks"] = tasks_data[0].get("max_tasks", 0)
-    return data
+
+    return dir(tasks_data)
 
 
 async def get_nearest_obj(conn: Connection, object_uuid: str, obj_name: str, GP_ID: str) -> Optional[Record]:
@@ -739,7 +733,7 @@ async def check_valid_task(conn: Connection, task_name: str, GP_ID: str, mo_uuid
         GP_ID=GP_ID,
         mo_uuid=mo_uuid
     )
-    if pawn_tasks["tasks_count"] > pawn_tasks.get("max_tasks", 0):
+    if pawn_tasks.get("active_tasks", 0) > pawn_tasks.get("max_tasks", 0):
         raise PawnLimit
 
 
@@ -799,7 +793,9 @@ async def procced_task(pool: Pool, task_uuid, GP_ID: str, accept: bool):
                 GP_ID=GP_ID,
                 task_uuid=task_uuid
             )
-            if (pawn_tasks["tasks_count"] == 0) or (pawn_tasks["tasks_count"] > pawn_tasks.get("max_tasks", 0)):
+            if not pawn_tasks:
+                raise NotValidTask
+            if pawn_tasks.get("active_tasks", 0) > pawn_tasks.get("max_tasks", 0):
                 raise PawnLimit
             return await add_walk_pawn_action(
                 conn=conn,

@@ -268,7 +268,7 @@ async def get_available_tasks_count(request: Request) -> json_response:
         )
 
         if not available_tasks:
-            response["erros"] = [6, "object_uuid or GP_ID not correct"]
+            response["erros"] = [6, "object_uuid or GP_ID are not correct"]
         else:
             response["status"] = True
             response["count"] = len(available_tasks)
@@ -291,7 +291,7 @@ async def get_player_resources(request: Request) -> json_response:
             response["status"] = True
             response["resources"] = [{k: v} for k, v in resources.items() if k not in ["uuid", "player"]]
         else:
-            response["errors"] = [1, "GP_ID not correct"]
+            response["errors"] = [1, "GP_ID is not correct"]
     except (KeyError, ValueError, TypeError, JSONDecodeError):
         response["erros"] = [2, "json is not correct"]
     except exceptions.UndefinedColumnError:
@@ -325,6 +325,8 @@ async def accept_task(request: Request) -> json_response:
         response["status"] = True
     except (ValueError, TypeError, KeyError, JSONDecodeError, exceptions.InvalidTextRepresentationError):
         response["errors"] = [2, "json is not correct"]
+    except NotValidTask:
+        response["errors"] = [7, "got are not correct data"]
     except PawnLimit:
         response["errors"] = [8, "pawn has tasks limit"]
 
