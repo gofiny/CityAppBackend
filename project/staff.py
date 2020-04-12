@@ -440,7 +440,7 @@ async def check_valid_task_name(conn: Connection, mo_uuid: str, task_name: str, 
 
 async def check_pawn_task_limit_by_task_uuid(conn: Connection, GP_ID: str, task_uuid: str) -> dict:
     tasks_data = await conn.fetchrow(
-        "WITH pt.uuid, pawn_task as (SELECT mo.uuid FROM map_objects mo "
+        "WITH pawn_task as (SELECT mo.uuid FROM map_objects mo "
         "LEFT JOIN game_objects go ON mo.game_object=go.uuid "
         "LEFT JOIN pawn_tasks pt ON go.uuid=pt.pawn "
         f"WHERE pt.uuid='{task_uuid}') "
