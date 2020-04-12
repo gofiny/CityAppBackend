@@ -444,7 +444,7 @@ async def check_pawn_task_limit_by_task_uuid(conn: Connection, GP_ID: str, task_
         "LEFT JOIN game_objects go ON mo.game_object=go.uuid "
         "LEFT JOIN pawn_tasks pt ON go.uuid=pt.pawn "
         f"WHERE pt.uuid='{task_uuid}') "
-        "SELECT COUNT(pt.uuid) as active_tasks, po.max_tasks, mo_uuid FROM game_objects go "
+        "SELECT COUNT(pt.uuid) as active_tasks, po.max_tasks, mo.uuid FROM game_objects go "
         "LEFT JOIN pawn_tasks pt ON go.uuid=pt.pawn "
         "LEFT JOIN pawn_objects po ON go.uuid=po.game_object_ptr "
         "LEFT JOIN map_objects mo ON go.uuid=mo.game_object "
@@ -458,7 +458,7 @@ async def check_pawn_task_limit_by_task_uuid(conn: Connection, GP_ID: str, task_
 
 async def check_pawn_task_limit_by_mo_uuid(conn: Connection, GP_ID: str, mo_uuid: str) -> dict:
     tasks_data = await conn.fetchrow(
-        "SELECT COUNT(pt.uuid) as active_tasks, po.max_tasks, mo_uuid FROM game_objects go "
+        "SELECT COUNT(pt.uuid) as active_tasks, po.max_tasks, mo.uuid FROM game_objects go "
         "LEFT JOIN pawn_tasks pt ON go.uuid=pt.pawn "
         "LEFT JOIN pawn_objects po ON go.uuid=po.game_object_ptr "
         "LEFT JOIN map_objects mo ON go.uuid=mo.game_object "
