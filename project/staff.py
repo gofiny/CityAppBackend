@@ -439,7 +439,7 @@ async def check_valid_task_name(conn: Connection, mo_uuid: str, task_name: str, 
 
 
 async def check_pawn_task_limit_by_task_uuid(conn: Connection, GP_ID: str, task_uuid: str) -> dict:
-    tasks_data = await conn.fetch(
+    tasks_data = await conn.fetchrow(
         "WITH pt.uuid, pawn_task as (SELECT mo.uuid FROM map_objects mo "
         "LEFT JOIN game_objects go ON mo.game_object=go.uuid "
         "LEFT JOIN pawn_tasks pt ON go.uuid=pt.pawn "
@@ -452,7 +452,9 @@ async def check_pawn_task_limit_by_task_uuid(conn: Connection, GP_ID: str, task_
         "GROUP BY pt.uuid, po.max_tasks, players.GP_ID, mo.uuid "
         f"HAVING players.GP_ID='{GP_ID}' AND mo.uuid=(SELECT uuid FROM pawn_task) LIMIT 1"
     )
-
+    
+    if isinstance(tasks_data, None):
+        tasks_data = {}
     return dir(tasks_data)
 
 
@@ -467,6 +469,8 @@ async def check_pawn_task_limit_by_mo_uuid(conn: Connection, GP_ID: str, mo_uuid
         f"HAVING players.GP_ID='{GP_ID}' AND mo.uuid='{mo_uuid}' LIMIT 1"
     )
 
+    if isinstance(tasks_data, None):
+        tasks_data = {}
     return dir(tasks_data)
 
 
