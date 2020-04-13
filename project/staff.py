@@ -295,7 +295,7 @@ async def get_profile_info(pool: Pool, GP_ID: str) -> Optional[Record]:
     """Получаем информацию о профиле игрока"""
     async with pool.acquire() as conn:
         return await conn.fetchrow(
-            "SELECT players.username, players.metadata, mo.x, mo.y, "
+            "SELECT players.username, mo.x, mo.y, "
             "pr.money, pr.wood, pr.stones FROM players "
             "INNER JOIN map_objects mo ON players.uuid=mo.owner "
             "INNER JOIN game_objects go ON mo.game_object=go.uuid "
