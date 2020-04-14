@@ -12,7 +12,8 @@ from staff import (
     add_work_pawn_action,
     add_walk_pawn_action,
     delete_map_objects,
-    change_object_health
+    change_object_health,
+    delete_old_tasks
 )
 
 
@@ -85,10 +86,15 @@ async def actions_handler(conn: Connection):
         await delete_map_objects(conn=conn, objects=tuple(objects_to_delete))
 
 
+async def clear_old_tasks(conn: Connection):
+    await delete_old_tasks(conn=conn)
+    
+
 async def main():
     conn = await connect()
     while True:
         await actions_handler(conn=conn)
+        await clear_old_tasks(conn=conn)
 
 
 if __name__ == "__main__":

@@ -870,3 +870,11 @@ async def delete_map_objects(conn: Connection, objects: tuple):
     await conn.execute(
         f"DELETE FROM map_objects WHERE uuid IN {str(objects)[0:-2]})"
     )
+
+
+async def delete_old_tasks(conn: Connection):
+    old_time = time() - 180
+    return conn.fetch(
+        f"DELETE FROM pawn_tasks WHERE start_time < {old_time} "
+        "AND is_active = false"
+    )
