@@ -84,18 +84,14 @@ async def actions_handler(conn: Connection):
         await delete_tasks(conn=conn, tasks=tuple(tasks_to_delete))
     if objects_to_delete:
         await delete_map_objects(conn=conn, objects=tuple(objects_to_delete))
-
-
-async def clear_old_tasks(conn: Connection):
-    await delete_old_tasks(conn=conn)
-    
+  
 
 async def main():
-    conn = await connect()
+    action_conn = await connect()
+    stuff_conn = await connect()
     while True:
-        await actions_handler(conn=conn)
-        await clear_old_tasks(conn=conn)
-
+        await actions_handler(conn=action_conn)
+        await delete_old_tasks(conn=stuff_conn)
 
 if __name__ == "__main__":
     try:
