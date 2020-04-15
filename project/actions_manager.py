@@ -3,18 +3,7 @@ import asyncpg
 from time import time
 from asyncpg.connection import Connection
 import config
-from staff import (
-    get_finished_actions,
-    get_resname_by_taskname,
-    delete_actions,
-    delete_tasks,
-    add_res_to_player,
-    add_work_pawn_action,
-    add_walk_pawn_action,
-    delete_map_objects,
-    change_object_health,
-    delete_old_tasks
-)
+import staff
 
 
 async def connect():
@@ -29,7 +18,7 @@ async def connect():
 
 
 async def actions_handler(conn: Connection):
-    actions = await get_finished_actions(conn=conn)
+    actions = await staff.get_finished_actions(conn=conn)
     actions_to_delete = []
     tasks_to_delete = []
     objects_to_delete = []
@@ -38,7 +27,7 @@ async def actions_handler(conn: Connection):
         res_health = action["res_health"]
         action_name = action["pa_name"]
         if action_name == "carry":
-            await add_res_to_player(
+            await staff.add_res_to_player(
                 conn=conn,
                 storage_uuid=str(action["storage_uuid"]),
                 task_name=action["task_name"],
@@ -47,12 +36,12 @@ async def actions_handler(conn: Connection):
             if action["mo_uuid"] is None:
                 tasks_to_delete.append(str(action["pt_uuid"]))
             else:
-                await add_walk_pawn_action(
+                await staff.add_walk_pawn_action(
                     conn=conn,
                     task_uuid=str(action["pt_uuid"]),
                 )
         elif action_name == "walk":
-            await add_work_pawn_action(
+            await staff.add_work_pawn_action(
                 conn=conn,
                 task_uuid=str(action["pt_uuid"]),
                 action_name=action["task_name"]
@@ -64,12 +53,12 @@ async def actions_handler(conn: Connection):
                 objects_to_delete.append(str(action["mo_uuid"]))
             else:
                 loot_count = pawn_power
-                await change_object_health(
+                await staff.change_object_health(
                     conn=conn,
                     go_uuid=action["res_uuid"],
                     new_health=new_health
                 )
-            await add_walk_pawn_action(
+            await staff.add_walk_pawn_action(
                 conn=conn,
                 task_uuid=str(action["pt_uuid"]),
                 action_name="carry",
@@ -79,11 +68,11 @@ async def actions_handler(conn: Connection):
         actions_to_delete.append(str(action["pa_uuid"]))
 
     if actions_to_delete:
-        await delete_actions(conn=conn, actions=tuple(actions_to_delete))
+        await staff.elete_actions(conn=conn, actions=tuple(actions_to_delete))
     if tasks_to_delete:
-        await delete_tasks(conn=conn, tasks=tuple(tasks_to_delete))
+        await staff.delete_tasks(conn=conn, tasks=tuple(tasks_to_delete))
     if objects_to_delete:
-        await delete_map_objects(conn=conn, objects=tuple(objects_to_delete))
+        await staff.delete_map_objects(conn=conn, objects=tuple(objects_to_delete))
   
 
 async def main():
@@ -91,7 +80,7 @@ async def main():
     stuff_conn = await connect()
     while True:
         await actions_handler(conn=action_conn)
-        await delete_old_tasks(conn=stuff_conn)
+        await staff.delete_old_tasks(conn=stuff_conn)
 
 if __name__ == "__main__":
     try:
