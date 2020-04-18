@@ -681,13 +681,22 @@ async def create_actions(conn: Connection, task_uuid: str) -> tuple:
 
 async def create_pawn_action(conn: Connection, task_uuid: str, action_name: str, start_time: float, end_time: float, res_count: Union[str, int]):
     await conn.execute(
-        f"WITH pt as (UPDATE pawn_tasks SET is_active=true WHERE uuid='{task_uuid}') "
         "INSERT INTO pawn_actions (uuid, task, name, start_time, end_time, res_count) "
         f"VALUES ('{uuid.uuid4()}', '{task_uuid}', '{action_name}', {start_time}, {end_time}, {res_count})"
     )
 
 
-async def add_walk_pawn_action(conn: Connection, task_uuid: str, action_name: str = "walk", returning: bool = False, res_count: Union[str, int] = "null") -> Optional[dict]:
+async def update_pawn_task_time(conn: Connection, task: Record) -> None:
+    start_time = time()
+    end_time = start_time + task["common_time"]
+    await conn.execute(
+        "UPDATE pawn_tasks SET "
+        f"is_active=true, start_time={start_time}, end_time={end_time} "
+        f"WHERE uuid='{task['uuid']}') "
+    )
+
+
+async def add_walk_pawn_action(conn: Connection, task_uuid: str, action_name: str = "walk", returning: bool = False, updating: bool = False, res_count: Union[str, int] = "null") -> Optional[dict]:
     pawn_task = await get_pawn_task(conn=conn, task_uuid=task_uuid)
     walk_time = pawn_task["walk_time"]
     start_time = time()
@@ -700,6 +709,10 @@ async def add_walk_pawn_action(conn: Connection, task_uuid: str, action_name: st
         end_time=end_time,
         res_count=res_count
     )
+
+    if updating is True:
+        await update_pawn_task_time(conn=conn, task=pawn_task)
+
     if returning is True:
         return {
             "task_uuid": task_uuid,
@@ -805,7 +818,8 @@ async def procced_task(pool: Pool, task_uuid, GP_ID: str, accept: bool):
             return await add_walk_pawn_action(
                 conn=conn,
                 task_uuid=task_uuid,
-                returning=True
+                returning=True,
+                updating=True
             )
         await delete_pawn_task(conn=conn, task_uuid=task_uuid)
 
