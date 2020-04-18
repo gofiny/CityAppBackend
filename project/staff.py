@@ -874,7 +874,7 @@ async def delete_map_objects(conn: Connection, objects: tuple):
 
 async def delete_old_tasks(conn: Connection):
     old_time = time() - 180
-    return conn.fetch(
+    return conn.execute(
         f"DELETE FROM pawn_tasks WHERE start_time < {old_time} "
         "AND is_active = false"
     )
