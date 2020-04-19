@@ -692,7 +692,7 @@ async def update_pawn_task_time(conn: Connection, task: Record) -> None:
     await conn.execute(
         "UPDATE pawn_tasks SET "
         f"is_active=true, start_time={start_time}, end_time={end_time} "
-        f"WHERE uuid='{task['uuid']}') "
+        f"WHERE uuid='{task['uuid']}'"
     )
 
 
