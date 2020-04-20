@@ -623,8 +623,8 @@ async def create_task(conn: Connection, pawn_mo_uuid: str, mo_uuid: str, task_na
         f"WHERE mo.uuid='{pawn_mo_uuid}'), task AS "
         f"(SELECT uuid FROM tasks WHERE name='{task_name}') "
         "INSERT INTO pawn_tasks (uuid, pawn, task, start_time, end_time, walk_time, work_time_count, common_time, mo_uuid, way) "
-        f"VALUES ('{uuid.uuid4()}', (SELECT uuid FROM pawn), (SELECT uuid FROM task), {task_start_time}, {task_end_time}, "
-        f"{walk_time}, {work_time_count}, {common_time}, '{mo_uuid}', ARRAY{way}) RETURNING uuid"
+        f"VALUES ('{uuid.uuid4()}', (SELECT uuid FROM pawn), (SELECT uuid FROM task), {int(task_start_time)}, {int(task_end_time)}, "
+        f"{int(walk_time)}, {work_time_count}, {int(common_time)}, '{mo_uuid}', ARRAY{way}) RETURNING uuid"
     )
     return task_uuid
 
@@ -682,7 +682,7 @@ async def create_actions(conn: Connection, task_uuid: str) -> tuple:
 async def create_pawn_action(conn: Connection, task_uuid: str, action_name: str, start_time: float, end_time: float, res_count: Union[str, int]):
     await conn.execute(
         "INSERT INTO pawn_actions (uuid, task, name, start_time, end_time, res_count) "
-        f"VALUES ('{uuid.uuid4()}', '{task_uuid}', '{action_name}', {start_time}, {end_time}, {res_count})"
+        f"VALUES ('{uuid.uuid4()}', '{task_uuid}', '{action_name}', {int(start_time)}, {int(end_time)}, {res_count})"
     )
 
 
@@ -691,7 +691,7 @@ async def update_pawn_task_time(conn: Connection, task: Record) -> None:
     end_time = start_time + task["common_time"]
     await conn.execute(
         "UPDATE pawn_tasks SET "
-        f"is_active=true, start_time={start_time}, end_time={end_time} "
+        f"is_active=true, start_time={int(start_time)}, end_time={int(end_time)} "
         f"WHERE uuid='{task['uuid']}'"
     )
 
