@@ -319,8 +319,8 @@ async def accept_task(request: Request) -> json_response:
         if action:
             response["task_uuid"] = action["task_uuid"]
             response["action_name"] = action["action_name"]
-            response["start_time"] = int(action["start_time"])
-            response["end_time"] = int(action["end_time"])
+            response["start_time"] = action["start_time"]
+            response["end_time"] = action["end_time"]
             response["way"] = action["way"]
         response["status"] = True
     except (ValueError, TypeError, KeyError, JSONDecodeError, exceptions.InvalidTextRepresentationError):

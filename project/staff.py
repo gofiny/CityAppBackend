@@ -623,8 +623,8 @@ async def create_task(conn: Connection, pawn_mo_uuid: str, mo_uuid: str, task_na
         f"WHERE mo.uuid='{pawn_mo_uuid}'), task AS "
         f"(SELECT uuid FROM tasks WHERE name='{task_name}') "
         "INSERT INTO pawn_tasks (uuid, pawn, task, start_time, end_time, walk_time, work_time_count, common_time, mo_uuid, way) "
-        f"VALUES ('{uuid.uuid4()}', (SELECT uuid FROM pawn), (SELECT uuid FROM task), {int(task_start_time)}, {int(task_end_time)}, "
-        f"{int(walk_time)}, {work_time_count}, {int(common_time)}, '{mo_uuid}', ARRAY{way}) RETURNING uuid"
+        f"VALUES ('{uuid.uuid4()}', (SELECT uuid FROM pawn), (SELECT uuid FROM task), {task_start_time}, {task_end_time}, "
+        f"{walk_time}, {work_time_count}, {common_time}, '{mo_uuid}', ARRAY{way}) RETURNING uuid"
     )
     return task_uuid
 
@@ -682,7 +682,7 @@ async def create_actions(conn: Connection, task_uuid: str) -> tuple:
 async def create_pawn_action(conn: Connection, task_uuid: str, action_name: str, start_time: float, end_time: float, res_count: Union[str, int]):
     await conn.execute(
         "INSERT INTO pawn_actions (uuid, task, name, start_time, end_time, res_count) "
-        f"VALUES ('{uuid.uuid4()}', '{task_uuid}', '{action_name}', {int(start_time)}, {int(end_time)}, {res_count})"
+        f"VALUES ('{uuid.uuid4()}', '{task_uuid}', '{action_name}', {start_time}, {end_time}, {res_count})"
     )
 
 
@@ -705,8 +705,8 @@ async def add_walk_pawn_action(conn: Connection, task_uuid: str, action_name: st
         conn=conn,
         task_uuid=pawn_task["uuid"],
         action_name=action_name,
-        start_time=start_time,
-        end_time=end_time,
+        start_time=int(start_time),
+        end_time=int(end_time),
         res_count=res_count
     )
 
@@ -717,21 +717,21 @@ async def add_walk_pawn_action(conn: Connection, task_uuid: str, action_name: st
         return {
             "task_uuid": task_uuid,
             "action_name": action_name,
-            "start_time": start_time,
-            "end_time": end_time,
+            "start_time": int(start_time),
+            "end_time": int(end_time),
             "way": pawn_task["way"]
         }
 
 
 async def add_work_pawn_action(conn: Connection, task_uuid: str, action_name: str, res_count: Union[str, int] = "null"):
     start_time = time()
-    end_time = start_time + 10.0
+    end_time = start_time + 10
     await create_pawn_action(
         conn=conn,
         task_uuid=task_uuid,
         action_name=action_name,
-        start_time=start_time,
-        end_time=end_time,
+        start_time=sint(tart_time),
+        end_time=int(end_time),
         res_count=res_count
     )
 
@@ -789,8 +789,8 @@ async def add_pretask_to_pawn(pool: Pool, object_uuid: str, GP_ID: str, task_nam
             pawn_mo_uuid=object_uuid,
             mo_uuid=nearest_obj["mo_uuid"],
             task_name=task_name,
-            common_time=common_time,
-            walk_time=walk_time,
+            common_time=int(common_time),
+            walk_time=int(walk_time),
             work_time_count=work_time_count,
             way=way["way"]
         )
