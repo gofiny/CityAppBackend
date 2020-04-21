@@ -730,7 +730,7 @@ async def add_work_pawn_action(conn: Connection, task_uuid: str, action_name: st
         conn=conn,
         task_uuid=task_uuid,
         action_name=action_name,
-        start_time=sint(tart_time),
+        start_time=int(start_time),
         end_time=int(end_time),
         res_count=res_count
     )
