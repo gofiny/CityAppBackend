@@ -138,6 +138,13 @@ async def check_relay(conn: Connection, pos: Tuple[int, int]) -> bool:
     return True
 
 
+def pack_response(func):
+    def wrapper(data):
+        data["timestamp"] = time()
+        return json_response(data)
+    return wrapper
+
+
 def check_token(func):
     '''Декоратор проверки токена авторизации'''
     async def wrapper(request):
