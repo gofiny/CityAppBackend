@@ -11,7 +11,8 @@ async def test(request: Request) -> json_response:
     return json_response({"status": True})
 
 
-async def register_user(request: Request) -> json_response:
+@staff.pack_response
+async def register_user(request: Request) -> dict:
     '''Метод регистрации игрока'''
     response = {"status": False}
     try:
@@ -33,11 +34,11 @@ async def register_user(request: Request) -> json_response:
         response["is_new_user"] = False
         response["status"] = True
    
-    return json_response(response)
+    return response
 
 
 @staff.pack_response
-async def get_map(request: Request) -> json_response:
+async def get_map(request: Request) -> dict:
     '''Возвращает объекты расположенные на карте'''
     response = {"status": True, "game_objects": None}
     try:
@@ -82,7 +83,8 @@ async def get_map(request: Request) -> json_response:
     return response
 
 
-async def get_profile(request: Request) -> json_response:
+@staff.pack_response
+async def get_profile(request: Request) -> dict:
     '''Возвращает инфу о игроке'''
     response = {"status": True}
     try:
@@ -105,10 +107,11 @@ async def get_profile(request: Request) -> json_response:
         response["status"] = False
         response["errors"] = [2, "json is not correct"]
 
-    return json_response(response)
+    return response
 
 
-async def get_object_info(request: Request) -> json_response:
+@staff.pack_response
+async def get_object_info(request: Request) -> dict:
     '''Возвращает информацию о конкретном объекте'''
     response = {"status": False}
     try:
@@ -168,10 +171,11 @@ async def get_object_info(request: Request) -> json_response:
     except (TypeError, KeyError, ValueError, JSONDecodeError):
         response["errors"] = [2, "json is not correct"]
 
-    return json_response(response)
+    return response
 
 
-async def get_player_pawns(request: Request) -> json_response:
+@staff.pack_response
+async def get_player_pawns(request: Request) -> dict:
     '''Возвращает список всех пешек игрока'''
     response = {"status": True}
     try:
@@ -196,7 +200,7 @@ async def get_player_pawns(request: Request) -> json_response:
     except (TypeError, KeyError, ValueError, JSONDecodeError):
         response["errors"] = [2, "json is not correct"]
 
-    return json_response(response)
+    return response
 
 
 async def gen_new_object(request: Request) -> Response:
@@ -213,7 +217,8 @@ async def gen_new_object(request: Request) -> Response:
         #return Response(status=500)
 
 
-async def get_tile(request: Request) -> json_response:
+@staff.pack_response
+async def get_tile(request: Request) -> dict:
     '''Получение тайла по координатам'''
     response = {"status": True, "game_object": None}
     try:
@@ -235,10 +240,11 @@ async def get_tile(request: Request) -> json_response:
         response["status"] = False
         response["errors"] = [2, "json is not correct"]
 
-    return json_response(response)
+    return response
 
 
-async def add_task_to_pawn(request: Request) -> json_response:
+@staff.pack_response
+async def add_task_to_pawn(request: Request) -> dict:
     response = {"status": False}
     try:
         data = await request.json()
@@ -255,10 +261,11 @@ async def add_task_to_pawn(request: Request) -> json_response:
         response["errors"] = [7, "data is not valid or correct"]
     except PawnLimit:
         response["errors"] = [8, "pawn has tasks limit"]
-    return json_response(response)
+    return response
 
 
-async def get_available_tasks_count(request: Request) -> json_response:
+@staff.pack_response
+async def get_available_tasks_count(request: Request) -> dict:
     response = {"status": False}
     try:
         data = await request.json()
@@ -276,10 +283,11 @@ async def get_available_tasks_count(request: Request) -> json_response:
     except (KeyError, ValueError, TypeError, JSONDecodeError, exceptions.InvalidTextRepresentationError):
         response["errors"] = [2, "json is not correct"]
 
-    return json_response(response)
+    return response
 
 
-async def get_player_resources(request: Request) -> json_response:
+@staff.pack_response
+async def get_player_resources(request: Request) -> dict:
     response = {"status": False}
     try:
         data = await request.json()
@@ -299,15 +307,17 @@ async def get_player_resources(request: Request) -> json_response:
         response["errors"] = [5, "resource name is not correct"]
         
 
-    return json_response(response)
+    return response
 
 
-async def check_connection(request: Request) -> json_response:
+@staff.pack_response
+async def check_connection(request: Request) -> dict:
     '''Тест соединения'''
-    return json_response({"status": True})
+    return {"status": True}
 
 
-async def accept_task(request: Request) -> json_response:
+@staff.pack_response
+async def accept_task(request: Request) -> dict:
     response = {"status": False}
     try:
         data = await request.json()
@@ -331,4 +341,4 @@ async def accept_task(request: Request) -> json_response:
     except PawnLimit:
         response["errors"] = [8, "pawn has tasks limit"]
 
-    return json_response(response)
+    return response
