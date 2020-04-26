@@ -36,6 +36,7 @@ async def register_user(request: Request) -> json_response:
     return json_response(response)
 
 
+@staff.pack_response
 async def get_map(request: Request) -> json_response:
     '''Возвращает объекты расположенные на карте'''
     response = {"status": True, "game_objects": None}
@@ -78,7 +79,7 @@ async def get_map(request: Request) -> json_response:
     except (TypeError, ValueError, KeyError, JSONDecodeError):
         response["status"] = False
         response["errors"] = [2, "json is not correct"]
-    return json_response(response)
+    return response
 
 
 async def get_profile(request: Request) -> json_response:
