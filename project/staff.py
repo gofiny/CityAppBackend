@@ -139,8 +139,8 @@ async def check_relay(conn: Connection, pos: Tuple[int, int]) -> bool:
 
 
 def pack_response(func):
-    def wrapper(data):
-        data = func(data)
+    async def wrapper(data):
+        data = await func(data)
         data["timestamp"] = time()
         return json_response(data)
     return wrapper
