@@ -267,12 +267,38 @@ async def get_objects_from_relay(conn: Connection, x_coords: Tuple[int, int], y_
     )
 
 
-async def get_map(pool: Pool, x_coord: int, y_coord: int, width: int, height: int) -> List[Optional[Record]]:
-    '''Возвращает объекты на карте из области'''
+async def get_pawn_ways_info(conn: Connection, x_coords: Tuple[int, int], y_coords: Tuple[int, int]):
+    return await conn.fetch(
+        "SELECT * FROM "
+        ""
+    )
+
+
+async def make_square_coords(x_coord: int, y_coord: int, width: int, height: int) -> tuple:
     x_coords = (x_coord - (width // 2), x_coord + (width // 2))
     y_coords = (y_coord - (height // 2), y_coord + (height // 2))
+    return (x_coords, y_coords,)
+
+
+async def get_map(pool: Pool, x_coord: int, y_coord: int, width: int, height: int) -> List[Optional[Record]]:
+    '''Возвращает объекты на карте из области'''
+    x_coords, y_coords = await make_square_coords(
+        x_coord=x_coord,
+        y_coord=y_coord,
+        width=width,
+        height=height
+    )
     async with pool.acquire() as conn:
         return await get_objects_from_relay(conn, x_coords, y_coords)
+
+
+async def get_pawn_ways(pool: Pool, x_coord: int, y_coord: int, width: int, height: int):
+    x_coords, y_coords = await make_square_coords(
+        x_coord=x_coord,
+        y_coord=y_coord,
+        width=width,
+        height=height
+    )
 
 
 async def gen_objects(pool: Pool) -> None:
