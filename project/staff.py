@@ -595,7 +595,7 @@ async def reconstruct_path(came_from, start, goal, _x, _y):
 async def get_broken_line_dots(way_dots: List[list]) -> List[list]:
     dots = []
     for dot in way_dots:
-        if len(way_dots) == 0:
+        if not dots:
             dots.append(dot)
         else:
             try:
