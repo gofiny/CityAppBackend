@@ -33,6 +33,14 @@ get_resname_by_taskname = {
 }
 
 
+def list_to_tuple(way_list: list) -> tuple:
+    return tuple(map(lambda x: tuple(x), way_list))
+
+
+def tuple_to_list(way_tuple: tuple) -> list:
+    return list(map(lambda x: list(x), way_tuple))
+
+
 class PriorityQueue:
     def __init__(self):
         self.elements = []
@@ -253,6 +261,7 @@ async def get_spawn_coords(pool: Pool, GP_ID: str) -> Record:
             raise ObjectNotExist
         return spawn
 
+
 async def get_objects_from_relay(conn: Connection, x_coords: Tuple[int, int], y_coords: Tuple[int, int]) -> List[Optional[Record]]:
     '''Получает объекты из области на карте'''
     return await conn.fetch(
@@ -269,8 +278,15 @@ async def get_objects_from_relay(conn: Connection, x_coords: Tuple[int, int], y_
 
 async def get_pawn_ways_info(conn: Connection, x_coords: Tuple[int, int], y_coords: Tuple[int, int]):
     return await conn.fetch(
-        "SELECT * FROM "
-        ""
+        "SELECT mo.uuid as pawn_uuid, go.name as pawn_name, players.username as owner_username, "
+        "go.health as pawn_health, pa.name as action_name, pa.start_time, pa.end_time, "
+        "pt.way FROM map_objects mo "
+        "LEFT JOIN game_objects go ON mo.game_object=go.uuid "
+        "LEFT JOIN players ON mo.owner=players.uuid "
+        "LEFT JOIN pawn_tasks pt ON pt.pawn=go.uuid "
+        "LEFT JOIN pawn_actions pa ON pt.uuid=pa.task "
+        f"WHERE polygon(pt.way) && polygon(box(({x_coords[0]}, {y_coords[0]}), ({x_coords[1]}, {y_coords[1]}))) "
+        "AND pt.is_active = true"
     )
 
 
@@ -299,6 +315,13 @@ async def get_pawn_ways(pool: Pool, x_coord: int, y_coord: int, width: int, heig
         width=width,
         height=height
     )
+
+    async with pool.acquire() as conn:
+        return await get_pawn_ways_info(
+            conn=conn,
+            x_coords=x_coords,
+            y_coords=y_coords
+        )
 
 
 async def gen_objects(pool: Pool) -> None:
@@ -658,7 +681,7 @@ async def create_task(conn: Connection, pawn_mo_uuid: str, mo_uuid: str, task_na
         f"(SELECT uuid FROM tasks WHERE name='{task_name}') "
         "INSERT INTO pawn_tasks (uuid, pawn, task, start_time, end_time, walk_time, work_time_count, common_time, mo_uuid, way) "
         f"VALUES ('{uuid.uuid4()}', (SELECT uuid FROM pawn), (SELECT uuid FROM task), {task_start_time}, {task_end_time}, "
-        f"{walk_time}, {work_time_count}, {common_time}, '{mo_uuid}', ARRAY{way}) RETURNING uuid"
+        f"{walk_time}, {work_time_count}, {common_time}, '{mo_uuid}', '{list_to_tuple(way)}') RETURNING uuid"
     )
     return task_uuid
 
@@ -753,7 +776,7 @@ async def add_walk_pawn_action(conn: Connection, task_uuid: str, action_name: st
             "action_name": action_name,
             "start_time": int(start_time),
             "end_time": int(end_time),
-            "way": pawn_task["way"]
+            "way": tuple_to_list(pawn_task["way"])
         }
 
 

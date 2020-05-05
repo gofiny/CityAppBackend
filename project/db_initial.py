@@ -97,7 +97,7 @@ PawnTasks = '''CREATE TABLE IF NOT EXISTS "pawn_tasks"
     "walk_time" integer,
     "work_time_count" integer,
     "common_time" integer,
-    "way" int[][],
+    "way" path,
     "is_active" bool not null default false;
 );'''
 
