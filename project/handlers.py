@@ -90,6 +90,7 @@ async def get_map(request: Request) -> dict:
             for way in pawn_ways:
                 way = dict(way)
                 way["way"] = staff.tuple_to_list(way["way"])
+                way["pawn_uuid"] = str(way["pawn_uuid"])
                 ways.append(way)
 
             response["pawn_ways"] = ways
