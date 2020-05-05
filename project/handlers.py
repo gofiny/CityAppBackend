@@ -88,9 +88,10 @@ async def get_map(request: Request) -> dict:
         if pawn_ways:
             ways = []
             for way in pawn_ways:
+                way = dict(way)
                 way["way"] = staff.tuple_to_list(way["way"])
-                ways.append(dict(way))
-                
+                ways.append(way)
+
             response["pawn_ways"] = ways
     except (TypeError, ValueError, KeyError, JSONDecodeError):
         response["status"] = False
