@@ -285,7 +285,7 @@ async def get_pawn_ways_info(conn: Connection, x_coords: Tuple[int, int], y_coor
         "LEFT JOIN players ON mo.owner=players.uuid "
         "LEFT JOIN pawn_tasks pt ON pt.pawn=go.uuid "
         "LEFT JOIN pawn_actions pa ON pt.uuid=pa.task "
-        f"WHERE polygon(pt.way) && polygon(box(({x_coords[0]}, {y_coords[0]}), ({x_coords[1]}, {y_coords[1]}))) "
+        f"WHERE polygon(pt.way) && polygon(box'({x_coords[0]}, {y_coords[0]}), ({x_coords[1]}, {y_coords[1]})') "
         "AND pt.is_active = true"
     )
 
