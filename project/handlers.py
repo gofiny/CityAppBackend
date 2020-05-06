@@ -41,79 +41,79 @@ async def register_user(request: Request) -> dict:
 async def get_map(request: Request) -> dict:
     '''Возвращает объекты расположенные на карте'''
     response = {"status": True, "game_objects": None}
-    #try:
-    data: dict = await request.json()
-    map_objects = await staff.get_map(
-        pool=request.app["pool"],
-        x_coord=data["coors"]["x"],
-        y_coord=data["coors"]['y'],
-        width=data["scope"]["width"],
-        height=data["scope"]["height"]
-    )
+    try:
+        data: dict = await request.json()
+        map_objects = await staff.get_map(
+            pool=request.app["pool"],
+            x_coord=data["coors"]["x"],
+            y_coord=data["coors"]['y'],
+            width=data["scope"]["width"],
+            height=data["scope"]["height"]
+        )
 
-    game_objects = []
-    appened_objects = {}
+        game_objects = []
+        appened_objects = {}
 
-    if map_objects:
-        for map_object in map_objects:
-            game_object = {
-                "uuid": str(map_object["uuid"]),
-                "name": map_object["name"],
-                "owner": map_object["username"],
-                "health": map_object["health"],
-                "type": map_object["object_type"],
-                "coors": {
-                    "x": map_object["x"],
-                    "y": map_object["y"]
-                }
-            }
-            if map_object["pt_uuid"] is not None:
-                action = {
-                    "task_uuid": str(map_object["pt_uuid"]),
-                    "action_name": map_object["pa_name"],
-                    "start_time": map_object["start_time"],
-                    "end_time": map_object["end_time"],
-                    "way": staff.tuple_to_list(map_object["way"])
-                }
-                game_object["action"] = action
-
-            game_objects.append(game_object)
-            appened_objects[map_object["uuid"]] = True
-
-    pawn_ways = await staff.get_pawn_ways(
-        pool=request.app["pool"],
-        x_coord=data["coors"]["x"],
-        y_coord=data["coors"]['y'],
-        width=data["scope"]["width"],
-        height=data["scope"]["height"]
-    )
-
-    if pawn_ways:
-        for way in pawn_ways:
-            if way["uuid"] not in appened_objects:
-                game_objects.append({
-                    "uuid": str(way["uuid"]),
-                    "name": way["name"],
-                    "owner": way["username"],
-                    "health": way["health"],
-                    "type": way["object_type"],
+        if map_objects:
+            for map_object in map_objects:
+                game_object = {
+                    "uuid": str(map_object["uuid"]),
+                    "name": map_object["name"],
+                    "owner": map_object["username"],
+                    "health": map_object["health"],
+                    "type": map_object["object_type"],
                     "coors": {
-                        "x": way["x"],
-                        "y": way["y"]
-                    },
-                    "task_uuid": str(way["pt_uuid"]),
-                    "action_name": way["pa_name"],
-                    "start_time": way["start_time"],
-                    "end_time": way["end_time"],
-                    "way": staff.tuple_to_list(way["way"])
-                })
+                        "x": map_object["x"],
+                        "y": map_object["y"]
+                    }
+                }
+                if map_object["pt_uuid"] is not None:
+                    action = {
+                        "task_uuid": str(map_object["pt_uuid"]),
+                        "action_name": map_object["pa_name"],
+                        "start_time": map_object["start_time"],
+                        "end_time": map_object["end_time"],
+                        "way": staff.tuple_to_list(map_object["way"])
+                    }
+                    game_object["action"] = action
 
-    if game_objects:
-        response["game_objects"] = game_objects
+                game_objects.append(game_object)
+                appened_objects[map_object["uuid"]] = True
 
-    # except (TypeError, ValueError, KeyError, JSONDecodeError):
-    #     response["status"] = False
-    #     response["errors"] = [2, "json is not correct"]
+        pawn_ways = await staff.get_pawn_ways(
+            pool=request.app["pool"],
+            x_coord=data["coors"]["x"],
+            y_coord=data["coors"]['y'],
+            width=data["scope"]["width"],
+            height=data["scope"]["height"]
+        )
+
+        if pawn_ways:
+            for way in pawn_ways:
+                if way["uuid"] not in appened_objects:
+                    game_objects.append({
+                        "uuid": str(way["uuid"]),
+                        "name": way["name"],
+                        "owner": way["username"],
+                        "health": way["health"],
+                        "type": way["object_type"],
+                        "coors": {
+                            "x": way["x"],
+                            "y": way["y"]
+                        },
+                        "task_uuid": str(way["pt_uuid"]),
+                        "action_name": way["pa_name"],
+                        "start_time": way["start_time"],
+                        "end_time": way["end_time"],
+                        "way": staff.tuple_to_list(way["way"])
+                    })
+
+        if game_objects:
+            response["game_objects"] = game_objects
+
+    except (TypeError, ValueError, KeyError, JSONDecodeError):
+        response["status"] = False
+        response["errors"] = [2, "json is not correct"]
     return response
 
 
