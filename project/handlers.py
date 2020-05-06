@@ -51,7 +51,8 @@ async def get_map(request: Request) -> dict:
         height=data["scope"]["height"]
     )
 
-    game_objects = set()
+    game_objects = []
+    appened_objects = {}
 
     if map_objects:
         for map_object in map_objects:
@@ -76,7 +77,8 @@ async def get_map(request: Request) -> dict:
                 }
                 game_object["action"] = action
 
-            game_objects.add(game_object)
+            game_objects.append(game_object)
+            appened_objects[map_object["uuid"]] = True
 
     pawn_ways = await staff.get_pawn_ways(
         pool=request.app["pool"],
@@ -85,28 +87,29 @@ async def get_map(request: Request) -> dict:
         width=data["scope"]["width"],
         height=data["scope"]["height"]
     )
+
     if pawn_ways:
         for way in pawn_ways:
-            game_object = {
-                "uuid": str(way["uuid"]),
-                "name": way["name"],
-                "owner": way["username"],
-                "health": way["health"],
-                "type": way["object_type"],
-                "coors": {
-                    "x": way["x"],
-                    "y": way["y"]
-                },
-                "task_uuid": str(way["pt_uuid"]),
-                "action_name": way["pa_name"],
-                "start_time": way["start_time"],
-                "end_time": way["end_time"],
-                "way": staff.tuple_to_list(way["way"])
-            }
-            game_objects.add(game_object)
+            if way["uuid"] not in appened_objects:
+                game_objects.append({
+                    "uuid": str(way["uuid"]),
+                    "name": way["name"],
+                    "owner": way["username"],
+                    "health": way["health"],
+                    "type": way["object_type"],
+                    "coors": {
+                        "x": way["x"],
+                        "y": way["y"]
+                    },
+                    "task_uuid": str(way["pt_uuid"]),
+                    "action_name": way["pa_name"],
+                    "start_time": way["start_time"],
+                    "end_time": way["end_time"],
+                    "way": staff.tuple_to_list(way["way"])
+                })
 
     if game_objects:
-        response["game_objects"] = list(game_objects)
+        response["game_objects"] = game_objects
 
     # except (TypeError, ValueError, KeyError, JSONDecodeError):
     #     response["status"] = False
