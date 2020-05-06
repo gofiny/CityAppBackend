@@ -278,9 +278,9 @@ async def get_objects_from_relay(conn: Connection, x_coords: Tuple[int, int], y_
 
 async def get_pawn_ways_info(conn: Connection, x_coords: Tuple[int, int], y_coords: Tuple[int, int]):
     return await conn.fetch(
-        "SELECT mo.uuid as pawn_uuid, go.name as pawn_name, players.username as owner_username, "
-        "go.health as pawn_health, pa.name as action_name, pa.start_time, pa.end_time, "
-        "pt.way FROM map_objects mo "
+        "SELECT mo.uuid, mo.x, mo.y, go.name, players.username, go.object_type, "
+        "go.health, pa.name as pa_name, pa.start_time, pa.end_time, "
+        "pt.uuid as pt_uuid, pt.way FROM map_objects mo "
         "LEFT JOIN game_objects go ON mo.game_object=go.uuid "
         "LEFT JOIN players ON mo.owner=players.uuid "
         "LEFT JOIN pawn_tasks pt ON pt.pawn=go.uuid "

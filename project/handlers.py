@@ -51,8 +51,9 @@ async def get_map(request: Request) -> dict:
             height=data["scope"]["height"]
         )
 
+        game_objects = set()
+
         if map_objects:
-            game_objects = []
             for map_object in map_objects:
                 game_object = {
                     "uuid": str(map_object["uuid"]),
@@ -75,8 +76,7 @@ async def get_map(request: Request) -> dict:
                     }
                     game_object["action"] = action
 
-                game_objects.append(game_object)
-            response["game_objects"] = game_objects
+                game_objects.add(game_object)
 
         pawn_ways = await staff.get_pawn_ways(
             pool=request.app["pool"],
@@ -86,14 +86,28 @@ async def get_map(request: Request) -> dict:
             height=data["scope"]["height"]
         )
         if pawn_ways:
-            ways = []
             for way in pawn_ways:
-                way = dict(way)
-                way["way"] = staff.tuple_to_list(way["way"])
-                way["pawn_uuid"] = str(way["pawn_uuid"])
-                ways.append(way)
+                game_object = {
+                    "uuid": str(way["uuid"]),
+                    "name": way["name"],
+                    "owner": way["username"],
+                    "health": way["health"],
+                    "type": way["object_type"],
+                    "coors": {
+                        "x": way["x"],
+                        "y": way["y"]
+                    },
+                    "task_uuid": str(way["pt_uuid"]),
+                    "action_name": way["pa_name"],
+                    "start_time": way["start_time"],
+                    "end_time": way["end_time"],
+                    "way": staff.tuple_to_list(way["way"])
+                }
+                game_objects.add(game_object)
 
-            response["pawn_ways"] = ways
+        if game_objects:
+            response["game_objects"] = list(game_objects)
+
     except (TypeError, ValueError, KeyError, JSONDecodeError):
         response["status"] = False
         response["errors"] = [2, "json is not correct"]
