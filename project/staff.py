@@ -34,11 +34,15 @@ get_resname_by_taskname = {
 
 
 def list_to_tuple(way_list: list) -> tuple:
-    return tuple(map(lambda x: tuple(x), way_list))
+    return tuple(map(tuple, way_list))
+
+
+def int_to_float(point: tuple) -> list:
+    return list(map(float, point))
 
 
 def tuple_to_list(way_tuple: tuple) -> list:
-    return list(map(lambda x: list(x), way_tuple))
+    return list(map(int_to_float, way_tuple))
 
 
 class PriorityQueue:
