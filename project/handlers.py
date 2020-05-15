@@ -45,8 +45,8 @@ async def get_map(request: Request) -> dict:
         data: dict = await request.json()
         map_objects = await staff.get_map(
             pool=request.app["pool"],
-            x_coord=data["coors"]["x"],
-            y_coord=data["coors"]['y'],
+            x_coord=int(data["coors"]["x"]),
+            y_coord=int(data["coors"]['y']),
             width=data["scope"]["width"],
             height=data["scope"]["height"]
         )
@@ -63,8 +63,8 @@ async def get_map(request: Request) -> dict:
                     "health": map_object["health"],
                     "type": map_object["object_type"],
                     "coors": {
-                        "x": map_object["x"],
-                        "y": map_object["y"]
+                        "x": float(map_object["x"]),
+                        "y": float(map_object["y"])
                     }
                 }
                 if map_object["pt_uuid"] is not None:
@@ -98,8 +98,8 @@ async def get_map(request: Request) -> dict:
                         "health": way["health"],
                         "type": way["object_type"],
                         "coors": {
-                            "x": way["x"],
-                            "y": way["y"]
+                            "x": float(way["x"]),
+                            "y": float(way["y"])
                         },
                         "task_uuid": str(way["pt_uuid"]),
                         "action_name": way["pa_name"],
@@ -134,8 +134,8 @@ async def get_profile(request: Request) -> dict:
             "wood": profile_info["wood"]
         }
         response["spawn"] = {
-            "x": profile_info['x'],
-            "y": profile_info['y']
+            "x": float(profile_info['x']),
+            "y": float(profile_info['y'])
         }
     except (TypeError, KeyError, ValueError, JSONDecodeError):
         response["status"] = False
@@ -162,8 +162,8 @@ async def get_object_info(request: Request) -> dict:
             response["owner"] = game_object["username"]
             response["health"] = game_object["health"]
             response["coors"] = {
-                "x": game_object["x"],
-                "y": game_object["y"]
+                "x": float(game_object["x"]),
+                "y": float(game_object["y"])
             }
             if game_object["object_type"] == "pawn":
                 tasks = await staff.get_pawn_tasks(
@@ -259,8 +259,8 @@ async def get_tile(request: Request) -> dict:
         data = await request.json()
         tile = await staff.get_object_by_coors(
             pool=request.app["pool"],
-            x=data["coors"]["x"],
-            y=data["coors"]["y"]
+            x=int(data["coors"]["x"]),
+            y=int(data["coors"]["y"])
         )
         if tile:
             response["game_object"] = {
