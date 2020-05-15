@@ -860,7 +860,7 @@ async def add_pretask_to_pawn(pool: Pool, object_uuid: str, GP_ID: str, task_nam
             "task_uuid": str(task_uuid),
             "target_uuid": str(nearest_obj["mo_uuid"]),
             "common_time": int(common_time),
-            "way": way["way"],
+            "way": tuple_to_list(way["way"]),
         }
         return response_dict
 
