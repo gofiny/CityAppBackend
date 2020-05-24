@@ -12,9 +12,12 @@ async def connect():
         user=config.USER,
         password=config.PASSWORD,
         database=config.DATABASE,
-        host=config.HOSTawait actions_handler(conn=action_conn)
-    await staff.delete_old_tasks(conn=stuff_conn)
+        host=config.HOST
+    )
+    return conn
 
+
+async def actions_handler(conn: Connection):
     actions = await staff.get_finished_actions(conn=conn)
     actions_to_delete = []
     tasks_to_delete = []
