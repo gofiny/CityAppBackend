@@ -10,15 +10,15 @@ from urls import URLS
 
 async def init_app():
     '''Ицициализация приложения'''
-    stio_handler = logging.StreamHandler()
-    stio_handler.setLevel(logging.INFO)
-    file_logs = logging.FileHandler("server.log")
-    file_logs.setLevel(logging.INFO)
-    _logger = logging.getLogger('aiohttp.access')
-    _logger.addHandler(file_logs)
-    _logger.addHandler(stio_handler)
-    _logger.setLevel(logging.DEBUG)
-    __app = web.Application(logger=_logger)
+    #stio_handler = logging.StreamHandler()
+    #stio_handler.setLevel(logging.INFO)
+    #file_logs = logging.FileHandler("server.log")
+    #file_logs.setLevel(logging.INFO)
+    #_logger = logging.getLogger('aiohttp.access')
+    #_logger.addHandler(file_logs)
+    #_logger.addHandler(stio_handler)
+    #_logger.setLevel(logging.DEBUG)
+    #__app = web.Application(logger=_logger)
     __app["pool"] = await asyncpg.create_pool(dsn=config.DESTINATION)
     __app.router.add_routes(URLS)
     return __app
