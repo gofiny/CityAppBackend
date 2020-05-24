@@ -78,9 +78,8 @@ async def actions_handler(conn: Connection):
 async def main():
     action_conn = await connect()
     stuff_conn = await connect()
-    while True:
-        await actions_handler(conn=action_conn)
-        await staff.delete_old_tasks(conn=stuff_conn)
+    await actions_handler(conn=action_conn)
+    await staff.delete_old_tasks(conn=stuff_conn)
 
 
 if __name__ == "__main__":
