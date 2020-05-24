@@ -12,12 +12,9 @@ async def connect():
         user=config.USER,
         password=config.PASSWORD,
         database=config.DATABASE,
-        host=config.HOST
-    )
-    return conn
+        host=config.HOSTawait actions_handler(conn=action_conn)
+    await staff.delete_old_tasks(conn=stuff_conn)
 
-
-async def actions_handler(conn: Connection):
     actions = await staff.get_finished_actions(conn=conn)
     actions_to_delete = []
     tasks_to_delete = []
@@ -78,14 +75,17 @@ async def actions_handler(conn: Connection):
 async def main():
     action_conn = await connect()
     stuff_conn = await connect()
-    await actions_handler(conn=action_conn)
-    await staff.delete_old_tasks(conn=stuff_conn)
+    while True:
+        await actions_handler(conn=action_conn)
+        asyncio.sleep(1)
+        await staff.delete_old_tasks(conn=stuff_conn)
+        asyncio.sleep(1)
 
 
 if __name__ == "__main__":
     try:
         main_loop = asyncio.get_event_loop()
-        main_loop.run_forever(main())
+        main_loop.run_until_complete(main())
     finally:
         main_loop.close()
    
