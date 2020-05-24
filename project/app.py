@@ -18,7 +18,7 @@ async def init_app():
     #_logger.addHandler(file_logs)
     #_logger.addHandler(stio_handler)
     #_logger.setLevel(logging.DEBUG)
-    #__app = web.Application(logger=_logger)
+    __app = web.Application()
     __app["pool"] = await asyncpg.create_pool(dsn=config.DESTINATION)
     __app.router.add_routes(URLS)
     return __app
