@@ -82,10 +82,11 @@ async def main():
         await actions_handler(conn=action_conn)
         await staff.delete_old_tasks(conn=stuff_conn)
 
+
 if __name__ == "__main__":
     try:
         main_loop = asyncio.get_event_loop()
-        main_loop.run_until_complete(main())
+        main_loop.run_forever(main())
     finally:
         main_loop.close()
    
