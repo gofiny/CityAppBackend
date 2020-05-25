@@ -76,16 +76,18 @@ async def actions_handler(conn: Connection):
   
 
 async def run_actions_handler():
-    conn = await connect()
     while True:
+        conn = await connect()
         await actions_handler(conn)
+        await conn.close()
         asyncio.sleep(1)
 
 
 async def run_delete_old_tasks():
-    conn = await connect()
     while True:
+        conn = await connect()
         await staff.delete_old_tasks(conn)
+        await conn.close()
         asyncio.sleep(1)
 
     
