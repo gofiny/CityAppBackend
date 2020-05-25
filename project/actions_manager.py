@@ -75,20 +75,26 @@ async def actions_handler(conn: Connection):
         await staff.delete_map_objects(conn=conn, objects=tuple(objects_to_delete))
   
 
-async def main():
-    action_conn = await connect()
-
+async def run_actions_handler():
+    conn = await connect()
     while True:
-        await actions_handler(conn=action_conn)
-        asyncio.sleep(1)
-        await staff.delete_old_tasks(conn=action_conn)
+        await actions_handler(conn)
         asyncio.sleep(1)
 
 
+async def run_delete_old_tasks():
+    conn = await connect()
+    while True:
+        await staff.delete_old_tasks(conn)
+        asyncio.sleep(1)
+
+    
 if __name__ == "__main__":
     try:
         main_loop = asyncio.get_event_loop()
-        main_loop.run_until_complete(main())
+        asyncio.ensure_future(run_actions_handler())
+        asyncio.ensure_future(run_delete_old_tasks())
+        main_loop.run_forever()
     finally:
         main_loop.close()
    
