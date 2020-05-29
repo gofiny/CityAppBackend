@@ -13,7 +13,8 @@ from handlers import (
     get_available_tasks_count,
     get_player_resources,
     check_connection,
-    accept_task
+    accept_task,
+    get_current_action
 )
 
 
@@ -30,5 +31,6 @@ URLS = [
     web.post("/async/get_available_tasks_count", get_available_tasks_count),
     web.post("/async/get_player_resources", get_player_resources),
     web.post("/async/check_connection", check_connection),
-    web.post("/async/accept_task", accept_task)
+    web.post("/async/accept_task", accept_task),
+    web.post("/async/get_current_action", get_current_action),
 ]

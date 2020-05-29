@@ -519,6 +519,20 @@ async def check_pawn_task_limit_by_task_uuid(conn: Connection, GP_ID: str, task_
     return dict(tasks_data)
 
 
+async def get_current_action_data(pool: Pool, GP_ID: str, mo_uuid: str) -> Optional[Record]:
+    async with pool.acquire() as conn:
+        return await conn.fetchrow(
+            "SELECT go.name as pawn_name, pt.way, pa.name as action_name, " 
+            "pa.start_time, pa.end_time FROM map_objects mo "
+            "LEFT JOIN players ON mo.owner=players.uuid "
+            "LEFT JOIN game_objects go ON mo.game_objects=go.uuid "
+            "LEFT JOIN pawn_tasks pt ON pt.pawn=go.uuid "
+            "LEFT JOIN pawn_actions pa ON pt.uuid=pa.task "
+            f"WHERE players.GP_ID='{GP_ID}' AND mo.uuid='{mo_uuid}' "
+            "AND pt.is_active=true ORDER BY pt.start_time ASC"
+        )
+
+
 async def check_pawn_task_limit_by_mo_uuid(conn: Connection, GP_ID: str, mo_uuid: str) -> dict:
     tasks_data = await conn.fetchrow(
         "SELECT COUNT(pt.uuid) as active_tasks, po.max_tasks FROM game_objects go "
