@@ -525,7 +525,7 @@ async def get_current_action_data(pool: Pool, GP_ID: str, mo_uuid: str) -> Optio
             "SELECT go.name as pawn_name, pt.way, pa.name as action_name, " 
             "pa.start_time, pa.end_time FROM map_objects mo "
             "INNER JOIN players ON mo.owner=players.uuid "
-            "INNER JOIN game_objects go ON mo.game_objects=go.uuid "
+            "INNER JOIN game_objects go ON mo.game_object=go.uuid "
             "INNER JOIN pawn_tasks pt ON pt.pawn=go.uuid "
             "INNER JOIN pawn_actions pa ON pt.uuid=pa.task "
             f"WHERE players.GP_ID='{GP_ID}' AND mo.uuid='{mo_uuid}' "
