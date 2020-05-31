@@ -277,7 +277,7 @@ async def get_objects_from_relay(conn: Connection, x_coords: Tuple[int, int], y_
         "LEFT JOIN pawn_actions pa ON pa.task=pt.uuid "
         f"WHERE mo.x >= {x_coords[0]} AND mo.x <= {x_coords[1]} "
         f"AND mo.y >= {y_coords[0]} AND mo.y <= {y_coords[1]}"
-        "AND pa.start_time != null"
+        "AND (go.object_type != 'pawn' AND pa.start_time = null)"
     )
 
 
