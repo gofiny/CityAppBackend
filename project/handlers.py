@@ -212,28 +212,28 @@ async def get_object_info(request: Request) -> dict:
 async def get_player_pawns(request: Request) -> dict:
     '''Возвращает список всех пешек игрока'''
     response = {"status": True}
-    #try:
-    data = await request.json()
-    pawns = await staff.get_pawns(
-        pool=request.app['pool'],
-        GP_ID=data['GP_ID']
-    )
-    response_pawns = None
-    if pawns:
-        response_pawns = []
-        for pawn in pawns:
-            response_pawns.append({
-                "object_uuid": str(pawn["uuid"]),
-                "name": pawn["name"],
-                "health": pawn["health"],
-                "speed": pawn["speed"],
-                "power": pawn["power"],
-                "max_actions": pawn["max_actions"]
-            })
-    response["pawns"] = response_pawns
-    # except (TypeError, KeyError, ValueError, JSONDecodeError):
-    #     response["errors"] = [2, "json is not correct"]
-    #     response["status"] = False
+    try:
+        data = await request.json()
+        pawns = await staff.get_pawns(
+            pool=request.app['pool'],
+            GP_ID=data['GP_ID']
+        )
+        response_pawns = None
+        if pawns:
+            response_pawns = []
+            for pawn in pawns:
+                response_pawns.append({
+                    "object_uuid": str(pawn["uuid"]),
+                    "name": pawn["name"],
+                    "health": pawn["health"],
+                    "speed": pawn["speed"],
+                    "power": pawn["power"],
+                    "max_actions": pawn["max_tasks"]
+                })
+        response["pawns"] = response_pawns
+    except (TypeError, KeyError, ValueError, JSONDecodeError):
+        response["errors"] = [2, "json is not correct"]
+        response["status"] = False
 
     return response
 
