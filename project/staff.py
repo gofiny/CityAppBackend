@@ -923,7 +923,8 @@ async def procced_task(pool: Pool, task_uuid, GP_ID: str, accept: bool):
                     returning=True,
                     updating=True
                 )
-        await delete_pawn_task(conn=conn, task_uuid=task_uuid)
+        else:
+            await delete_pawn_task(conn=conn, task_uuid=task_uuid)
 
 
 async def get_player_resource_by_name(pool: Pool, GP_ID: str, res_name: Optional[str]) -> Optional[Record]:
