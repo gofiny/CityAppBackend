@@ -764,15 +764,25 @@ async def create_pawn_action(conn: Connection, task_uuid: str, action_name: str,
 async def update_pawn_task_time(
     conn: Connection,
     task: Record,
-    mo_uuid: uuid.uuid4
+    mo_uuid: uuid.uuid4,
 ) -> None:
+
     start_time = time()
     end_time = start_time + task["common_time"]
+
     await conn.execute(
         "WITH upd as (UPDATE pawn_tasks SET "
         f"is_active=true, start_time={int(start_time)}, end_time={int(end_time)} "
         f"WHERE uuid='{task['uuid']}') "
         f"UPDATE map_objects SET is_free=false WHERE uuid='{mo_uuid}'"
+    )
+
+
+async def update_pawn_task_status(conn: Connection, pt_uuid: str) -> None:
+    await conn.execute(
+        "WITH upd as (UPDATE pawn_tasks SET is_active=true "
+        f"WHERE uuid='{pt_uuid}' RETURNING mo_uuid) "
+        f"UPDATE map_objects SET is_free=false WHERE uuid=(SELECT mo_uuid FROM upd)"
     )
 
 
@@ -782,16 +792,13 @@ async def add_walk_pawn_action(
     returning: bool = False,
     updating: bool = False,
     res_count: Union[str, int] = "null",
-    count_time: bool = True
 ) -> Optional[dict]:
+
     pawn_task = await get_pawn_task(conn=conn, task_uuid=task_uuid)
-    if count_time is True:
-        walk_time = pawn_task["walk_time"]
-        start_time = time()
-        end_time = start_time + walk_time
-    else:
-        start_time = 0
-        end_time = 0
+    walk_time = pawn_task["walk_time"]
+    start_time = time()
+    end_time = start_time + walk_time
+    
     await create_pawn_action(
         conn=conn,
         task_uuid=pawn_task["uuid"],
@@ -907,15 +914,15 @@ async def procced_task(pool: Pool, task_uuid, GP_ID: str, accept: bool):
 
             if pawn_tasks.get("active_tasks", 0) >= pawn_tasks.get("max_tasks", 1):
                 raise PawnLimit
-            params = {
-                "conn": conn,
-                "task_uuid": task_uuid,
-                "returning": True,
-                "updating": True
-            }
             if pawn_tasks.get("active_tasks", 0) > 0:
-                params["count_time"] = False
-            return await add_walk_pawn_action(**params)
+                await update_pawn_task_status(conn=conn, pt_uuid=task_uuid)
+            else:
+                return await add_walk_pawn_action(
+                    conn=conn,
+                    task_uuid=task_uuid,
+                    returning=True,
+                    updating=True
+                )
         await delete_pawn_task(conn=conn, task_uuid=task_uuid)
 
 
