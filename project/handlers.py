@@ -387,7 +387,7 @@ async def get_current_action(request: Request) -> dict:
     action_data = await staff.get_current_action_data(
         pool=request.app["pool"],
         GP_ID=data["GP_ID"],
-        mo_uuid=data["uuid"]
+        mo_uuid=data["object_uuid"]
     )
     if action_data:
         action_data = {
