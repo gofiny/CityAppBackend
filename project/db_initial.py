@@ -61,7 +61,8 @@ MAP_OBJECTS = '''CREATE TABLE IF NOT EXISTS "map_objects"
     "x" integer NOT NULL,
     "y" integer NOT NULL,
     "game_object" uuid NOT NULL REFERENCES "game_objects" ("uuid") ON DELETE cascade,
-    "owner" uuid NULL REFERENCES "players" ("uuid") ON DELETE cascade
+    "owner" uuid NULL REFERENCES "players" ("uuid") ON DELETE cascade,
+    "is_free" bool NOT NULL DEFAULT true
 );'''
 
 PlayerResources = '''CREATE TABLE IF NOT EXISTS "players_resources"

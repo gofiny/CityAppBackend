@@ -561,7 +561,7 @@ async def get_nearest_obj(conn: Connection, object_uuid: str, obj_name: str, GP_
         "(SELECT power FROM pawn) AS pawn_power, (SELECT speed FROM pawn) AS pawn_speed "
         "FROM map_objects mo INNER JOIN game_objects go ON mo.game_object=go.uuid "
         f"WHERE go.name='{obj_name}' AND mo.x >= ((SELECT x FROM pawn) - 100) AND mo.x <= ((SELECT x FROM pawn) + 100) "
-        "AND mo.y >= ((SELECT y FROM pawn) - 100) AND mo.y <= ((SELECT y FROM pawn) + 100) "
+        "AND mo.y >= ((SELECT y FROM pawn) - 100) AND mo.y <= ((SELECT y FROM pawn) + 100) AND mo.is_free = true"
         "ORDER BY length LIMIT 1"
     )
 
@@ -761,21 +761,37 @@ async def create_pawn_action(conn: Connection, task_uuid: str, action_name: str,
     )
 
 
-async def update_pawn_task_time(conn: Connection, task: Record) -> None:
+async def update_pawn_task_time(
+    conn: Connection,
+    task: Record,
+    mo_uuid: uuid.uuid4
+) -> None:
     start_time = time()
     end_time = start_time + task["common_time"]
     await conn.execute(
-        "UPDATE pawn_tasks SET "
+        "WITH upd as (UPDATE pawn_tasks SET "
         f"is_active=true, start_time={int(start_time)}, end_time={int(end_time)} "
-        f"WHERE uuid='{task['uuid']}'"
+        f"WHERE uuid='{task['uuid']}') "
+        f"UPDATE map_objects SET is_free=false WHERE uuid='{mo_uuid}'"
     )
 
 
-async def add_walk_pawn_action(conn: Connection, task_uuid: str, action_name: str = "walk", returning: bool = False, updating: bool = False, res_count: Union[str, int] = "null") -> Optional[dict]:
+async def add_walk_pawn_action(
+    conn: Connection, task_uuid: str,
+    action_name: str = "walk",
+    returning: bool = False,
+    updating: bool = False,
+    res_count: Union[str, int] = "null",
+    count_time: bool = True
+) -> Optional[dict]:
     pawn_task = await get_pawn_task(conn=conn, task_uuid=task_uuid)
-    walk_time = pawn_task["walk_time"]
-    start_time = time()
-    end_time = start_time + walk_time
+    if count_time is True:
+        walk_time = pawn_task["walk_time"]
+        start_time = time()
+        end_time = start_time + walk_time
+    else:
+        start_time = 0
+        end_time = 0
     await create_pawn_action(
         conn=conn,
         task_uuid=pawn_task["uuid"],
@@ -786,7 +802,8 @@ async def add_walk_pawn_action(conn: Connection, task_uuid: str, action_name: st
     )
 
     if updating is True:
-        await update_pawn_task_time(conn=conn, task=pawn_task)
+        mo_uuid = pawn_task["mo_uuid"]
+        await update_pawn_task_time(conn=conn, task=pawn_task, mo_uuid=mo_uuid)
 
     if returning is True:
         return {
@@ -890,12 +907,15 @@ async def procced_task(pool: Pool, task_uuid, GP_ID: str, accept: bool):
 
             if pawn_tasks.get("active_tasks", 0) >= pawn_tasks.get("max_tasks", 1):
                 raise PawnLimit
-            return await add_walk_pawn_action(
-                conn=conn,
-                task_uuid=task_uuid,
-                returning=True,
-                updating=True
-            )
+            params = {
+                "conn": conn,
+                "task_uuid": task_uuid,
+                "returning": True,
+                "updating": True
+            }
+            if pawn_tasks.get("active_tasks", 0) > 0:
+                params["count_time"] = False
+            return await add_walk_pawn_action(**params)
         await delete_pawn_task(conn=conn, task_uuid=task_uuid)
 
 
