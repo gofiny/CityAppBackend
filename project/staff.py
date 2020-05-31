@@ -765,7 +765,7 @@ async def update_pawn_task_time(
     conn: Connection,
     task_uuid: uuid.uuid4,
     calc_time: bool = True,
-    common_time: int = None
+    common_time: Optional[int] = None
 ) -> None:
 
     if calc_time is True:
