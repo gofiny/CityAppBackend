@@ -561,7 +561,7 @@ async def get_nearest_obj(conn: Connection, object_uuid: str, obj_name: str, GP_
         "(SELECT power FROM pawn) AS pawn_power, (SELECT speed FROM pawn) AS pawn_speed "
         "FROM map_objects mo INNER JOIN game_objects go ON mo.game_object=go.uuid "
         f"WHERE go.name='{obj_name}' AND mo.x >= ((SELECT x FROM pawn) - 100) AND mo.x <= ((SELECT x FROM pawn) + 100) "
-        "AND mo.y >= ((SELECT y FROM pawn) - 100) AND mo.y <= ((SELECT y FROM pawn) + 100) AND mo.is_free = true"
+        "AND mo.y >= ((SELECT y FROM pawn) - 100) AND mo.y <= ((SELECT y FROM pawn) + 100) AND mo.is_free = true "
         "ORDER BY length LIMIT 1"
     )
 
