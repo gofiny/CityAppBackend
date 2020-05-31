@@ -354,27 +354,27 @@ async def check_connection(request: Request) -> dict:
 @staff.pack_response
 async def accept_task(request: Request) -> dict:
     response = {"status": False}
-    #try:
-    data = await request.json()
-    action = await staff.procced_task(
-        pool=request.app["pool"],
-        task_uuid=data["task_uuid"],
-        GP_ID=data["GP_ID"],
-        accept=data["accept"]
-    )
-    if action:
-        response["task_uuid"] = action["task_uuid"]
-        response["action_name"] = action["action_name"]
-        response["start_time"] = action["start_time"]
-        response["end_time"] = action["end_time"]
-        response["way"] = action["way"]
-    response["status"] = True
-    # except (ValueError, TypeError, KeyError, JSONDecodeError, exceptions.InvalidTextRepresentationError):
-    #     response["errors"] = [2, "json is not correct"]
-    # except NotValidTask:
-    #     response["errors"] = [7, "got are not correct data"]
-    # except PawnLimit:
-    #     response["errors"] = [8, "pawn has tasks limit"]
+    try:
+        data = await request.json()
+        action = await staff.procced_task(
+            pool=request.app["pool"],
+            task_uuid=data["task_uuid"],
+            GP_ID=data["GP_ID"],
+            accept=data["accept"]
+        )
+        if action:
+            response["task_uuid"] = action["task_uuid"]
+            response["action_name"] = action["action_name"]
+            response["start_time"] = action["start_time"]
+            response["end_time"] = action["end_time"]
+            response["way"] = action["way"]
+        response["status"] = True
+    except (ValueError, TypeError, KeyError, JSONDecodeError, exceptions.InvalidTextRepresentationError):
+        response["errors"] = [2, "json is not correct"]
+    except NotValidTask:
+        response["errors"] = [7, "got are not correct data"]
+    except PawnLimit:
+        response["errors"] = [8, "pawn has tasks limit"]
 
     return response
 
