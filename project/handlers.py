@@ -382,24 +382,24 @@ async def accept_task(request: Request) -> dict:
 @staff.pack_response
 async def get_current_action(request: Request) -> dict:
     response = {"status": True}
-    try:
-        data = await request.json()
-        action_data = await staff.get_current_action_data(
-            pool=request.app["pool"],
-            GP_ID=data["GP_ID"],
-            mo_uuid=data["uuid"]
-        )
-        if action_data:
-            action_data = {
-                "pawn_name": action_data["pawn_name"],
-                "action_name": action_data["action_name"],
-                "start_time": action_data["start_time"],
-                "end_time": action_data["end_time"],
-                "way": action_data["way"]
-            }
-        response["action"] = action_data
-    except (ValueError, TypeError, KeyError, JSONDecodeError, exceptions.InvalidTextRepresentationError):
-        response["errors"] = [2, "json is not correct"]
-        response["status"] = False
+    #try:
+    data = await request.json()
+    action_data = await staff.get_current_action_data(
+        pool=request.app["pool"],
+        GP_ID=data["GP_ID"],
+        mo_uuid=data["uuid"]
+    )
+    if action_data:
+        action_data = {
+            "pawn_name": action_data["pawn_name"],
+            "action_name": action_data["action_name"],
+            "start_time": action_data["start_time"],
+            "end_time": action_data["end_time"],
+            "way": action_data["way"]
+        }
+    response["action"] = action_data
+    # except (ValueError, TypeError, KeyError, JSONDecodeError, exceptions.InvalidTextRepresentationError):
+    #     response["errors"] = [2, "json is not correct"]
+    #     response["status"] = False
 
     return response
