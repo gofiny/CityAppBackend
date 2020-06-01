@@ -966,7 +966,7 @@ async def get_next_tasks(conn: Connection, pawns_uuid: tuple) -> List[Optional[R
         "SELECT pt.uuid as pt_uuid FROM game_objects go "
         "LEFT JOIN pawn_tasks pt ON go.uuid=pt.pawn "
         "WHERE pt.is_active=true AND pt.start_time=null "
-        f"AND go.uuid IN {str(pawns_uuid)[0:-2]}"
+        f"AND go.uuid IN {str(pawns_uuid)[0:-2]})"
     )
 
 

@@ -90,7 +90,7 @@ async def run_actions_handler():
         conn = await connect()
         await actions_handler(conn)
         await conn.close()
-        asyncio.sleep(1)
+        await asyncio.sleep(1)
 
 
 async def run_delete_old_tasks():
@@ -98,7 +98,7 @@ async def run_delete_old_tasks():
         conn = await connect()
         await staff.delete_old_tasks(conn)
         await conn.close()
-        asyncio.sleep(1)
+        await asyncio.sleep(1)
 
     
 if __name__ == "__main__":
