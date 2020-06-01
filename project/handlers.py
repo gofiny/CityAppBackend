@@ -67,7 +67,7 @@ async def get_map(request: Request) -> dict:
                         "y": float(map_object["y"])
                     }
                 }
-                if map_object["pt_uuid"] is not None:
+                if map_object["pt_uuid"] and map_object["pa_name"]:
                     action = {
                         "task_uuid": str(map_object["pt_uuid"]),
                         "action_name": map_object["pa_name"],
