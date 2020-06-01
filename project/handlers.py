@@ -56,29 +56,30 @@ async def get_map(request: Request) -> dict:
 
         if map_objects:
             for map_object in map_objects:
-                game_object = {
-                    "uuid": str(map_object["uuid"]),
-                    "name": map_object["name"],
-                    "owner": map_object["username"],
-                    "health": map_object["health"],
-                    "type": map_object["object_type"],
-                    "coors": {
-                        "x": float(map_object["x"]),
-                        "y": float(map_object["y"])
+                if map_object["uuid"] not in appened_objects:
+                    game_object = {
+                        "uuid": str(map_object["uuid"]),
+                        "name": map_object["name"],
+                        "owner": map_object["username"],
+                        "health": map_object["health"],
+                        "type": map_object["object_type"],
+                        "coors": {
+                            "x": float(map_object["x"]),
+                            "y": float(map_object["y"])
+                        }
                     }
-                }
-                if map_object["pt_uuid"] and map_object["pa_name"]:
-                    action = {
-                        "task_uuid": str(map_object["pt_uuid"]),
-                        "action_name": map_object["pa_name"],
-                        "start_time": map_object["start_time"],
-                        "end_time": map_object["end_time"],
-                        "way": staff.tuple_to_list(map_object["way"])
-                    }
-                    game_object["action"] = action
+                    if map_object["pt_uuid"]:
+                        action = {
+                            "task_uuid": str(map_object["pt_uuid"]),
+                            "action_name": map_object["pa_name"],
+                            "start_time": map_object["start_time"],
+                            "end_time": map_object["end_time"],
+                            "way": staff.tuple_to_list(map_object["way"])
+                        }
+                        game_object["action"] = action
 
-                game_objects.append(game_object)
-                appened_objects[map_object["uuid"]] = True
+                    game_objects.append(game_object)
+                    appened_objects[map_object["uuid"]] = True
 
         pawn_ways = await staff.get_pawn_ways(
             pool=request.app["pool"],
