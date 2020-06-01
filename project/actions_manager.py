@@ -22,6 +22,7 @@ async def actions_handler(conn: Connection):
     actions_to_delete = []
     tasks_to_delete = []
     objects_to_delete = []
+    pawn_for_check = []
     for action in actions:
         pawn_power = action["pawn_power"]
         res_health = action["res_health"]
@@ -35,6 +36,7 @@ async def actions_handler(conn: Connection):
             )
             if action["mo_uuid"] is None:
                 tasks_to_delete.append(str(action["pt_uuid"]))
+                pawn_for_check.append(str(action["pt_pawn"]))
             else:
                 await staff.add_walk_pawn_action(
                     conn=conn,
@@ -67,6 +69,14 @@ async def actions_handler(conn: Connection):
         
         actions_to_delete.append(str(action["pa_uuid"]))
 
+    if pawn_for_check: # Add action for next task in queue
+        new_tasks = await staff.get_next_tasks(conn=conn, pawns_uuid=tuple(pawn_for_check))
+        for task in new_tasks:
+            await staff.add_walk_pawn_action(
+                conn=conn,
+                task_uuid=task["pt_uuid"],
+                updating=True
+            )
     if actions_to_delete:
         await staff.delete_actions(conn=conn, actions=tuple(actions_to_delete))
     if tasks_to_delete:

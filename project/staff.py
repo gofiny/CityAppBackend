@@ -784,7 +784,8 @@ async def update_pawn_task_time(
 
 
 async def add_walk_pawn_action(
-    conn: Connection, task_uuid: str,
+    conn: Connection, 
+    task_uuid: str,
     action_name: str = "walk",
     returning: bool = False,
     updating: bool = False,
@@ -945,7 +946,7 @@ async def get_finished_actions(conn: Connection) -> List[Optional[Record]]:
     current_time = time()
     return await conn.fetch(
         "SELECT p.uuid as player_uuid, pr.uuid as storage_uuid, po.power as pawn_power, "
-        "pt.uuid as pt_uuid, t.name as task_name, pa.name as pa_name, pa.uuid as pa_uuid, "
+        "pt.uuid as pt_uuid, t.name as task_name, pa.name as pa_name, pa.uuid as pa_uuid, pt.pawn as pt_pawn, "
         "res_mo.uuid as mo_uuid, res_go.health as res_health, res_go.uuid as res_uuid, pa.res_count as res_count "
         "FROM players p INNER JOIN players_resources pr ON p.uuid=pr.player "
         "LEFT JOIN map_objects mo ON mo.owner=p.uuid "
@@ -957,6 +958,15 @@ async def get_finished_actions(conn: Connection) -> List[Optional[Record]]:
         "LEFT JOIN map_objects res_mo ON res_mo.uuid=pt.mo_uuid "
         "LEFT JOIN game_objects res_go ON res_mo.game_object=res_go.uuid "
         f"WHERE pa.end_time < {current_time}"
+    )
+
+
+async def get_next_tasks(conn: Connection, pawns_uuid: tuple) -> List[Optional[Record]]:
+    return await conn.fetch(
+        "SELECT pt.uuid as pt_uuid FROM game_objects go "
+        "LEFT JOIN pawn_tasks pt ON go.uuid=pt.pawn "
+        "WHERE pt.is_active=true AND pt.start_time=null "
+        f"AND go.uuid IN {str(pawns_uuid)[0:-2]}"
     )
 
 
