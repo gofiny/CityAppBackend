@@ -290,7 +290,7 @@ async def get_pawn_ways_info(conn: Connection, x_coords: Tuple[int, int], y_coor
         "LEFT JOIN pawn_tasks pt ON pt.pawn=go.uuid "
         "LEFT JOIN pawn_actions pa ON pt.uuid=pa.task "
         f"WHERE polygon(pt.way) && polygon(box'({x_coords[0]}, {y_coords[0]}), ({x_coords[1]}, {y_coords[1]})') "
-        "AND pt.is_active = true AND pt.start_time != null"
+        "AND pt.is_active = true AND pt.start_time is not null"
     )
 
 
@@ -965,7 +965,7 @@ async def get_next_tasks(conn: Connection, pawns_uuid: tuple) -> List[Optional[R
     return await conn.fetch(
         "SELECT pt.uuid as pt_uuid FROM game_objects go "
         "LEFT JOIN pawn_tasks pt ON go.uuid=pt.pawn "
-        "WHERE pt.is_active=true AND pt.start_time=null "
+        "WHERE pt.is_active=true AND pt.start_time is null "
         f"AND go.uuid IN {str(pawns_uuid)[0:-2]})"
     )
 
