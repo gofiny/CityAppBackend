@@ -34,7 +34,8 @@ GAME_OBJECTS = '''CREATE TABLE IF NOT EXISTS "game_objects"
     "uuid" uuid NOT NULL PRIMARY KEY,
     "name" varchar(25) NOT NULL,
     "health" integer NOT NULL,
-    "object_type" varchar(15) NULL
+    "object_type" varchar(15) NULL,
+    "level" integer default 1
 );'''
 
 STATIC_OBJECTS = '''CREATE TABLE IF NOT EXISTS "static_objects"
