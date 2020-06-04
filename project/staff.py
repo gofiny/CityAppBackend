@@ -269,7 +269,7 @@ async def get_spawn_coords(pool: Pool, GP_ID: str) -> Record:
 async def get_objects_from_relay(conn: Connection, x_coords: Tuple[int, int], y_coords: Tuple[int, int]) -> List[Optional[Record]]:
     '''Получает объекты из области на карте'''
     return await conn.fetch(
-        "SELECT go.name, players.username, go.health, go.object_type, mo.x, mo.y, mo.uuid, "
+        "SELECT go.name, players.username, go.health, go.object_type, go.level, mo.x, mo.y, mo.uuid, "
         "pt.uuid as pt_uuid, pa.name as pa_name, pa.start_time, pa.end_time, pt.way FROM map_objects mo "
         "LEFT JOIN players ON mo.owner=players.uuid "
         "LEFT JOIN game_objects go ON mo.game_object=go.uuid "
@@ -283,7 +283,7 @@ async def get_objects_from_relay(conn: Connection, x_coords: Tuple[int, int], y_
 async def get_pawn_ways_info(conn: Connection, x_coords: Tuple[int, int], y_coords: Tuple[int, int]):
     return await conn.fetch(
         "SELECT mo.uuid, mo.x, mo.y, go.name, players.username, go.object_type, "
-        "go.health, pa.name as pa_name, pa.start_time, pa.end_time, "
+        "go.health, go.level, pa.name as pa_name, pa.start_time, pa.end_time, "
         "pt.uuid as pt_uuid, pt.way FROM map_objects mo "
         "LEFT JOIN game_objects go ON mo.game_object=go.uuid "
         "LEFT JOIN players ON mo.owner=players.uuid "
@@ -369,7 +369,7 @@ async def get_object_by_uuid(pool: Pool, object_uuid: str) -> Optional[Record]:
     '''Получает объект по uuid map_object'''
     async with pool.acquire() as conn:
         return await conn.fetchrow(
-            "SELECT go.uuid, go.name, go.object_type, players.username, go.health, mo.x, mo.y, "
+            "SELECT go.uuid, go.name, go.object_type, go.level, players.username, go.health, mo.x, mo.y, "
             "po.speed, po.power, po.max_tasks FROM map_objects mo "
             "INNER JOIN game_objects go ON mo.game_object=go.uuid "
             "LEFT JOIN players ON mo.owner=players.uuid "
@@ -382,7 +382,7 @@ async def get_object_by_coors(pool: Pool, x: int, y: int) -> Optional[Record]:
     ''''Получает объект на тайле или ничего'''
     async with pool.acquire() as conn:
         return await conn.fetchrow(
-            "SELECT mo.uuid, go.name, go.object_type, players.username, go.health "
+            "SELECT mo.uuid, go.name, go.object_type, go.level, players.username, go.health "
             "FROM map_objects mo "
             "LEFT JOIN game_objects go ON mo.game_object=go.uuid "
             "LEFT JOIN players ON mo.owner=players.uuid "
@@ -431,7 +431,7 @@ async def get_pawns(pool: Pool, GP_ID: str) -> List[Optional[Record]]:
     '''Получает список пешек игрока'''
     async with pool.acquire() as conn:
         return await conn.fetch(
-            "SELECT mo.uuid, go.name, go.health, po.speed, po.power, po.max_tasks "
+            "SELECT mo.uuid, go.name, go.health, go.level, po.speed, po.power, po.max_tasks "
             "FROM map_objects mo "
             "INNER JOIN game_objects go ON mo.game_object=go.uuid "
             "INNER JOIN pawn_objects po ON po.game_object_ptr=go.uuid "

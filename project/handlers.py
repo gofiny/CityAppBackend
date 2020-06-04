@@ -63,6 +63,7 @@ async def get_map(request: Request) -> dict:
                         "owner": map_object["username"],
                         "health": map_object["health"],
                         "type": map_object["object_type"],
+                        "level": map_object["level"],
                         "coors": {
                             "x": float(map_object["x"]),
                             "y": float(map_object["y"])
@@ -98,6 +99,7 @@ async def get_map(request: Request) -> dict:
                         "owner": way["username"],
                         "health": way["health"],
                         "type": way["object_type"],
+                        "level": way["level"],
                         "coors": {
                             "x": float(way["x"]),
                             "y": float(way["y"])
@@ -162,6 +164,7 @@ async def get_object_info(request: Request) -> dict:
             response["object_type"] = game_object["object_type"]
             response["owner"] = game_object["username"]
             response["health"] = game_object["health"]
+            response["level"] = game_object["level"]
             response["coors"] = {
                 "x": float(game_object["x"]),
                 "y": float(game_object["y"])
@@ -229,6 +232,7 @@ async def get_player_pawns(request: Request) -> dict:
                     "health": pawn["health"],
                     "speed": pawn["speed"],
                     "power": pawn["power"],
+                    "level": pawn["level"],
                     "max_actions": pawn["max_tasks"]
                 })
         response["pawns"] = response_pawns
@@ -270,6 +274,7 @@ async def get_tile(request: Request) -> dict:
                 "name": tile["name"],
                 "object_type": tile["object_type"],
                 "health": tile["health"],
+                "level": tile["level"],
                 "owner": tile["username"]
             }
     except (KeyError, ValueError, TypeError, JSONDecodeError):
