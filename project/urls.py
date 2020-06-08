@@ -30,7 +30,7 @@ URLS = [
     web.post("/async/add_task_to_pawn", add_task_to_pawn),
     web.post("/async/get_available_tasks_count", get_available_tasks_count),
     web.post("/async/get_player_resources", get_player_resources),
-    web.post("/async/check_connection", check_connection),
+    web.get("/async/check_connection", check_connection),
     web.post("/async/accept_task", accept_task),
     web.post("/async/get_current_action", get_current_action),
 ]
