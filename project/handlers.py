@@ -75,7 +75,7 @@ async def get_map(request: Request) -> dict:
                             "action_name": map_object["pa_name"],
                             "start_time": map_object["start_time"],
                             "end_time": map_object["end_time"],
-                            "target_uuid": map_object["target_uuid"],
+                            "target_uuid": str(map_object["target_uuid"]),
                             "way": staff.tuple_to_list(map_object["way"])
                         }
                         game_object["action"] = action
