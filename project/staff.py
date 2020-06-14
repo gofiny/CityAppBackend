@@ -270,7 +270,7 @@ async def get_objects_from_relay(conn: Connection, x_coords: Tuple[int, int], y_
     '''Получает объекты из области на карте'''
     return await conn.fetch(
         "SELECT go.name, players.username, go.health, go.object_type, go.level, mo.x, mo.y, mo.uuid, "
-        "pt.uuid as pt_uuid, pa.name as pa_name, pa.start_time, pa.end_time, pt.way FROM map_objects mo "
+        "pt.uuid as pt_uuid, pt.mo_uuid as target_uuid, pa.name as pa_name, pa.start_time, pa.end_time, pt.way FROM map_objects mo "
         "LEFT JOIN players ON mo.owner=players.uuid "
         "LEFT JOIN game_objects go ON mo.game_object=go.uuid "
         "LEFT JOIN pawn_tasks pt ON pt.pawn=go.uuid "
