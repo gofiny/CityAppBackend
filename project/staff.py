@@ -1009,3 +1009,18 @@ async def delete_old_tasks(conn: Connection):
         f"DELETE FROM pawn_tasks WHERE start_time < {old_time} "
         "AND is_active = false"
     )
+
+
+async def get_pawn_tasks_list(pool: Pool, pawn_uuid: str, GP_ID: str) -> List[Optional[Record]]:
+    async with pool.acquire() as conn:
+        return await conn.fetch(
+            "SELECT tasks.name, pt.end_time, pt.uuid as pt_uuid, po.max_tasks "
+            "FROM map_objects mo"
+            "LEFT JOIN game_objects go ON mo.game_object=go.uuid "
+            "LEFT JOIN pawn_objects po ON po.game_object_ptr=go.uuid "
+            "LEFT JOIN pawn_tasks pt ON pt.pawn=go.uuid "
+            "LEFT JOIN tasks ON tasks.uuid=pt.task "
+            "LEFT JOIN players ON mo.owner=players.uuid "
+            f"WHERE mo.uuid={pawn_uuid} AND players.GP_ID={GP_ID} "
+            "ORDER BY start_time DESC"
+        )

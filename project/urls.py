@@ -14,7 +14,8 @@ from handlers import (
     get_player_resources,
     check_connection,
     accept_task,
-    get_current_action
+    get_current_action,
+    get_pawn_tasks_list
 )
 
 
@@ -33,4 +34,5 @@ URLS = [
     web.get("/async/check_connection", check_connection),
     web.post("/async/accept_task", accept_task),
     web.post("/async/get_current_action", get_current_action),
+    web.post("/async/get_pawn_tasks_list", get_pawn_tasks_list)
 ]
