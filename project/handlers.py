@@ -420,7 +420,8 @@ async def get_pawn_tasks_list(request: Request) -> dict:
         data = await request.json()
         pawn_tasks = await staff.get_pawn_tasks_list(
             pool=request.app["pool"],
-            pawn_uuid=data["pawn_uuid"]
+            pawn_uuid=data["pawn_uuid"],
+            GP_ID=data["GP_ID"]
         )
         tasks = []
         for task in pawn_tasks:
