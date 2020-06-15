@@ -416,24 +416,24 @@ async def get_current_action(request: Request) -> dict:
 @staff.pack_response
 async def get_pawn_tasks_list(request: Request) -> dict:
     response = {"status": True}
-    try:
-        data = await request.json()
-        pawn_tasks = await staff.get_pawn_tasks_list(
-            pool=request.app["pool"],
-            pawn_uuid=data["pawn_uuid"],
-            GP_ID=data["GP_ID"]
-        )
-        tasks = []
-        for task in pawn_tasks:
-            t = {"uuid": str(task["uuid"]),"name": task["name"]}
-            if task["end_time"]:
-                t["end_time"] = task["end_time"]
-            tasks.append(t)
-        for _ in range(pawn_tasks[0]["max_tasks"] - len(tasks)):
-            tasks.append(None)
-        response["tasks"] = tasks
-    except (ValueError, TypeError, KeyError, JSONDecodeError, exceptions.InvalidTextRepresentationError):
-        response["errors"] = [2, "json is not correct"]
-        response["status"] = False
+    #try:
+    data = await request.json()
+    pawn_tasks = await staff.get_pawn_tasks_list(
+        pool=request.app["pool"],
+        pawn_uuid=data["pawn_uuid"],
+        GP_ID=data["GP_ID"]
+    )
+    tasks = []
+    for task in pawn_tasks:
+        t = {"uuid": str(task["uuid"]),"name": task["name"]}
+        if task["end_time"]:
+            t["end_time"] = task["end_time"]
+        tasks.append(t)
+    for _ in range(pawn_tasks[0]["max_tasks"] - len(tasks)):
+        tasks.append(None)
+    response["tasks"] = tasks
+    # except (ValueError, TypeError, KeyError, JSONDecodeError, exceptions.InvalidTextRepresentationError):
+    #     response["errors"] = [2, "json is not correct"]
+    #     response["status"] = False
 
     return response
