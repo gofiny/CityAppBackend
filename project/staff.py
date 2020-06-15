@@ -1015,7 +1015,7 @@ async def get_pawn_tasks_list(pool: Pool, pawn_uuid: str, GP_ID: str) -> List[Op
     async with pool.acquire() as conn:
         return await conn.fetch(
             "SELECT tasks.name, pt.end_time, pt.uuid as pt_uuid, po.max_tasks "
-            "FROM map_objects mo"
+            "FROM map_objects mo "
             "LEFT JOIN game_objects go ON mo.game_object=go.uuid "
             "LEFT JOIN pawn_objects po ON po.game_object_ptr=go.uuid "
             "LEFT JOIN pawn_tasks pt ON pt.pawn=go.uuid "
