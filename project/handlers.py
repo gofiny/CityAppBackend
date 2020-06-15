@@ -425,10 +425,11 @@ async def get_pawn_tasks_list(request: Request) -> dict:
     )
     tasks = []
     for task in pawn_tasks:
-        t = {"uuid": str(task["pt_uuid"]),"name": task["name"]}
-        if task["end_time"]:
-            t["end_time"] = task["end_time"]
-        tasks.append(t)
+        if task["name"]:
+            t = {"uuid": str(task["pt_uuid"]),"name": task["name"]}
+            if task["end_time"]:
+                t["end_time"] = task["end_time"]
+            tasks.append(t)
     for _ in range(pawn_tasks[0]["max_tasks"] - len(tasks)):
         tasks.append(None)
     response["tasks"] = tasks
