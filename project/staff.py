@@ -522,7 +522,7 @@ async def check_pawn_task_limit_by_task_uuid(conn: Connection, GP_ID: str, task_
 async def get_current_action_data(pool: Pool, GP_ID: str, mo_uuid: str) -> Optional[Record]:
     async with pool.acquire() as conn:
         return await conn.fetchrow(
-            "SELECT go.name as pawn_name, pt.way, pa.name as action_name, " 
+            "SELECT go.name as pawn_name, pt.way, pt.mo_uuid as target_uuid, pa.name as action_name, " 
             "pa.start_time, pa.end_time FROM map_objects mo "
             "INNER JOIN players ON mo.owner=players.uuid "
             "INNER JOIN game_objects go ON mo.game_object=go.uuid "

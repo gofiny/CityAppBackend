@@ -402,7 +402,8 @@ async def get_current_action(request: Request) -> dict:
                 "action_name": action_data["action_name"],
                 "start_time": action_data["start_time"],
                 "end_time": action_data["end_time"],
-                "way": staff.tuple_to_list(action_data["way"])
+                "way": staff.tuple_to_list(action_data["way"]),
+                "target_uuid" : action_data["target_uuid"]
             }
         response["action"] = action_data
     except (ValueError, TypeError, KeyError, JSONDecodeError, exceptions.InvalidTextRepresentationError):
