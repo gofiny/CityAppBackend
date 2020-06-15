@@ -425,7 +425,7 @@ async def get_pawn_tasks_list(request: Request) -> dict:
     )
     tasks = []
     for task in pawn_tasks:
-        t = {"uuid": str(task["uuid"]),"name": task["name"]}
+        t = {"uuid": str(task["pt_uuid"]),"name": task["name"]}
         if task["end_time"]:
             t["end_time"] = task["end_time"]
         tasks.append(t)
