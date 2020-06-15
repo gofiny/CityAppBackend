@@ -1022,5 +1022,5 @@ async def get_pawn_tasks_list(pool: Pool, pawn_uuid: str, GP_ID: str) -> List[Op
             "LEFT JOIN tasks ON tasks.uuid=pt.task "
             "LEFT JOIN players ON mo.owner=players.uuid "
             f"WHERE mo.uuid='{pawn_uuid}' AND players.GP_ID='{GP_ID}' "
-            "ORDER BY start_time DESC"
+            "ORDER BY start_time ASC"
         )
