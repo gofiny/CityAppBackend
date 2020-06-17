@@ -199,7 +199,7 @@ async def get_free_pos(conn: Connection) -> Tuple[int, int]:
 async def create_spawn(conn: Connection, player_uuid: uuid.uuid4) -> Tuple[int, int]:
     '''Создает точку спауна игрока'''
     pos = await get_free_pos(conn)
-    spawn_obj = Spawn()
+    spawn_obj = Spawn(name="spawn", object_type="static", health=1000)
     await conn.execute(
         "WITH go AS (INSERT INTO game_objects (uuid, name, health, object_type) "
         f"VALUES ('{spawn_obj.uuid}', '{spawn_obj.name}', {spawn_obj.health}, '{spawn_obj.object_type}')), so AS ("
