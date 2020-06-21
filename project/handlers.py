@@ -444,7 +444,12 @@ async def websocket_handler(request):
     ws = WebSocketResponse()
     await ws.prepare(request)
 
-    async for msg in ws:
-        await ws.send_json({"test": True})
+    request.app["websockets"].append(ws)
+
+    try:
+        async for msg in ws:
+            await ws.send_json({"test": True})
+    finally:
+        request.app["websockets"].remove(ws)
 
     return ws

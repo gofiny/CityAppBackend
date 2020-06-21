@@ -20,8 +20,14 @@ async def init_app():
     #_logger.setLevel(logging.DEBUG)
     __app = web.Application()
     __app["pool"] = await asyncpg.create_pool(dsn=config.DESTINATION)
+    __app["websockets"] = []
     __app.router.add_routes(URLS)
     return __app
+
+
+async def on_shutdown(app):
+    for ws in app["websockets"]:
+        await ws.close(code=999, message="Server shutdown")
 
 
 if __name__ == "__main__":
@@ -29,5 +35,6 @@ if __name__ == "__main__":
     parser.add_argument('--path')
     LOOP = asyncio.get_event_loop()
     APP = LOOP.run_until_complete(init_app())
+    APP.on_shutdown.append(on_shutdown)
     args = parser.parse_args()
     web.run_app(APP, access_log_format='%t %a "%r" -> [%s] %b bytes in %Tf seconds.', path=args.path)
