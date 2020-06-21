@@ -2,7 +2,8 @@
 from asyncpg import exceptions
 from exceptions import UserAlreadyExist, ObjectNotExist, UserRegistered, NotValidTask, PawnLimit
 from json.decoder import JSONDecodeError
-from aiohttp.web import json_response, Request, Response
+from aiohttp.web import json_response, Request, Response, WebSocketResponse
+from aiohttp import WSMsgType
 import staff
 import sys
 
@@ -393,7 +394,6 @@ async def get_current_action(request: Request) -> dict:
         data = await request.json()
         action_data = await staff.get_current_action_data(
             pool=request.app["pool"],
-            GP_ID=data["GP_ID"],
             mo_uuid=data["object_uuid"]
         )
         if action_data:
@@ -438,3 +438,13 @@ async def get_pawn_tasks_list(request: Request) -> dict:
         response["status"] = False
 
     return response
+
+
+async def websocket_handler(request):
+    ws = WebSocketResponse()
+    await ws.prepare(request)
+
+    async for msg in ws:
+        await ws.send_json({"test": True})
+
+    return ws

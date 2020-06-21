@@ -15,7 +15,8 @@ from handlers import (
     check_connection,
     accept_task,
     get_current_action,
-    get_pawn_tasks_list
+    get_pawn_tasks_list,
+    websocket_handler
 )
 
 
@@ -34,5 +35,6 @@ URLS = [
     web.get("/async/check_connection", check_connection),
     web.post("/async/accept_task", accept_task),
     web.post("/async/get_current_action", get_current_action),
-    web.post("/async/get_pawn_tasks_list", get_pawn_tasks_list)
+    web.post("/async/get_pawn_tasks_list", get_pawn_tasks_list),
+    web.get("/async/ws", websocket_handler)
 ]
