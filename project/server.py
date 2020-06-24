@@ -1,8 +1,10 @@
 import asyncio
+import asyncpg
 import logging
 import websockets
 import json
-from config import methods
+from config import DESTINATION
+from methods import methods
 from time import time
 from websockets import WebSocketServerProtocol
 from utils import exeptions
@@ -11,6 +13,7 @@ from utils import exeptions
 class Server:
     def __init__(self):
         self.clients = set()
+        self.pool = asyncpg.create_pool(dsn=DESTINATION)
 
     async def _connect_client(self, ws: WebSocketServerProtocol) -> None:
         self.clients.add(ws)
@@ -35,9 +38,11 @@ class Server:
                     data = await self._get_json_data(message)
                     if data["method"] not in methods:
                         raise exeptions.MethodIsNotExist
-                    await ws.send(message)
+                    methods[data["method"]](pool=self.pool, **data["data"])
                 except exeptions.MethodIsNotExist:
-                    await self._send_json(ws=ws, data={"errors": [0, "method is not exist"]})
+                    await self._send_json(ws=ws, data=exeptions.errors[0])
+                except TypeError:
+                    await self._send_json(ws=ws, data=exeptions.errors[1])
         finally:
             await self._disconnect_client(ws)
 
