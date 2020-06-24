@@ -7,7 +7,7 @@ from config import DESTINATION
 from methods import methods
 from time import time
 from websockets import WebSocketServerProtocol
-from utils import exeptions
+from utils import exceptions
 
 
 class Server:
@@ -37,12 +37,12 @@ class Server:
                 try:
                     data = await self._get_json_data(message)
                     if data["method"] not in methods:
-                        raise exeptions.MethodIsNotExist
+                        raise exceptions.MethodIsNotExist
                     methods[data["method"]](pool=self.pool, **data["data"])
-                except exeptions.MethodIsNotExist:
-                    await self._send_json(ws=ws, data=exeptions.errors[0])
+                except exceptions.MethodIsNotExist:
+                    await self._send_json(ws=ws, data=exceptions.errors[0])
                 except TypeError:
-                    await self._send_json(ws=ws, data=exeptions.errors[1])
+                    await self._send_json(ws=ws, data=exceptions.errors[1])
         finally:
             await self._disconnect_client(ws)
 

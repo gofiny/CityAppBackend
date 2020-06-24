@@ -2,7 +2,7 @@ from asyncpg import Record
 from asyncpg.pool import Pool
 from asyncpg.connection import Connection
 from time import time
-from utils import exeptions, sql
+from utils import exceptions, sql
 
 
 class GameResource:
@@ -18,7 +18,7 @@ class GameResource:
 
     def subtract(self, count: int) -> None:
         if not self._can_subtruct:
-            raise exeptions.ResNotEnough
+            raise exceptions.ResNotEnough
         self.count - count
 
 
