@@ -1,0 +1,2 @@
+class MethodIsNotExist(Exception):
+    pass

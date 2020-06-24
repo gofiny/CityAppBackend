@@ -1,0 +1,3 @@
+methods = {
+    "register": True
+}
