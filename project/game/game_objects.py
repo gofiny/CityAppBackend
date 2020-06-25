@@ -47,3 +47,8 @@ class User:
             async with conn.transaction():
                 await conn.execute(sql.create_table_user)
 
+    def __eq__(self, other):
+        if isinstance(other, User):
+            return self.uuid == other.uuid
+        return NotImplemented
+
