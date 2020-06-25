@@ -17,6 +17,12 @@ class Server:
         self.pool = await asyncpg.create_pool(dsn=DESTINATION)
         self.redis_pool = await aioredis.create_pool(address=REDIS_ADDR, db=0)
 
+    async def get_redis_connection(self) -> aioredis.RedisConnection:
+        conn = await self.redis_pool.get_connection()[0]
+        if conn:
+            return conn
+        return await self.redis_pool.acquire()
+
     async def _connect_client(self, ws: WebSocketServerProtocol) -> None:
         self.clients.add(ws)
         logging.info(f"{ws.remote_address} connected")
