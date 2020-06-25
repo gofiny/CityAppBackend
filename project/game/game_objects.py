@@ -51,4 +51,3 @@ class User:
         if isinstance(other, User):
             return self.uuid == other.uuid
         return NotImplemented
-

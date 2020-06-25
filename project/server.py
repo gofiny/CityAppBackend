@@ -1,9 +1,10 @@
 import asyncio
 import asyncpg
+import aioredis
 import logging
 import websockets
 import json
-from config import DESTINATION
+from config import DESTINATION, REDIS_ADDR
 from methods import methods
 from time import time
 from websockets import WebSocketServerProtocol
@@ -13,7 +14,8 @@ from utils import exceptions
 class Server:
     def __init__(self):
         self.clients = set()
-        self.pool = asyncpg.create_pool(dsn=DESTINATION)
+        self.pool = await asyncpg.create_pool(dsn=DESTINATION)
+        self.redis_pool = await aioredis.create_pool(address=REDIS_ADDR, db=0)
 
     async def _connect_client(self, ws: WebSocketServerProtocol) -> None:
         self.clients.add(ws)
