@@ -14,13 +14,17 @@ from utils import exceptions
 class Server:
     def __init__(self):
         self.clients = set()
-        self.pool = await asyncpg.create_pool(dsn=DESTINATION)
+        self.redis_connections_count = 0
+        
+    async def create_pools(self) -> None:
+        self.pg_pool = await asyncpg.create_pool(dsn=DESTINATION)
         self.redis_pool = await aioredis.create_pool(address=REDIS_ADDR, db=0)
 
     async def get_redis_connection(self) -> aioredis.RedisConnection:
         conn = await self.redis_pool.get_connection()[0]
         if conn:
             return conn
+        self.redis_connections_count += 1
         return await self.redis_pool.acquire()
 
     async def _connect_client(self, ws: WebSocketServerProtocol) -> None:
@@ -46,7 +50,7 @@ class Server:
                     data = await self._get_json_data(message)
                     if data["method"] not in methods:
                         raise exceptions.MethodIsNotExist
-                    methods[data["method"]](pool=self.pool, **data["data"])
+                    methods[data["method"]](pool=self.pg_pool, **data["data"])
                 except exceptions.MethodIsNotExist:
                     await self._send_json(ws=ws, data=exceptions.errors[0])
                 except TypeError:
@@ -55,10 +59,15 @@ class Server:
             await self._disconnect_client(ws)
 
 
+async def prepare(server: Server) -> None:
+    await server.create_pools()
+
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    server = Server()
-    start_server = websockets.serve(server.ws_handler, host="localhost", port=6876)
     loop = asyncio.get_event_loop()
+    server = Server()
+    loop.run_until_complete(prepare(server))
+    start_server = websockets.serve(server.ws_handler, host="localhost", port=6876)
     loop.run_until_complete(start_server)
     loop.run_forever()
