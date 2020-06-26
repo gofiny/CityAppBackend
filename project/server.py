@@ -15,6 +15,8 @@ class Server:
     def __init__(self):
         self.clients = set()
         self.redis_connections_count = 0
+        self.pg_pool = None
+        self.redis_pool = None
         
     async def create_pools(self) -> None:
         self.pg_pool = await asyncpg.create_pool(dsn=DESTINATION)
