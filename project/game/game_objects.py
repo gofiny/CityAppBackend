@@ -42,10 +42,9 @@ class User:
         await self.update_save_time()
 
     @staticmethod
-    async def create_table(pool: Pool):
-        async with pool.acquire() as conn:
-            async with conn.transaction():
-                await conn.execute(sql.create_table_user)
+    async def create_table(connection: Connection):
+        async with connection.transaction():
+            await connection.execute(sql.create_table_user)
 
     def __eq__(self, other):
         if isinstance(other, User):

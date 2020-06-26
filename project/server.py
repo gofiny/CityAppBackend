@@ -8,7 +8,7 @@ from config import DESTINATION, REDIS_ADDR
 from methods import methods
 from time import time
 from websockets import WebSocketServerProtocol
-from utils import exceptions
+from utils import exceptions, init_dbs
 
 
 class Server:
@@ -63,6 +63,7 @@ class Server:
 
 async def prepare(server: Server) -> None:
     await server.create_pools()
+    await init_dbs.create_databases(pool=server.pg_pool)
 
 
 if __name__ == "__main__":
