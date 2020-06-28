@@ -14,12 +14,42 @@ class GameResource:
         return self.count >= count
 
     def add(self, count: int) -> None:
-        self.count + count
+        self.count += count
 
     def subtract(self, count: int) -> None:
         if not self._can_subtruct:
             raise exceptions.ResNotEnough
-        self.count - count
+        self.count -= count
+    
+    def __eq__(self, other):
+        if other.__class__ is not self.__class__:
+            return NotImplemented
+        return self.name == other.name and self.count == other.count
+
+    def __lt__(self, other):
+        if other.__class__ is not self.__class__:
+            return NotImplemented
+        return self.name == other.name and self.count < other.count
+
+    def __le__(self, other):
+        if other.__class__ is not self.__class__:
+            return NotImplemented
+        return self.name == other.name and self.count <= other.count
+
+    def __add__(self, other):
+        if other.__class__ is not self.__class__:
+            return NotImplemented
+        if other.name != self.name:
+            return NotImplemented
+        return self.count + other.count
+
+    def __iadd__(self, other):
+        if other.__class__ is not self.__class__:
+            return NotImplemented
+        if other.name != self.name:
+            return NotImplemented
+        self.count += other.count
+        return self
 
 
 class User:
@@ -47,6 +77,7 @@ class User:
             await connection.execute(sql.create_table_user)
 
     def __eq__(self, other):
-        if isinstance(other, User):
-            return self.uuid == other.uuid
-        return NotImplemented
+        if other.__class__ is not self.__class__:
+            return NotImplemented
+        return self.uuid == other.uuid
+        

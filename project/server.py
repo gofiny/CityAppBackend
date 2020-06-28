@@ -14,7 +14,6 @@ from utils import exceptions, init_dbs
 class Server:
     def __init__(self):
         self.clients = set()
-        self.redis_connections_count = 0
         self.pg_pool = None
         self.redis_pool = None
         
@@ -26,7 +25,6 @@ class Server:
         conn = await self.redis_pool.get_connection()[0]
         if conn:
             return conn
-        self.redis_connections_count += 1
         return await self.redis_pool.acquire()
 
     async def _connect_client(self, ws: WebSocketServerProtocol) -> None:
@@ -52,7 +50,7 @@ class Server:
                     data = await self._get_json_data(message)
                     if data["method"] not in methods:
                         raise exceptions.MethodIsNotExist
-                    methods[data["method"]](pool=self.pg_pool, **data["data"])
+                    await methods[data["method"]](server=self, ws=ws **data["data"])
                 except exceptions.MethodIsNotExist:
                     await self._send_json(ws=ws, data=exceptions.errors[0])
                 except TypeError:

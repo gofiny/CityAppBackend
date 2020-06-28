@@ -8,7 +8,7 @@ SERVER_URI = "ws://localhost:6876"
 
 async def connect():
     async with websockets.connect(SERVER_URI) as websocket:
-        data = {"method": "register", "data": "some_data"}
+        data = {"method": "register", "data": {"gp_id": "afaf2323432", "username": "test"}}
         await websocket.send(json.dumps(data))
         answer = await websocket.recv()
         print(answer)
