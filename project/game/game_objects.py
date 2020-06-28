@@ -57,6 +57,7 @@ class User:
         self.uuid = db_user["uuid"]
         self.gp_id = db_user["gp_id"]
         self.username = db_user["username"]
+        self.reg_time = db_user["reg_time"]
         self.money = GameResource("money", db_user["money"])
         self.wood = GameResource("wood", db_user["wood"])
         self.stones = GameResource("stones", db_user["stones"])

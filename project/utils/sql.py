@@ -3,6 +3,7 @@ create_table_user = '''CREATE TABLE IF NOT EXISTS "users"
                             "uuid" uuid NOT NULL PRIMARY KEY,
                             "gp_id" varchar(50) NOT NULL UNIQUE,
                             "username" varchar(30) NOT NULL UNIQUE,
+                            "reg_time" integer NOT NULL,
                             "money" integer NOT NULL DEFAULT 100, 
                             "wood" integer NOT NULL DEFAULT 100,
                             "stones" integer NOT NULL DEFAULT 100
