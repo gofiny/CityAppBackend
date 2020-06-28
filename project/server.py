@@ -50,11 +50,17 @@ class Server:
                     data = await self._get_json_data(message)
                     if data["method"] not in methods:
                         raise exceptions.MethodIsNotExist
-                    await methods[data["method"]](server=self, ws=ws **data["data"])
+                    await methods[data["method"]](server=self, ws=ws, **data["data"])
                 except exceptions.MethodIsNotExist:
                     await self._send_json(ws=ws, data=exceptions.errors[0])
-                except TypeError:
-                    await self._send_json(ws=ws, data=exceptions.errors[1])
+                #except TypeError:
+                    #await self._send_json(ws=ws, data=exceptions.errors[1])
+                except exceptions.UserExceptions.GPIDAlreadyExist:
+                    await self._send_json(ws=ws, data=exceptions.errors[2])
+                except exceptions.UserExceptions.UsernameAlreadyExist:
+                    await self._send_json(ws=ws, data=exceptions.errors[3])
+        except websockets.ConnectionClosedError:
+            pass
         finally:
             await self._disconnect_client(ws)
 
