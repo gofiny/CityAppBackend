@@ -10,7 +10,7 @@ class GameResource:
         self.name = name
         self.count = count
 
-    def _can_subtruct(self, count) -> bool:
+    def _can_subtruct(self, count: int) -> bool:
         return self.count >= count
 
     def add(self, count: int) -> None:
@@ -21,29 +21,29 @@ class GameResource:
             raise exceptions.ResNotEnough
         self.count -= count
     
-    def __eq__(self, other):
+    def __eq__(self, other: "GameResource"):
         if other.__class__ is not self.__class__:
             return NotImplemented
         return self.name == other.name and self.count == other.count
 
-    def __lt__(self, other):
+    def __lt__(self, other: "GameResource"):
         if other.__class__ is not self.__class__:
             return NotImplemented
         return self.name == other.name and self.count < other.count
 
-    def __le__(self, other):
+    def __le__(self, other: "GameResource"):
         if other.__class__ is not self.__class__:
             return NotImplemented
         return self.name == other.name and self.count <= other.count
 
-    def __add__(self, other):
+    def __add__(self, other: "GameResource"):
         if other.__class__ is not self.__class__:
             return NotImplemented
         if other.name != self.name:
             return NotImplemented
         return self.count + other.count
 
-    def __iadd__(self, other):
+    def __iadd__(self, other: "GameResource"):
         if other.__class__ is not self.__class__:
             return NotImplemented
         if other.name != self.name:
@@ -77,8 +77,18 @@ class User:
         async with connection.transaction():
             await connection.execute(sql.create_table_user)
 
-    def __eq__(self, other):
+    def __eq__(self, other: "User"):
         if other.__class__ is not self.__class__:
             return NotImplemented
         return self.uuid == other.uuid
-        
+
+
+class GameObject:
+    def __init__(self, health: int):
+        self.object_type = "static"
+        self.health = health
+
+
+class Map:
+    def __init__(self):
+        pass
