@@ -2,7 +2,7 @@ from asyncpg import Record
 from asyncpg.pool import Pool
 from asyncpg.connection import Connection
 from time import time
-from utils import exceptions, sql
+from utils import exceptions, sql, raw_sql
 
 
 class GameResource:
@@ -68,14 +68,24 @@ class User:
 
     async def save_resources(self, conn: Connection):
         async with conn.transaction():
-            await conn.execute(
-                sql.save_user_resources % (self.money, self.wood, self.stones, self.uuid))
-        await self.update_save_time()
+            await sql.save_user_resources(
+                conn=conn,
+                uuid=self.uuid,
+                money=self.money.count,
+                wood=self.wood.count,
+                stones=self.stones.count
+            )
+            await self.update_save_time()
 
     @staticmethod
-    async def create_table(connection: Connection):
-        async with connection.transaction():
-            await connection.execute(sql.create_table_user)
+    async def create_table(conn: Connection):
+        async with conn.transaction():
+            await conn.execute(raw_sql.create_table_user)
+
+    @staticmethod
+    async def create_new_user(conn: Connection, gp_id: str, username: str) -> "User":
+        user = await sql.create_new_user(conn, gp_id, username)
+        return User(**user)
 
     def __eq__(self, other: "User"):
         if other.__class__ is not self.__class__:
@@ -84,7 +94,9 @@ class User:
 
 
 class GameObject:
-    def __init__(self, health: int):
+    def __init__(self, uuid: str, health: int):
+        self.uuid = uuid
+        self.name = object
         self.object_type = "static"
         self.health = health
 
