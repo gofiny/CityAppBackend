@@ -1,12 +1,9 @@
 from utils import sql, exceptions
-from uuid import uuid4
-from time import time
 from game.game_objects import User
 
 
 async def register(server, ws, gp_id: str, username: str):
-    pool = server.pg_pool
-    async with pool.acquire() as conn:
+    async with server.pg_pool.acquire() as conn:
         async with conn.transaction():
             user = await sql.get_user_info_or_none(conn, gp_id, username)
             if user:

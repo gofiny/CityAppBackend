@@ -5,19 +5,31 @@ from time import time
 from utils import exceptions, sql, raw_sql
 
 
+actions = {
+    "cut_wood": ["woodcutter"],
+    "cut_stone": ["stonecutter"],
+    "carry": ["woodcutter", "stonecutter"]
+}
+
+available_tasks = {
+    "woodcutter": ["cut_wood"],
+    "stonecutter": ["cut_stone"]
+}
+
+
 class GameResource:
     def __init__(self, name: str, count: int):
         self.name = name
         self.count = count
 
-    def _can_subtruct(self, count: int) -> bool:
+    def _can_subtract(self, count: int) -> bool:
         return self.count >= count
 
     def add(self, count: int) -> None:
         self.count += count
 
     def subtract(self, count: int) -> None:
-        if not self._can_subtruct:
+        if not self._can_subtract:
             raise exceptions.ResNotEnough
         self.count -= count
     
@@ -94,11 +106,61 @@ class User:
 
 
 class GameObject:
-    def __init__(self, uuid: str, health: int):
+    def __init__(self, uuid: str, name: str, object_type: str, level: int = 1):
         self.uuid = uuid
-        self.name = object
-        self.object_type = "static"
+        self.name = name
+        self.object_type = object_type
+        self.level = level
+
+    @staticmethod
+    async def create_table(conn: Connection):
+        async with conn.transaction():
+            await conn.execute(raw_sql.create_table_game_objects)
+
+    @staticmethod
+    async def create_new_object(conn: Connection, **kwargs) -> __class__:
+        game_object = await sql.create_new_user(conn, **kwargs)
+        return __class__(**game_object)
+
+
+class StaticObject(GameObject):
+    def __init__(self, **kwargs):
+        super().__init__(object_type="static", **kwargs)
+
+
+class GeneratedObject(GameObject):
+    def __init__(self, health: int, **kwargs):
         self.health = health
+        super().__init__(object_type="generated", **kwargs)
+
+
+class PawnObject(GameObject):
+    def __init__(self, speed: int, power: int, max_tasks: int, **kwargs):
+        self.speed = speed,
+        self.power = power
+        self.max_tasks = max_tasks
+        super().__init__(object_type="pawn", **kwargs)
+
+
+class Woodcutter(PawnObject):
+    def __init__(self, db_woodcutter: Record):
+        super().__init__(
+            uuid=db_woodcutter["uuid"],
+            name=db_woodcutter["name"],
+            speed=db_woodcutter["speed"],
+            power=db_woodcutter["power"],
+            max_tasks=db_woodcutter["max_tasks"],
+            level=db_woodcutter["level"]
+        )
+
+
+class MapObject:
+    def __init__(self, db_object: Record):
+        self.uuid = db_object["uuid"]
+        self.coors = db_object["coors"]
+        self.game_object = db_object["game_object"]
+        self.owner = db_object["owner"]
+        self.is_free = db_object["is_free"]
 
 
 class Map:

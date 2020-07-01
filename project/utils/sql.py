@@ -19,3 +19,17 @@ async def create_new_user(conn: Connection, gp_id: str, username: str) -> Record
 
 async def save_user_resources(conn: Connection, uuid: uuid4, money: int, wood: int, stones: int) -> None:
     await conn.execute(raw_sql.save_user_resources % (money, wood, stones, uuid))
+
+
+async def create_new_game_object(conn: Connection, name: str,
+                                 object_type: str, level: int,
+                                 health: Optional[int] = None,
+                                 speed: Optional[int] = None,
+                                 power: Optional[int] = None,
+                                 max_tasks: Optional[int] = None) -> Record:
+    game_object = await conn.fetchrow(
+        raw_sql.create_game_object % (
+            uuid4(), name, object_type,
+            level, health, speed, power, max_tasks
+        ))
+    return game_object

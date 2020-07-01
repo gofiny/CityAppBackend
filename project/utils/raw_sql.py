@@ -9,6 +9,18 @@ create_table_user = '''CREATE TABLE IF NOT EXISTS "users"
                             "stones" integer NOT NULL DEFAULT 100
                         )'''
 
+create_table_game_objects = '''CREATE TABLE IF NOT EXISTS "game_objects"
+                        (
+                            "uuid" uuid NOT NULL PRIMARY KEY,
+                            "name" varchar(25) NOT NULL,
+                            "object_type" varchar(25) NOT NULL,
+                            "level" integer NOT NULL DEFAULT 1,
+                            "health" integer,
+                            "speed" integer,
+                            "power" integer,
+                            "max_tasks" integer,    
+                        )'''
+
 save_user_resources = "UPDATE users SET money=%s, wood=%s, stones=%s, WHERE uuid='%s'"
 
 check_reg_user = "SELECT gp_id, username FROM users where gp_id='%s' OR username='%s'"
@@ -23,3 +35,18 @@ create_new_user = """INSERT INTO users
                         reg_time
                     )
                     VALUES ('%s', '%s', '%s', %s) returning *"""
+
+
+create_game_object = """INSERT INTO game_objects
+                        (
+                            uuid,
+                            name,
+                            object_type,
+                            level,
+                            health,
+                            speed,
+                            power,
+                            max_tasks
+                        )
+                        VALUES ('%s', '%s', '%s', %s, %s, %s, %s, %s)
+                        returning *"""
