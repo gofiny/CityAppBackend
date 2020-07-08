@@ -1,5 +1,5 @@
 from utils import sql, exceptions
-from game.game_objects import User
+from game.game_objects import User, Woodcutter
 
 
 async def register(server, ws, gp_id: str, username: str):
@@ -12,6 +12,7 @@ async def register(server, ws, gp_id: str, username: str):
                 else:
                     raise exceptions.UserExceptions.UsernameAlreadyExist
             user = await User.create_new_user(conn, gp_id, username)
+            woodcutter = await Woodcutter.create_new_object(conn, Woodcutter, )
 
 methods = {
     "register": register

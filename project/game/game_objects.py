@@ -1,6 +1,7 @@
 from asyncpg import Record
 from asyncpg.pool import Pool
 from asyncpg.connection import Connection
+from typing import Union
 from time import time
 from utils import exceptions, sql, raw_sql
 
@@ -118,9 +119,10 @@ class GameObject:
             await conn.execute(raw_sql.create_table_game_objects)
 
     @staticmethod
-    async def create_new_object(conn: Connection, **kwargs) -> __class__:
+    async def create_new_object(conn: Connection,
+                                **kwargs) -> Union["Woodcutter"]:
         game_object = await sql.create_new_user(conn, **kwargs)
-        return __class__(**game_object)
+        return game_object
 
 
 class StaticObject(GameObject):
