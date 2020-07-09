@@ -24,7 +24,7 @@ async def save_user_resources(conn: Connection, uuid: uuid4, money: int, wood: i
 async def create_new_game_object(conn: Connection, name: str,
                                  object_type: str, level: int,
                                  health: Optional[int] = None,
-                                 speed: Optional[int] = None,
+                                 speed: Optional[float] = None,
                                  power: Optional[int] = None,
                                  max_tasks: Optional[int] = None) -> Record:
     game_object = await conn.fetchrow(

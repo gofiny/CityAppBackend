@@ -1,7 +1,7 @@
 from asyncpg import Record
 from asyncpg.pool import Pool
 from asyncpg.connection import Connection
-from typing import Union
+from typing import Union, Optional
 from time import time
 from utils import exceptions, sql, raw_sql
 
@@ -120,9 +120,12 @@ class GameObject:
 
     @staticmethod
     async def create_new_object(conn: Connection,
-                                **kwargs) -> Union["Woodcutter"]:
-        game_object = await sql.create_new_user(conn, **kwargs)
-        return game_object
+                                name: str, object_type: str,
+                                health: Optional[int] = None,
+                                speed: Optional[float] = None,
+                                power: Optional[int] = None,
+                                max_tasks: Optional[int] = None) -> Record:
+        return await sql.create_new_game_object(conn, name, object_type, health, speed, power, max_tasks)
 
 
 class StaticObject(GameObject):
@@ -137,11 +140,23 @@ class GeneratedObject(GameObject):
 
 
 class PawnObject(GameObject):
-    def __init__(self, speed: int, power: int, max_tasks: int, **kwargs):
+    def __init__(self, speed: float, power: int, max_tasks: int, **kwargs):
         self.speed = speed,
         self.power = power
         self.max_tasks = max_tasks
         super().__init__(object_type="pawn", **kwargs)
+
+    @staticmethod
+    async def create_new_object(conn: Connection, name: str) -> Record:
+        return await super().create_new_object(
+        conn=conn,
+        name=name,
+        object_type="pawn",
+        health=100,
+        speed=.77,
+        power=10,
+        max_tasks=1
+    )
 
 
 class Woodcutter(PawnObject):
@@ -153,6 +168,20 @@ class Woodcutter(PawnObject):
             power=db_woodcutter["power"],
             max_tasks=db_woodcutter["max_tasks"],
             level=db_woodcutter["level"]
+        )
+
+    @staticmethod
+    async def create_new_object(conn: Connection) -> "Woodcutter":
+        game_object = await super().create_new_object(conn=conn, name="woodcutter")
+        return Woodcutter(game_object)
+
+
+class WoodcutterHouse(StaticObject):
+    def __init__(self, db_woodcutter_house: Record):
+        super().__init__(
+            uuid=db_woodcutter_house["uuid"],
+            name=db_woodcutter_house["name"],
+            level=db_woodcutter_house["level"]
         )
 
 

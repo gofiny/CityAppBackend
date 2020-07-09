@@ -16,7 +16,7 @@ create_table_game_objects = '''CREATE TABLE IF NOT EXISTS "game_objects"
                             "object_type" varchar(25) NOT NULL,
                             "level" integer NOT NULL DEFAULT 1,
                             "health" integer,
-                            "speed" integer,
+                            "speed" float,
                             "power" integer,
                             "max_tasks" integer,    
                         )'''
