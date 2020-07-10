@@ -21,6 +21,15 @@ create_table_game_objects = '''CREATE TABLE IF NOT EXISTS "game_objects"
                             "max_tasks" integer,    
                         )'''
 
+create_table_map_objects = """CREATE TABLE IF NOT EXISTS 'map_objects'
+                            (
+                                'uuid' uuid NOT NULL PRIMARY KEY,
+                                'pos' point,
+                                'game_object' uuid NOT NULL REFERENCES 'game_objects' ('uuid') on delete cascade, 
+                                'owner' uuid null REFERENCES 'users' ('uuid'),
+                                'is_free' bool default true
+                            )"""
+
 save_user_resources = "UPDATE users SET money=%s, wood=%s, stones=%s, WHERE uuid='%s'"
 
 check_reg_user = "SELECT gp_id, username FROM users where gp_id='%s' OR username='%s'"
@@ -50,3 +59,6 @@ create_game_object = """INSERT INTO game_objects
                         )
                         VALUES ('%s', '%s', '%s', %s, %s, %s, %s, %s)
                         returning *"""
+
+create_start_user = """WITH user as (
+                        """
