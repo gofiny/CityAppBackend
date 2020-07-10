@@ -188,10 +188,15 @@ class WoodcutterHouse(StaticObject):
 class MapObject:
     def __init__(self, db_object: Record):
         self.uuid = db_object["uuid"]
-        self.coors = db_object["coors"]
+        self.pos = db_object["pos"]
         self.game_object = db_object["game_object"]
         self.owner = db_object["owner"]
         self.is_free = db_object["is_free"]
+
+    @staticmethod
+    async def create_table(conn: Connection):
+        async with conn.transaction():
+            await conn.execute(raw_sql.create_table_map_objects)
 
 
 class Map:

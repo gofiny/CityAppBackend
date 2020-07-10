@@ -5,7 +5,6 @@ from uuid import uuid4
 from . import raw_sql
 from typing import (
     Optional,
-    Union
 )
 
 
