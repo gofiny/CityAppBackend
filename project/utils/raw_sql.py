@@ -61,3 +61,8 @@ create_game_object = """INSERT INTO game_objects
 
 create_start_user = """WITH user as (
                         """
+
+get_random_object_pos = """SELECT pos 
+                            FROM map_objects 
+                                OFFSET RANDOM() * (SELECT COUNT(*) FROM map_objects)
+                            LIMIT %s"""

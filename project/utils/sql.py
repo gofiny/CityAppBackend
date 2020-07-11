@@ -5,6 +5,7 @@ from uuid import uuid4
 from . import raw_sql
 from typing import (
     Optional,
+    List
 )
 
 
@@ -32,3 +33,7 @@ async def create_new_game_object(conn: Connection, name: str,
             level, health, speed, power, max_tasks
         ))
     return game_object
+
+
+async def get_random_map_object_pos(conn: Connection, limit: int = 1) -> List[Optional[Record]]:
+    return await conn.fetch(raw_sql.get_random_object_pos % limit)
