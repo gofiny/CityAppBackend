@@ -18,17 +18,17 @@ create_table_game_objects = '''CREATE TABLE IF NOT EXISTS "game_objects"
                             "health" integer,
                             "speed" float,
                             "power" integer,
-                            "max_tasks" integer,    
+                            "max_tasks" integer    
                         )'''
 
-create_table_map_objects = """CREATE TABLE IF NOT EXISTS 'map_objects'
+create_table_map_objects = '''CREATE TABLE IF NOT EXISTS "map_objects"
                             (
-                                'uuid' uuid NOT NULL PRIMARY KEY,
-                                'pos' point,
-                                'game_object' uuid NOT NULL REFERENCES 'game_objects' ('uuid') on delete cascade, 
-                                'owner' uuid null REFERENCES 'users' ('uuid'),
-                                'is_free' bool default true
-                            )"""
+                                "uuid" uuid NOT NULL PRIMARY KEY,
+                                "pos" point,
+                                "game_object" uuid NOT NULL REFERENCES "game_objects" ("uuid") on delete cascade, 
+                                "owner" uuid null REFERENCES "users" ("uuid"),
+                                "is_free" bool default true
+                            )'''
 
 save_user_resources = "UPDATE users SET money=%s, wood=%s, stones=%s, WHERE uuid='%s'"
 
