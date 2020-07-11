@@ -4,7 +4,7 @@ import aioredis
 import logging
 import websockets
 import json
-from config import DESTINATION, REDIS_ADDR
+from config import DESTINATION, REDIS_ADDR, SERVER_HOST, SERVER_PORT
 from methods import methods
 from time import time
 from websockets import WebSocketServerProtocol
@@ -75,6 +75,6 @@ if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     server = Server()
     loop.run_until_complete(prepare(server))
-    start_server = websockets.serve(server.ws_handler, host="localhost", port=6876)
+    start_server = websockets.serve(server.ws_handler, host=SERVER_HOST, port=SERVER_PORT)
     loop.run_until_complete(start_server)
     loop.run_forever()
