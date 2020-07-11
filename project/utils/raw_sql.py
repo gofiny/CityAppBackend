@@ -45,7 +45,6 @@ create_new_user = """INSERT INTO users
                     )
                     VALUES ('%s', '%s', '%s', %s) returning *"""
 
-
 create_game_object = """INSERT INTO game_objects
                         (
                             uuid,

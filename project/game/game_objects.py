@@ -132,6 +132,15 @@ class StaticObject(GameObject):
     def __init__(self, **kwargs):
         super().__init__(object_type="static", **kwargs)
 
+    @staticmethod
+    async def create_new_object(conn: Connection, name: str) -> Record:
+        return await super().create_new_object(
+            conn=conn,
+            name=name,
+            object_type="static",
+            health=1000,
+        )
+
 
 class GeneratedObject(GameObject):
     def __init__(self, health: int, **kwargs):
@@ -149,14 +158,14 @@ class PawnObject(GameObject):
     @staticmethod
     async def create_new_object(conn: Connection, name: str) -> Record:
         return await super().create_new_object(
-        conn=conn,
-        name=name,
-        object_type="pawn",
-        health=100,
-        speed=.77,
-        power=10,
-        max_tasks=1
-    )
+            conn=conn,
+            name=name,
+            object_type="pawn",
+            health=100,
+            speed=.77,
+            power=10,
+            max_tasks=1
+        )
 
 
 class Woodcutter(PawnObject):
@@ -183,6 +192,11 @@ class WoodcutterHouse(StaticObject):
             name=db_woodcutter_house["name"],
             level=db_woodcutter_house["level"]
         )
+
+    @staticmethod
+    async def create_new_object(conn: Connection) -> "WoodcutterHouse":
+        game_object = await super().create_new_object(conn=conn, name="woodcutter_house")
+        return WoodcutterHouse(game_object)
 
 
 class MapObject:
