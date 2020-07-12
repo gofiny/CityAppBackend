@@ -74,6 +74,7 @@ class User:
         self.money = GameResource("money", db_user["money"])
         self.wood = GameResource("wood", db_user["wood"])
         self.stones = GameResource("stones", db_user["stones"])
+        self.spawn_pos = db_user["spawn_pos"]
         self._save_time = time()
 
     async def update_save_time(self):
@@ -96,8 +97,8 @@ class User:
             await conn.execute(raw_sql.create_table_user)
 
     @staticmethod
-    async def create_new_user(conn: Connection, gp_id: str, username: str) -> "User":
-        user = await sql.create_new_user(conn, gp_id, username)
+    async def create_new_user(conn: Connection, gp_id: str, username: str, spawn_pos: tuple) -> "User":
+        user = await sql.create_new_user(conn, gp_id, username, spawn_pos)
         return User(user)
 
     def __eq__(self, other: "User"):
