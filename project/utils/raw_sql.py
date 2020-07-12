@@ -6,7 +6,8 @@ create_table_user = '''CREATE TABLE IF NOT EXISTS "users"
                             "reg_time" integer NOT NULL,
                             "money" integer NOT NULL DEFAULT 100, 
                             "wood" integer NOT NULL DEFAULT 100,
-                            "stones" integer NOT NULL DEFAULT 100
+                            "stones" integer NOT NULL DEFAULT 100,
+                            "spawn_pos" point
                         )'''
 
 create_table_game_objects = '''CREATE TABLE IF NOT EXISTS "game_objects"
@@ -26,7 +27,7 @@ create_table_map_objects = '''CREATE TABLE IF NOT EXISTS "map_objects"
                                 "uuid" uuid NOT NULL PRIMARY KEY,
                                 "pos" point,
                                 "game_object" uuid NOT NULL REFERENCES "game_objects" ("uuid") on delete cascade, 
-                                "owner" uuid null REFERENCES "users" ("uuid"),
+                                "owner" uuid null REFERENCES "users" ("uuid") on delete cascade,
                                 "is_free" bool default true
                             )'''
 
@@ -41,9 +42,10 @@ create_new_user = """INSERT INTO users
                         uuid,
                         gp_id,
                         username,
-                        reg_time
+                        reg_time,
+                        spawn_pos
                     )
-                    VALUES ($1, $2, $3, $4) returning *"""
+                    VALUES ($1, $2, $3, $4, $5) returning *"""
 
 create_game_object = """INSERT INTO game_objects
                         (
@@ -59,10 +61,38 @@ create_game_object = """INSERT INTO game_objects
                         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
                         returning *"""
 
-create_start_user = """WITH user as (
-                        """
-
 get_random_object_pos = """SELECT pos 
                             FROM map_objects 
-                                OFFSET RANDOM() * (SELECT COUNT(*) FROM map_objects)
+                            WHERE
+                                owner is not null
+                            OFFSET 
+                                RANDOM() * (SELECT COUNT(*) FROM map_objects)
                             LIMIT $1"""
+
+check_relay_for_free = """SELECT
+                            pos
+                        FROM 
+                            map_objects
+                        WHERE
+                            pos <@ polygon(box'(%s, %s), (%s, %s)')
+                            AND owner is not null
+                        LIMIT 1"""
+
+check_pos_for_free = """SELECT 
+                            pos
+                        FROM
+                            map_objects
+                        WHERE
+                            pos ~= $1"""
+
+set_game_object_on_map = """INSERT INTO 
+                                map_objects
+                            (
+                                uuid,
+                                pos,
+                                game_object, 
+                                owner,
+                                is_free
+                            )
+                            VALUES
+                                ($1, $2, $3, $4, $5)"""
