@@ -1,18 +1,36 @@
-create_table_user = '''CREATE TABLE IF NOT EXISTS "users"
-                        (
-                            "uuid" uuid NOT NULL PRIMARY KEY,
-                            "gp_id" varchar(50) NOT NULL UNIQUE,
-                            "username" varchar(30) NOT NULL UNIQUE,
-                            "money" integer NOT NULL DEFAULT 100, 
-                            "wood" integer NOT NULL DEFAULT 100,
-                            "stones" integer NOT NULL DEFAULT 100
-                        )'''
+from asyncpg.connection import Connection
+from asyncpg import Record
+from time import time
+from uuid import uuid4
+from . import raw_sql
+from typing import (
+    Optional,
+    List
+)
 
-save_user_resources = '''UPDATE 
-                            users 
-                        SET 
-                            money=%s,
-                            wood=%s,
-                            stones=%s,
-                        WHERE 
-                            uuid="%s"'''
+
+async def get_user_info_or_none(conn: Connection, gp_id: str, username: str) -> Optional[Record]:
+    return await conn.fetchrow(raw_sql.check_reg_user, gp_id, username)
+
+
+async def create_new_user(conn: Connection, gp_id: str, username: str) -> Record:
+    return await conn.fetchrow(raw_sql.create_new_user, uuid4(), gp_id, username, int(time()))
+
+
+async def save_user_resources(conn: Connection, uuid: uuid4, money: int, wood: int, stones: int) -> None:
+    await conn.execute(raw_sql.save_user_resources, money, wood, stones, uuid)
+
+
+async def create_new_game_object(conn: Connection, name: str,
+                                 object_type: str, level: int = 1,
+                                 health: Optional[int] = None,
+                                 speed: Optional[float] = None,
+                                 power: Optional[int] = None,
+                                 max_tasks: Optional[int] = None) -> Record:
+    game_object = await conn.fetchrow(
+        raw_sql.create_game_object, uuid4(), name, object_type, level, health, speed, power, max_tasks)
+    return game_object
+
+
+async def get_random_map_object_pos(conn: Connection, limit: int = 1) -> List[Optional[Record]]:
+    return await conn.fetch(raw_sql.get_random_object_pos, limit)

@@ -4,7 +4,7 @@ import aioredis
 import logging
 import websockets
 import json
-from config import DESTINATION, REDIS_ADDR
+from config import DESTINATION, REDIS_ADDR, SERVER_HOST, SERVER_PORT
 from methods import methods
 from time import time
 from websockets import WebSocketServerProtocol
@@ -14,7 +14,6 @@ from utils import exceptions, init_dbs
 class Server:
     def __init__(self):
         self.clients = set()
-        self.redis_connections_count = 0
         self.pg_pool = None
         self.redis_pool = None
         
@@ -26,7 +25,6 @@ class Server:
         conn = await self.redis_pool.get_connection()[0]
         if conn:
             return conn
-        self.redis_connections_count += 1
         return await self.redis_pool.acquire()
 
     async def _connect_client(self, ws: WebSocketServerProtocol) -> None:
@@ -40,23 +38,33 @@ class Server:
     async def _get_json_data(self, message: str) -> dict:
         return json.loads(message)
 
-    async def _send_json(self, ws: WebSocketServerProtocol, data: dict) -> None:
-        data["timestamp"] = int(time())
-        await ws.send(json.dumps(data))
+    async def _send_json(self, ws: WebSocketServerProtocol, method: str, data: dict) -> None:
+        new_data = {"timestamp": int(time()), "method": method, "data": data}
+        await ws.send(json.dumps(new_data))
 
     async def ws_handler(self, ws: WebSocketServerProtocol, path: str) -> None:
         await self._connect_client(ws)
         try:
             async for message in ws:
+                method = None
                 try:
                     data = await self._get_json_data(message)
-                    if data["method"] not in methods:
+                    method = data.get("method")
+                    if (not method) or (method not in methods):
                         raise exceptions.MethodIsNotExist
-                    methods[data["method"]](pool=self.pg_pool, **data["data"])
+                    answer = await methods[method](server=self, **data["data"])
+                    if answer:
+                        await self._send_json(ws=ws, method=method, data=answer)
                 except exceptions.MethodIsNotExist:
-                    await self._send_json(ws=ws, data=exceptions.errors[0])
-                except TypeError:
-                    await self._send_json(ws=ws, data=exceptions.errors[1])
+                    await self._send_json(ws=ws, method=method, data=exceptions.errors[0])
+                #except TypeError:
+                    #await self.send_json(ws=ws, data=exceptions.errors[1])
+                except exceptions.UserExceptions.GPIDAlreadyExist:
+                    await self._send_json(ws=ws, method=method, data=exceptions.errors[2])
+                except exceptions.UserExceptions.UsernameAlreadyExist:
+                    await self._send_json(ws=ws, method=method, data=exceptions.errors[3])
+        except websockets.ConnectionClosedError:
+            pass
         finally:
             await self._disconnect_client(ws)
 
@@ -71,6 +79,6 @@ if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     server = Server()
     loop.run_until_complete(prepare(server))
-    start_server = websockets.serve(server.ws_handler, host="localhost", port=6876)
+    start_server = websockets.serve(server.ws_handler, host=SERVER_HOST, port=SERVER_PORT)
     loop.run_until_complete(start_server)
     loop.run_forever()
