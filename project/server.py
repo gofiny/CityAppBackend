@@ -38,27 +38,31 @@ class Server:
     async def _get_json_data(self, message: str) -> dict:
         return json.loads(message)
 
-    async def _send_json(self, ws: WebSocketServerProtocol, data: dict) -> None:
-        data["timestamp"] = int(time())
-        await ws.send(json.dumps(data))
+    async def _send_json(self, ws: WebSocketServerProtocol, method: str, data: dict) -> None:
+        new_data = {"timestamp": int(time()), "method": method, "data": data}
+        await ws.send(json.dumps(new_data))
 
     async def ws_handler(self, ws: WebSocketServerProtocol, path: str) -> None:
         await self._connect_client(ws)
         try:
             async for message in ws:
+                method = None
                 try:
                     data = await self._get_json_data(message)
-                    if data["method"] not in methods:
+                    method = data.get("method")
+                    if (not method) or (method not in methods):
                         raise exceptions.MethodIsNotExist
-                    await methods[data["method"]](server=self, ws=ws, **data["data"])
+                    answer = await methods[method](server=self, **data["data"])
+                    if answer:
+                        await self._send_json(ws=ws, method=method, data=answer)
                 except exceptions.MethodIsNotExist:
-                    await self._send_json(ws=ws, data=exceptions.errors[0])
+                    await self._send_json(ws=ws, method=method, data=exceptions.errors[0])
                 #except TypeError:
-                    #await self._send_json(ws=ws, data=exceptions.errors[1])
+                    #await self.send_json(ws=ws, data=exceptions.errors[1])
                 except exceptions.UserExceptions.GPIDAlreadyExist:
-                    await self._send_json(ws=ws, data=exceptions.errors[2])
+                    await self._send_json(ws=ws, method=method, data=exceptions.errors[2])
                 except exceptions.UserExceptions.UsernameAlreadyExist:
-                    await self._send_json(ws=ws, data=exceptions.errors[3])
+                    await self._send_json(ws=ws, method=method, data=exceptions.errors[3])
         except websockets.ConnectionClosedError:
             pass
         finally:

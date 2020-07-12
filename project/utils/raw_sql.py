@@ -30,11 +30,11 @@ create_table_map_objects = '''CREATE TABLE IF NOT EXISTS "map_objects"
                                 "is_free" bool default true
                             )'''
 
-save_user_resources = "UPDATE users SET money=%s, wood=%s, stones=%s, WHERE uuid='%s'"
+save_user_resources = "UPDATE users SET money=$1, wood=$2, stones=$3, WHERE uuid=$4"
 
-check_reg_user = "SELECT gp_id, username FROM users where gp_id='%s' OR username='%s'"
+check_reg_user = "SELECT gp_id, username FROM users where gp_id=$1 OR username=$2"
 
-get_user = "SELECT * FROM users WHERE gp_id='%s'"
+get_user = "SELECT * FROM users WHERE gp_id=$1"
 
 create_new_user = """INSERT INTO users
                     (
@@ -43,7 +43,7 @@ create_new_user = """INSERT INTO users
                         username,
                         reg_time
                     )
-                    VALUES ('%s', '%s', '%s', %s) returning *"""
+                    VALUES ($1, $2, $3, $4) returning *"""
 
 create_game_object = """INSERT INTO game_objects
                         (
@@ -56,7 +56,7 @@ create_game_object = """INSERT INTO game_objects
                             power,
                             max_tasks
                         )
-                        VALUES ('%s', '%s', '%s', %s, %s, %s, %s, %s)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
                         returning *"""
 
 create_start_user = """WITH user as (
@@ -65,4 +65,4 @@ create_start_user = """WITH user as (
 get_random_object_pos = """SELECT pos 
                             FROM map_objects 
                                 OFFSET RANDOM() * (SELECT COUNT(*) FROM map_objects)
-                            LIMIT %s"""
+                            LIMIT $1"""

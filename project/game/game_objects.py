@@ -98,7 +98,7 @@ class User:
     @staticmethod
     async def create_new_user(conn: Connection, gp_id: str, username: str) -> "User":
         user = await sql.create_new_user(conn, gp_id, username)
-        return User(**user)
+        return User(user)
 
     def __eq__(self, other: "User"):
         if other.__class__ is not self.__class__:
@@ -119,27 +119,29 @@ class GameObject:
             await conn.execute(raw_sql.create_table_game_objects)
 
     @staticmethod
-    async def create_new_object(conn: Connection,
-                                name: str, object_type: str,
-                                health: Optional[int] = None,
-                                speed: Optional[float] = None,
-                                power: Optional[int] = None,
-                                max_tasks: Optional[int] = None) -> Record:
-        return await sql.create_new_game_object(conn, name, object_type, health, speed, power, max_tasks)
+    async def _create_new_object(
+            conn: Connection,
+            name: str, object_type: str,
+            level: int = 1,
+            health: Optional[int] = None,
+            speed: Optional[float] = None,
+            power: Optional[int] = None,
+            max_tasks: Optional[int] = None) -> Record:
+        return await sql.create_new_game_object(
+            conn,
+            name=name,
+            object_type=object_type,
+            level=level,
+            health=health,
+            speed=speed,
+            power=power,
+            max_tasks=max_tasks
+        )
 
 
 class StaticObject(GameObject):
     def __init__(self, **kwargs):
         super().__init__(object_type="static", **kwargs)
-
-    @staticmethod
-    async def create_new_object(conn: Connection, name: str) -> Record:
-        return await super().create_new_object(
-            conn=conn,
-            name=name,
-            object_type="static",
-            health=1000,
-        )
 
 
 class GeneratedObject(GameObject):
@@ -155,18 +157,6 @@ class PawnObject(GameObject):
         self.max_tasks = max_tasks
         super().__init__(object_type="pawn", **kwargs)
 
-    @staticmethod
-    async def create_new_object(conn: Connection, name: str) -> Record:
-        return await super().create_new_object(
-            conn=conn,
-            name=name,
-            object_type="pawn",
-            health=100,
-            speed=.77,
-            power=10,
-            max_tasks=1
-        )
-
 
 class Woodcutter(PawnObject):
     def __init__(self, db_woodcutter: Record):
@@ -180,8 +170,15 @@ class Woodcutter(PawnObject):
         )
 
     @staticmethod
-    async def create_new_object(conn: Connection) -> "Woodcutter":
-        game_object = await super().create_new_object(conn=conn, name="woodcutter")
+    async def create_new(conn: Connection) -> "Woodcutter":
+        game_object = await GameObject._create_new_object(
+            conn=conn,
+            name="woodcutter",
+            object_type="pawn",
+            power=10,
+            speed=.33,
+            max_tasks=1
+        )
         return Woodcutter(game_object)
 
 
@@ -194,8 +191,13 @@ class WoodcutterHouse(StaticObject):
         )
 
     @staticmethod
-    async def create_new_object(conn: Connection) -> "WoodcutterHouse":
-        game_object = await super().create_new_object(conn=conn, name="woodcutter_house")
+    async def create_new(conn: Connection) -> "WoodcutterHouse":
+        game_object = await GameObject._create_new_object(
+            conn=conn,
+            name="woodcutter_house",
+            object_type="static",
+            health=1000
+        )
         return WoodcutterHouse(game_object)
 
 
