@@ -96,3 +96,15 @@ set_game_object_on_map = """INSERT INTO
                             )
                             VALUES
                                 ($1, $2, $3, $4, $5)"""
+
+get_user_by_gp_id = """SELECT * FROM users WHERE gp_id=$1"""
+
+get_game_object_by_gp_id = """SELECT 
+                                go.* 
+                            FROM 
+                                map_objects mo
+                            LEFT JOIN users ON mo.owner=users.uuid
+                            LEFT JOIN game_objects go ON go.uuid=mo.game_object
+                            WHERE
+                                users.gp_id=$1 AND
+                                go.name=$2"""

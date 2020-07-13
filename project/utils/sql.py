@@ -46,3 +46,11 @@ async def check_pos_for_free(conn: Connection, pos: tuple) -> Optional[tuple]:
 
 async def set_game_objects_on_map(conn: Connection, objects: list) -> None:
     await conn.executemany(raw_sql.set_game_object_on_map, objects)
+
+
+async def get_game_object_by_gp_id(conn: Connection, gp_id: str, object_name=str) -> Record:
+    return await conn.fetchrow(raw_sql.get_game_object_by_gp_id, gp_id, object_name)
+
+
+async def get_user_by_gp_id(conn: Connection, gp_id: str) -> Record:
+    return await conn.fetchrow(raw_sql.get_user_by_gp_id, gp_id)

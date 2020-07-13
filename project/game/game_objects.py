@@ -101,6 +101,11 @@ class User:
         user = await sql.create_new_user(conn, gp_id, username, spawn_pos)
         return User(user)
 
+    @staticmethod
+    async def get_by_gp_id(conn: Connection, gp_id: str) -> "User":
+        user = await sql.get_user_by_gp_id(conn=conn, gp_id=gp_id)
+        return User(user)
+
     def __eq__(self, other: "User"):
         if other.__class__ is not self.__class__:
             return NotImplemented
@@ -113,6 +118,10 @@ class GameObject:
         self.name = name
         self.object_type = object_type
         self.level = level
+
+    @staticmethod
+    async def _get_by_gp_id(conn: Connection, gp_id: str, object_name: str) -> Record:
+        return await sql.get_game_object_by_gp_id(conn=conn, gp_id=gp_id, object_name=object_name)
 
     @staticmethod
     async def create_table(conn: Connection):
@@ -171,6 +180,11 @@ class Woodcutter(PawnObject):
         )
 
     @staticmethod
+    async def get_by_gp_id(conn: Connection, gp_id: str) -> "Woodcutter":
+        game_objects = await GameObject._get_by_gp_id(conn=conn, gp_id=gp_id, object_name="woodcutter")
+        return Woodcutter(game_objects)
+
+    @staticmethod
     async def create_new(conn: Connection) -> "Woodcutter":
         game_object = await GameObject._create_new_object(
             conn=conn,
@@ -190,6 +204,11 @@ class WoodcutterHouse(StaticObject):
             name=db_woodcutter_house["name"],
             level=db_woodcutter_house["level"]
         )
+
+    @staticmethod
+    async def get_by_gp_id(conn: Connection, gp_id: str) -> "WoodcutterHouse":
+        game_objects = await GameObject._get_by_gp_id(conn=conn, gp_id=gp_id, object_name="woodcutter_house")
+        return WoodcutterHouse(game_objects)
 
     @staticmethod
     async def create_new(conn: Connection) -> "WoodcutterHouse":

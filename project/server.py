@@ -13,7 +13,7 @@ from utils import exceptions, init_dbs
 
 class Server:
     def __init__(self):
-        self.clients = set()
+        self.clients = dict()
         self.pg_pool = None
         self.redis_pool = None
         
@@ -28,11 +28,11 @@ class Server:
         return await self.redis_pool.acquire()
 
     async def _connect_client(self, ws: WebSocketServerProtocol) -> None:
-        self.clients.add(ws)
+        self.clients[ws] = None
         logging.info(f"{ws.remote_address} connected")
 
     async def _disconnect_client(self, ws: WebSocketServerProtocol) -> None:
-        self.clients.remove(ws)
+        self.clients.pop(ws)
         logging.info(f"{ws.remote_address} disconnected")
 
     async def _get_json_data(self, message: str) -> dict:
@@ -59,10 +59,8 @@ class Server:
                     await self._send_json(ws=ws, method=method, data=exceptions.errors[0])
                 #except TypeError:
                     #await self.send_json(ws=ws, data=exceptions.errors[1])
-                except exceptions.UserExceptions.GPIDAlreadyExist:
-                    await self._send_json(ws=ws, method=method, data=exceptions.errors[2])
                 except exceptions.UserExceptions.UsernameAlreadyExist:
-                    await self._send_json(ws=ws, method=method, data=exceptions.errors[3])
+                    await self._send_json(ws=ws, method=method, data=exceptions.errors[2])
         except websockets.ConnectionClosedError:
             pass
         finally:
