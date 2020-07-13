@@ -14,6 +14,5 @@ class UserExceptions(Exception):
 errors = {
     0: {"errors": [0, "method is not exist"]},
     1: {"errors": [1, "data is not correct"]},
-    2: {"is_new_user": False, "errors": [2, "user with this gp_id already exist"]},
-    3: {"errors": [3, "user with this username already exist"]},
+    2: {"errors": [2, "user with this username already exist"]},
 }
