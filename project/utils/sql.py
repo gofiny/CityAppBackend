@@ -1,60 +1,119 @@
-from asyncpg.connection import Connection
-from asyncpg import Record
-from time import time
-from uuid import uuid4
-from . import raw_sql
-from typing import (
-    Optional,
-    List
-)
+create_table_user = '''CREATE TABLE IF NOT EXISTS "users"
+                        (
+                            "uuid" uuid NOT NULL PRIMARY KEY,
+                            "gp_id" varchar(50) NOT NULL UNIQUE,
+                            "username" varchar(30) NOT NULL UNIQUE,
+                            "reg_time" integer NOT NULL,
+                            "money" integer NOT NULL DEFAULT 100, 
+                            "wood" integer NOT NULL DEFAULT 100,
+                            "stones" integer NOT NULL DEFAULT 100,
+                            "spawn_pos" point
+                        )'''
 
+create_table_game_objects = '''CREATE TABLE IF NOT EXISTS "game_objects"
+                        (
+                            "uuid" uuid NOT NULL PRIMARY KEY,
+                            "name" varchar(25) NOT NULL,
+                            "object_type" varchar(25) NOT NULL,
+                            "level" integer NOT NULL DEFAULT 1,
+                            "health" integer,
+                            "speed" float,
+                            "power" integer,
+                            "max_tasks" integer    
+                        )'''
 
-async def get_user_info_or_none(conn: Connection, gp_id: str, username: str) -> Optional[Record]:
-    return await conn.fetchrow(raw_sql.check_reg_user, gp_id, username)
+create_table_map_objects = '''CREATE TABLE IF NOT EXISTS "map_objects"
+                            (
+                                "uuid" uuid NOT NULL PRIMARY KEY,
+                                "pos" point,
+                                "game_object" uuid NOT NULL REFERENCES "game_objects" ("uuid") on delete cascade, 
+                                "owner" uuid null REFERENCES "users" ("uuid") on delete cascade,
+                                "is_free" bool default true
+                            )'''
 
+save_user_resources = "UPDATE users SET money=$1, wood=$2, stones=$3, WHERE uuid=$4"
 
-async def create_new_user(conn: Connection, gp_id: str, username: str, spawn_pos: tuple) -> Record:
-    return await conn.fetchrow(raw_sql.create_new_user, uuid4(), gp_id, username, int(time()), spawn_pos)
+check_reg_user = "SELECT gp_id, username FROM users where gp_id=$1 OR username=$2"
 
+get_user = "SELECT * FROM users WHERE gp_id=$1"
 
-async def save_user_resources(conn: Connection, uuid: uuid4, money: int, wood: int, stones: int) -> None:
-    await conn.execute(raw_sql.save_user_resources, money, wood, stones, uuid)
+create_new_user = """INSERT INTO users
+                    (
+                        uuid,
+                        gp_id,
+                        username,
+                        reg_time,
+                        spawn_pos
+                    )
+                    VALUES ($1, $2, $3, $4, $5) returning *"""
 
+create_game_object = """INSERT INTO game_objects
+                        (
+                            uuid,
+                            name,
+                            object_type,
+                            level,
+                            health,
+                            speed,
+                            power,
+                            max_tasks
+                        )
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                        returning *"""
 
-async def create_new_game_object(conn: Connection, name: str,
-                                 object_type: str, level: int = 1,
-                                 health: Optional[int] = None,
-                                 speed: Optional[float] = None,
-                                 power: Optional[int] = None,
-                                 max_tasks: Optional[int] = None) -> Record:
-    game_object = await conn.fetchrow(
-        raw_sql.create_game_object, uuid4(), name, object_type, level, health, speed, power, max_tasks)
-    return game_object
+get_random_object_pos = """SELECT pos 
+                            FROM map_objects 
+                            WHERE
+                                owner is not null
+                            OFFSET 
+                                RANDOM() * (SELECT COUNT(*) FROM map_objects)
+                            LIMIT $1"""
 
+check_relay_for_free = """SELECT
+                            pos
+                        FROM 
+                            map_objects
+                        WHERE
+                            pos <@ polygon(box'(%s, %s), (%s, %s)')
+                            AND owner is not null
+                        LIMIT 1"""
 
-async def get_random_map_object_pos(conn: Connection, limit: int = 1) -> List[Optional[Record]]:
-    return await conn.fetch(raw_sql.get_random_object_pos, limit)
+check_pos_for_free = """SELECT 
+                            pos
+                        FROM
+                            map_objects
+                        WHERE
+                            pos ~= $1"""
 
+set_game_object_on_map = """INSERT INTO 
+                                map_objects
+                            (
+                                uuid,
+                                pos,
+                                game_object, 
+                                owner,
+                                is_free
+                            )
+                            VALUES
+                                ($1, $2, $3, $4, $5)"""
 
-async def check_relay_for_free(conn: Connection, pos: tuple) -> Optional[tuple]:
-    return await conn.fetchval(raw_sql.check_relay_for_free % (pos[0][0], pos[0][1], pos[1][0], pos[1][1]))
+get_user_by_gp_id = """SELECT * FROM users WHERE gp_id=$1"""
 
+get_game_object_by_gp_id = """SELECT 
+                                go.* 
+                            FROM 
+                                map_objects mo
+                            LEFT JOIN users ON mo.owner=users.uuid
+                            LEFT JOIN game_objects go ON go.uuid=mo.game_object
+                            WHERE
+                                users.gp_id=$1 AND
+                                go.name=$2"""
 
-async def check_pos_for_free(conn: Connection, pos: tuple) -> Optional[tuple]:
-    return await conn.fetchval(raw_sql.check_pos_for_free, pos)
-
-
-async def set_game_objects_on_map(conn: Connection, objects: list) -> None:
-    await conn.executemany(raw_sql.set_game_object_on_map, objects)
-
-
-async def get_game_object_by_gp_id(conn: Connection, gp_id: str, object_name=str) -> Record:
-    return await conn.fetchrow(raw_sql.get_game_object_by_gp_id, gp_id, object_name)
-
-
-async def get_user_by_gp_id(conn: Connection, gp_id: str) -> Record:
-    return await conn.fetchrow(raw_sql.get_user_by_gp_id, gp_id)
-
-
-async def get_all_game_objects_by_gp_id(conn: Connection, gp_id: str) -> List[Optional[Record]]:
-    return await conn.fetch(raw_sql.get_all_game_objects_by_gp_id, gp_id)
+get_all_game_objects_by_gp_id = """SELECT 
+                                    go.* 
+                                FROM 
+                                    map_objects mo
+                                LEFT JOIN users ON mo.owner=users.uuid
+                                LEFT JOIN game_objects go ON go.uuid=mo.game_object
+                                WHERE
+                                    users.gp_id=$1 AND"""

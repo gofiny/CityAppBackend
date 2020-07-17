@@ -3,7 +3,7 @@ from asyncpg.pool import Pool
 from asyncpg.connection import Connection
 from typing import Union, Optional
 from time import time
-from utils import exceptions, sql, raw_sql
+from utils import exceptions, db, sql
 
 
 actions = {
@@ -82,7 +82,7 @@ class User:
 
     async def save_resources(self, conn: Connection):
         async with conn.transaction():
-            await sql.save_user_resources(
+            await db.save_user_resources(
                 conn=conn,
                 uuid=self.uuid,
                 money=self.money.count,
@@ -94,16 +94,16 @@ class User:
     @staticmethod
     async def create_table(conn: Connection):
         async with conn.transaction():
-            await conn.execute(raw_sql.create_table_user)
+            await conn.execute(sql.create_table_user)
 
     @staticmethod
     async def create_new_user(conn: Connection, gp_id: str, username: str, spawn_pos: tuple) -> "User":
-        user = await sql.create_new_user(conn, gp_id, username, spawn_pos)
+        user = await db.create_new_user(conn, gp_id, username, spawn_pos)
         return User(user)
 
     @staticmethod
     async def get_by_gp_id(conn: Connection, gp_id: str) -> "User":
-        user = await sql.get_user_by_gp_id(conn=conn, gp_id=gp_id)
+        user = await db.get_user_by_gp_id(conn=conn, gp_id=gp_id)
         return User(user)
 
     def __eq__(self, other: "User"):
@@ -121,12 +121,12 @@ class GameObject:
 
     @staticmethod
     async def _get_by_gp_id(conn: Connection, gp_id: str, object_name: str) -> Record:
-        return await sql.get_game_object_by_gp_id(conn=conn, gp_id=gp_id, object_name=object_name)
+        return await db.get_game_object_by_gp_id(conn=conn, gp_id=gp_id, object_name=object_name)
 
     @staticmethod
     async def create_table(conn: Connection):
         async with conn.transaction():
-            await conn.execute(raw_sql.create_table_game_objects)
+            await conn.execute(sql.create_table_game_objects)
 
     @staticmethod
     async def _create_new_object(
@@ -137,7 +137,7 @@ class GameObject:
             speed: Optional[float] = None,
             power: Optional[int] = None,
             max_tasks: Optional[int] = None) -> Record:
-        return await sql.create_new_game_object(
+        return await db.create_new_game_object(
             conn,
             name=name,
             object_type=object_type,
@@ -232,7 +232,7 @@ class MapObject:
     @staticmethod
     async def create_table(conn: Connection):
         async with conn.transaction():
-            await conn.execute(raw_sql.create_table_map_objects)
+            await conn.execute(sql.create_table_map_objects)
 
 
 class Map:

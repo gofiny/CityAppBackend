@@ -1,6 +1,6 @@
 from asyncpg import Connection
 import random
-from . import sql
+from . import db
 
 
 def gen_random_pos(pos: tuple, min_c: int = 20, max_c: int = 70) -> tuple:
@@ -19,16 +19,16 @@ def make_square(x_coord: int, y_coord: int, width: int, height: int) -> tuple:
 
 async def find_new_spawn_pos(conn: Connection) -> tuple:
     while True:
-        random_objects = await sql.get_random_map_object_pos(conn=conn, limit=10)
+        random_objects = await db.get_random_map_object_pos(conn=conn, limit=10)
         if not random_objects:
             return 0, 0
         for random_pos in random_objects:
             new_pos = gen_random_pos(pos=random_pos["pos"])
             square = make_square(x_coord=new_pos[0], y_coord=new_pos[1], width=40, height=40)
-            is_busy = await sql.check_relay_for_free(conn=conn, pos=square)
+            is_busy = await db.check_relay_for_free(conn=conn, pos=square)
             if is_busy:
                 continue
-            is_busy = await sql.check_pos_for_free(conn, new_pos)
+            is_busy = await db.check_pos_for_free(conn, new_pos)
             if is_busy:
                 continue
             return new_pos
