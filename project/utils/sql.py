@@ -54,3 +54,7 @@ async def get_game_object_by_gp_id(conn: Connection, gp_id: str, object_name=str
 
 async def get_user_by_gp_id(conn: Connection, gp_id: str) -> Record:
     return await conn.fetchrow(raw_sql.get_user_by_gp_id, gp_id)
+
+
+async def get_all_game_objects_by_gp_id(conn: Connection, gp_id: str) -> List[Optional[Record]]:
+    return await conn.fetch(raw_sql.get_all_game_objects_by_gp_id, gp_id)

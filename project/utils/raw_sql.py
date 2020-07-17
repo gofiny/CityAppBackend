@@ -108,3 +108,12 @@ get_game_object_by_gp_id = """SELECT
                             WHERE
                                 users.gp_id=$1 AND
                                 go.name=$2"""
+
+get_all_game_objects_by_gp_id = """SELECT 
+                                    go.* 
+                                FROM 
+                                    map_objects mo
+                                LEFT JOIN users ON mo.owner=users.uuid
+                                LEFT JOIN game_objects go ON go.uuid=mo.game_object
+                                WHERE
+                                    users.gp_id=$1 AND"""
