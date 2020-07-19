@@ -1,6 +1,6 @@
 from uuid import uuid4
 from utils import db, exceptions
-from utils.map_methods import find_new_spawn_pos
+from utils.map_methods import find_new_spawn_pos, dumps_game_objects
 from game.game_objects import User, Woodcutter, WoodcutterHouse
 
 
@@ -36,7 +36,8 @@ async def register(server, gp_id: str, username: str) -> dict:
                     (uuid4(), spawn_pos, woodcutter_house.uuid, user.uuid, False)
                 ])
                 objects_to_initialize = [woodcutter, woodcutter_house]
-            # initializations to Redis will be here
+            redis_conn = server.get_redis_connection()
+            await dumps_game_objects(conn=redis_conn, game_objects=objects_to_initialize)
             return response
 
 methods = {

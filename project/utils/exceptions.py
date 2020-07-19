@@ -1,8 +1,10 @@
 class MethodIsNotExist(Exception):
     pass
 
+
 class ResNotEnough(Exception):
     pass
+
 
 class UserExceptions(Exception):
     class GPIDAlreadyExist(Exception):
@@ -10,6 +12,7 @@ class UserExceptions(Exception):
 
     class UsernameAlreadyExist(Exception):
         pass
+
 
 errors = {
     0: {"errors": [0, "method is not exist"]},

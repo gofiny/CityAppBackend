@@ -1,6 +1,14 @@
 from asyncpg import Connection
+from aioredis import RedisConnection
+from aioredis.commands import Pipeline
 import random
 from . import db
+
+
+async def dumps_game_objects(conn: RedisConnection, game_objects: list) -> None:
+    pipe = Pipeline(conn)
+    await db.dump_game_objects(pipe=pipe, game_objects=game_objects)
+    await pipe.execute()
 
 
 def gen_random_pos(pos: tuple, min_c: int = 20, max_c: int = 70) -> tuple:

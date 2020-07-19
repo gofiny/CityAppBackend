@@ -1,6 +1,6 @@
 from asyncpg.connection import Connection
 from asyncpg import Record
-from aioredis.commands.transaction import Pipeline
+from aioredis.commands import Pipeline
 from aioredis.connection import RedisConnection
 from time import time
 from uuid import uuid4
@@ -74,8 +74,18 @@ async def get_all_game_objects_by_gp_id(conn: Connection, gp_id: str) -> List[Op
 
 async def dump_game_objects(pipe: Pipeline, game_objects: list) -> None:
     for game_object in game_objects:
-        await pipe.hmset(f"game_objects:{game_object.uuid}", serialize(game_object))
+        pipe.append(f"game_objects:{game_object.uuid}", serialize(game_object))
 
 
 async def load_game_object(conn: RedisConnection, game_object_uuid: str) -> Any:
-    pass
+    game_object = await conn.execute("get", f"game_object:{game_object_uuid}")
+    return deserialize(game_object)
+
+
+async def dump_user(pipe: Pipeline, user):
+    pipe.append(serialize(user))
+
+
+async def load_user(conn: RedisConnection, user_uuid: str):
+    user = await conn.execute("get", f"user:{user_uuid}")
+    return deserialize(user)
