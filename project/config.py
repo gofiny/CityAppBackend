@@ -1,5 +1,5 @@
 DB_USER = "freelance"
-DB_PASSWORD = "pass123"
+DB_PASSWORD = ""
 DB_NAME = "free_db"
 DB_HOST = "localhost"
 DB_PORT = 5432
