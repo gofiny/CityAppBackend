@@ -1,8 +1,8 @@
 '''Информация для подключения к базе данных'''
 
 
-USER = "dmitry"
-PASSWORD = "6PEMGE2x"
+USER = ""
+PASSWORD = ""
 DATABASE = "game"
 HOST = "localhost"
 PORT = 5432
